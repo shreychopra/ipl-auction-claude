@@ -563,15 +563,20 @@
 <div class="toast" id="toast"></div>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyAcfJjyEmSUVkk-oXipxVkmsHzq1vwOcwc",
-  authDomain:"ipl-auction-64c8e.firebaseapp.com",
-  databaseURL:"https://ipl-auction-64c8e-default-rtdb.firebaseio.com",
-  projectId:"ipl-auction-64c8e",
-  storageBucket:"ipl-auction-64c8e.appspot.com",
-  appId:"1:152098475113:web:1ca6675ccf43e8d568a6f8"
+var db = null;
+// Initialize Firebase when DOM is ready
+window.addEventListener('load', function(){
+  firebase.initializeApp({
+    apiKey:"AIzaSyAcfJjyEmSUVkk-oXipxVkmsHzq1vwOcwc",
+    authDomain:"ipl-auction-64c8e.firebaseapp.com",
+    databaseURL:"https://ipl-auction-64c8e-default-rtdb.firebaseio.com",
+    projectId:"ipl-auction-64c8e",
+    storageBucket:"ipl-auction-64c8e.appspot.com",
+    appId:"1:152098475113:web:1ca6675ccf43e8d568a6f8"
+  });
+  db = firebase.database();
+  console.log("Firebase ready");
 });
-var db = firebase.database();
 
 var PLAYERS = [
   {id:1,name:"Akeal Hosein",role:"Bowler",nat:"WI",base:200},
@@ -810,7 +815,7 @@ function nextBid(current) {
   if (current < 500) return current + 25;
   return current + 50;
 }
-function fmtL(val) { return "Rs." + val + "L"; }
+function fmtL(val) { return "₹" + val + "L"; }
 
 // Get team from Firebase data (handles both array and object-with-string-keys)
 function getTeam(teamsData, idx) {
@@ -938,12 +943,14 @@ function joinRoom(){
     document.getElementById('tsRoomName').textContent=data.roomName;
     document.getElementById('tsRoomCode').textContent=code;
     showScreen('teamSelectScreen');
-    roomRef.on('value',function(snap2){
+    // Poll for auction start - once started, switch to the main participant listener
+    var startWatcher = roomRef.on('value', function(snap2){
       var d=snap2.val(); if(!d) return;
       G=d;
       if(d.auctionStarted && myTeamIdx!==null){
+        roomRef.off('value', startWatcher); // remove this watcher
         showScreen('waitScreen');
-        listenParticipant();
+        listenParticipant(); // start the one real listener
       }
     });
   });
