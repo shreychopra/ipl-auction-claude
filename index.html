@@ -573,7 +573,7 @@ firebase.initializeApp({
 });
 var db = firebase.database();
 
-// ── PLAYER DATA (base prices already in Lakhs = Cr * 100) ──
+// PLAYER DATA (base prices already in Lakhs = Cr * 100) ──
 var PLAYERS = [
   {id:1,name:"Akeal Hosein",role:"Bowler",nat:"WI",base:200},
   {id:2,name:"Aman Khan",role:"All-Rounder",nat:"Indian",base:40},
@@ -805,7 +805,7 @@ var PLAYERS = [
 var COLORS=['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166','#e040fb','#00bcd4'];
 var EMOJI={Batter:'🏏',Bowler:'🎳','All-Rounder':'⚡','WK-Batter':'🧤'};
 
-// ── BID INCREMENT LOGIC ──
+// BID INCREMENT LOGIC ──
 // Under 100L: steps of 20L; 100-500L: steps of 25L; above 500L: steps of 50L
 function nextBid(current) {
   if (current < 100) return current + 20;
@@ -814,7 +814,7 @@ function nextBid(current) {
 }
 function fmtL(val) { return '₹' + val + 'L'; }
 
-// ── APP STATE ──
+// APP STATE ──
 var role=null, roomCode=null, roomRef=null;
 var myTeamIdx=null, myName=null, myTeamName=null;
 var G={};
@@ -860,7 +860,7 @@ function pickTimer(s,el){
   el.classList.add('on');
 }
 
-// ── CREATE ROOM ──
+// CREATE ROOM ──
 function createRoom(){
   var hName=document.getElementById('hostName').value.trim();
   var rName=document.getElementById('roomName').value.trim();
@@ -897,7 +897,7 @@ function createRoom(){
   });
 }
 
-// ── LOBBY ──
+// LOBBY ──
 function listenLobby(){
   roomRef.on('value',function(snap){
     var data=snap.val(); if(!data) return;
@@ -917,7 +917,7 @@ function listenLobby(){
   });
 }
 
-// ── JOIN ROOM ──
+// JOIN ROOM ──
 function joinRoom(){
   var pName=document.getElementById('participantName').value.trim();
   var code=document.getElementById('roomCode').value.trim().toUpperCase();
@@ -950,7 +950,7 @@ function joinRoom(){
   });
 }
 
-// ── JOIN TEAM ──
+// JOIN TEAM ──
 function joinTeam(){
   var tName=document.getElementById('myTeamName').value.trim();
   if(!tName){toast('Enter your team name!');return;}
@@ -989,7 +989,7 @@ function joinTeam(){
   });
 }
 
-// ── START AUCTION ──
+// START AUCTION ──
 function startAuction(){
   roomRef.update({auctionStarted:true},function(err){
     if(err){toast('Error: '+err.message);return;}
@@ -1002,7 +1002,7 @@ function startAuction(){
   });
 }
 
-// ── HOST AUCTION LISTENER ──
+// HOST AUCTION LISTENER ──
 function listenAuction(){
   document.getElementById('hostCode').textContent=roomCode;
   roomRef.on('value',function(snap){
@@ -1025,7 +1025,7 @@ function pushRoom(patch,cb){
   if(roomRef) roomRef.update(patch,cb||function(){});
 }
 
-// ── CATEGORY ──
+// CATEGORY ──
 function setHostCat(cat,el){
   hostCat=cat;
   document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('on');});
@@ -1118,7 +1118,7 @@ function renderActiveBid(data){
   }
 }
 
-// ── SOLD ──
+// SOLD ──
 function soldNow(){
   if(!roomRef) return;
   roomRef.once('value',function(snap){
@@ -1355,7 +1355,7 @@ function showSoldFlash(sold){
   setTimeout(function(){fl.classList.remove('show');},3000);
 }
 
-// ── END SCREENS ──
+// END SCREENS ──
 function showEndScreen(){
   var sold=(G.players||[]).filter(function(p){return p.status==='sold';}).length;
   var unsold=(G.players||[]).filter(function(p){return p.status==='unsold';}).length;
@@ -1377,7 +1377,7 @@ function renderFinalList(){
   }).join('');
 }
 
-// ── WAIT SCREEN TABS ──
+// WAIT SCREEN TABS ──
 var wPoolCat='All';
 
 function wTab(name,el){
