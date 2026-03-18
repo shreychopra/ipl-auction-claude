@@ -959,24 +959,33 @@ function joinTeam(){
   var parts=G.participants?Object.values(G.participants):[];
   if(parts.length>=12){toast('Room is full (12 teams max)!');return;}
 
-  myTeamName=tName;
-  // assign team index = current participant count
-  myTeamIdx=parts.length;
-  var color=COLORS[myTeamIdx%COLORS.length];
-  document.documentElement.style.setProperty('--team',color);
+  myTeamName = tName;
 
-  var pid=myName.replace(/\s+/g,'_')+'_'+Date.now();
-  var teamEntry={name:myTeamName,budget:G.teamBudget||10000,spent:0,players:[],color:color};
+  // Use a transaction on teamCount to safely assign a unique index
+  roomRef.child('teamCount').transaction(function(current){
+    return (current || 0) + 1;
+  }, function(err, committed, snap){
+    if(err || !committed){ toast('Join error, try again!'); return; }
+    var assignedIdx = snap.val() - 1; // 0-based
+    if(assignedIdx >= 12){ toast('Room is full (12 teams max)!'); return; }
 
-  // atomic update: add participant + add team
-  var update={};
-  update['participants/'+pid]={name:myName,teamName:tName,teamIdx:myTeamIdx,joinedAt:Date.now()};
-  update['teams/'+myTeamIdx]=teamEntry;
-  roomRef.update(update,function(err){
-    if(err){toast('Error: '+err.message);return;}
-    toast('Joined as '+tName+' 🎉');
-    document.getElementById('waitTeamName').textContent=tName;
-    document.getElementById('pTeamName').textContent=tName;
+    myTeamIdx = assignedIdx;
+    var color = COLORS[assignedIdx % COLORS.length];
+    document.documentElement.style.setProperty('--team', color);
+
+    var pid = myName.replace(/\s+/g,'_') + '_' + Date.now();
+    var teamEntry = { name: tName, budget: G.teamBudget||10000, spent: 0, players: [], color: color };
+
+    var update = {};
+    update['participants/' + pid] = { name: myName, teamName: tName, teamIdx: assignedIdx, joinedAt: Date.now() };
+    update['teams/' + assignedIdx] = teamEntry;
+
+    roomRef.update(update, function(updateErr){
+      if(updateErr){ toast('Error: ' + updateErr.message); return; }
+      toast('Joined as ' + tName + ' 🎉');
+      document.getElementById('waitTeamName').textContent = tName;
+      document.getElementById('pTeamName').textContent = tName;
+    });
   });
 }
 
@@ -1367,53 +1376,89 @@ function renderParticipantBid(data){
   updatePBidInfo(data);
 }
 
+function getTeam(teamsData, idx) {
+  // Firebase stores arrays as objects with string keys — handle both
+  if (!teamsData) return null;
+  var n = parseInt(idx);
+  if (Array.isArray(teamsData)) return teamsData[n] || null;
+  return teamsData[n] || teamsData[String(n)] || null;
+}
+
 function updatePBidInfo(data){
-  var cb=data.currentBid||0;
-  var bi=(data.currentBidderIdx!==undefined && data.currentBidderIdx!==null)?parseInt(data.currentBidderIdx):-1;
-  var myIdx=parseInt(myTeamIdx);
-  document.getElementById('pCurrent').textContent = cb===0 ? '—' : fmtL(cb);
-  // When no bid yet (cb=0), first bid is at base price
-  var p2=(G.players||[]).find(function(x){return x.id===G.currentPlayerId;});
-  var nb=(cb===0 && p2) ? p2.base : nextBid(cb);
-  document.getElementById('pBidAmt').textContent=nb;
-  var teams=data.teams||G.teams||[];
-  var mt=teams[myIdx]||teams[''+myIdx];
-  var canAfford=mt&&(mt.budget-mt.spent)>=nb;
-  var iLead=(bi>=0 && bi===myIdx);
-  document.getElementById('bigBidBtn').disabled=!canAfford||iLead;
-  var lb=document.getElementById('pLeader');
-  if(bi<0){lb.textContent='No bids yet — be first!';lb.className='p-leader';document.getElementById('liveCard').classList.remove('leading');}
-  else if(iLead){lb.innerHTML="<strong>You're leading! 🎉</strong>";lb.className='p-leader me';document.getElementById('liveCard').classList.add('leading');}
-  else{
-    var leadTeam=G.teams&&(G.teams[bi]||G.teams[''+bi]);
-    lb.innerHTML='Leading: <strong>'+(leadTeam?leadTeam.name:'?')+'</strong>';
-    lb.className='p-leader';
-    document.getElementById('liveCard').classList.remove('leading');
+  var cb = data.currentBid || 0;
+  var rawBi = data.currentBidderIdx;
+  var bi = (rawBi !== undefined && rawBi !== null && rawBi !== -1) ? parseInt(rawBi) : -1;
+  var myIdx = parseInt(myTeamIdx);
+
+  // Current bid display
+  document.getElementById('pCurrent').textContent = (cb === 0) ? '—' : fmtL(cb);
+
+  // Next bid amount: first bid = base price, subsequent = nextBid()
+  var p2 = (data.players || G.players || []).find(function(x){ return x.id === data.currentPlayerId; });
+  var nb = (cb === 0 && p2) ? p2.base : nextBid(cb);
+  document.getElementById('pBidAmt').textContent = nb;
+
+  // Get my team from Firebase data
+  var mt = getTeam(data.teams, myIdx);
+  var remaining = mt ? (mt.budget - mt.spent) : 0;
+  var canAfford = mt && remaining >= nb;
+  var iLead = (bi >= 0 && bi === myIdx);
+
+  console.log('[BID] myIdx='+myIdx+' bi='+bi+' cb='+cb+' nb='+nb+' remaining='+remaining+' canAfford='+canAfford+' iLead='+iLead);
+
+  // Enable button for anyone who CAN afford and is NOT currently leading
+  document.getElementById('bigBidBtn').disabled = iLead || !canAfford;
+
+  // Leader display
+  var lb = document.getElementById('pLeader');
+  var liveCard = document.getElementById('liveCard');
+  if (bi < 0) {
+    lb.textContent = 'No bids yet — be first!';
+    lb.className = 'p-leader';
+    liveCard.classList.remove('leading');
+  } else if (iLead) {
+    lb.innerHTML = "<strong>You're leading! 🎉</strong>";
+    lb.className = 'p-leader me';
+    liveCard.classList.add('leading');
+  } else {
+    var leadTeam = getTeam(data.teams || G.teams, bi);
+    lb.innerHTML = 'Leading: <strong>' + (leadTeam ? leadTeam.name : 'Team ' + bi) + '</strong>';
+    lb.className = 'p-leader';
+    liveCard.classList.remove('leading');
   }
-  document.getElementById('pBidHint').textContent=(!canAfford&&!iLead)?'⚠️ Not enough budget':iLead?"You're the highest bidder!":'Tap to raise the bid';
-  if(data.timerEnabled&&data.timerLeft!==undefined){
-    var tl=data.timerLeft||0,ts=data.timerSeconds||45;
-    var tn=document.getElementById('pTimerNum'),tb=document.getElementById('pTimerBar');
-    tn.textContent=tl; tb.style.width=(tl/ts*100)+'%';
-    tn.classList.toggle('urgent',tl<=10); tb.classList.toggle('urgent',tl<=10);
+
+  document.getElementById('pBidHint').textContent =
+    !canAfford ? '⚠️ Not enough budget' :
+    iLead ? "You're the highest bidder!" :
+    'Tap to raise the bid';
+
+  // Timer
+  if (data.timerEnabled && data.timerSeconds) {
+    var tl = data.timerLeft || 0, ts = data.timerSeconds;
+    var tn = document.getElementById('pTimerNum'), tb = document.getElementById('pTimerBar');
+    tn.textContent = tl;
+    tb.style.width = (tl / ts * 100) + '%';
+    tn.classList.toggle('urgent', tl <= 10);
+    tb.classList.toggle('urgent', tl <= 10);
   }
 }
 
 function placeBid(){
-  if(!roomRef||myTeamIdx===null) return;
-  var myIdx2=parseInt(myTeamIdx);
-  roomRef.once('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    var cb=data.currentBid||0;
-    // Don't allow bidding if already leading
-    var curBi=(data.currentBidderIdx!==undefined&&data.currentBidderIdx!==null)?parseInt(data.currentBidderIdx):-1;
-    if(curBi===myIdx2){toast("You're already the highest bidder!");return;}
-    var p0=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-    var nb=(cb===0 && p0) ? p0.base : nextBid(cb);
-    var teams=data.teams||[];
-    var mt=teams[myIdx2]||teams[''+myIdx2];
-    if(!mt||nb>mt.budget-mt.spent){toast('Not enough budget!');return;}
-    roomRef.update({currentBid:nb,currentBidderIdx:myIdx2});
+  if(!roomRef || myTeamIdx === null) return;
+  var myIdx2 = parseInt(myTeamIdx);
+  roomRef.once('value', function(snap){
+    var data = snap.val(); if(!data) return;
+    var cb = data.currentBid || 0;
+    var curBi = (data.currentBidderIdx !== undefined && data.currentBidderIdx !== null) ? parseInt(data.currentBidderIdx) : -1;
+    if(curBi === myIdx2){ toast("You're already the highest bidder!"); return; }
+    var p0 = (data.players || []).find(function(x){ return x.id === data.currentPlayerId; });
+    if(!p0){ toast('No active player!'); return; }
+    var nb = (cb === 0) ? p0.base : nextBid(cb);
+    var mt = getTeam(data.teams, myIdx2);
+    if(!mt){ toast('Team not found!'); return; }
+    if(nb > mt.budget - mt.spent){ toast('Not enough budget!'); return; }
+    console.log('[PLACE BID] team='+myIdx2+' nb='+nb);
+    roomRef.update({ currentBid: nb, currentBidderIdx: myIdx2 });
   });
 }
 
