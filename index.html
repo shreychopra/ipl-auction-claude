@@ -232,6 +232,18 @@
     .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 18px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:all .3s;white-space:nowrap;max-width:92vw;text-align:center}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .empty{text-align:center;padding:32px 18px;color:var(--text3);font-size:14px}
+    /* confirm dialog */
+    .confirm-overlay{position:fixed;inset:0;background:rgba(10,12,16,.92);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s}
+    .confirm-overlay.show{opacity:1;pointer-events:all}
+    .confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;max-width:320px;width:100%;text-align:center}
+    .confirm-box h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;margin-bottom:10px}
+    .confirm-box p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+    .confirm-btns{display:flex;gap:10px}
+    /* pause banner */
+    .pause-bar{padding:10px 16px;background:rgba(240,180,41,.15);border-bottom:1px solid rgba(240,180,41,.3);color:var(--gold);font-size:13px;font-weight:700;text-align:center;letter-spacing:.5px;display:none}
+    .pause-bar.show{display:block}
+    /* host controls row */
+    .host-ctrl-row{display:flex;gap:8px;padding:10px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
   </style>
 </head>
 <body>
@@ -340,6 +352,12 @@
     <span class="pbadge pb-code" id="hostCode">-</span>
     <span class="pbadge pb-live" id="hostLive" style="display:none">● LIVE</span>
   </div>
+  <div class="host-ctrl-row">
+    <button class="btn btn-ghost btn-sm" id="pauseBtn" onclick="togglePause()" style="flex:1">⏸ Pause</button>
+    <button class="btn btn-red btn-sm" onclick="confirmAction('end')" style="flex:1">🏁 End Auction</button>
+    <button class="btn btn-ghost btn-sm" onclick="confirmAction('exitHost')" style="flex:1">✕ Exit</button>
+  </div>
+  <div class="pause-bar" id="pauseBar">⏸ AUCTION PAUSED — Bidding disabled</div>
   <div class="tabs">
     <div class="tab on" onclick="hTab('bid',this)">🔨 Bid</div>
     <div class="tab" onclick="hTab('teams',this)">👥 Teams</div>
@@ -428,6 +446,9 @@
 <!-- ════ WAIT SCREEN ════ -->
 <div id="waitScreen" class="screen">
   <div class="conn-bar cb-live" id="waitConnBar">✓ Connected</div>
+  <div style="display:flex;justify-content:flex-end;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border)">
+    <button class="btn btn-ghost btn-sm" onclick="confirmAction('exitPart')" style="font-size:12px;padding:6px 12px">✕ Exit Room</button>
+  </div>
   <div class="tabs" style="background:var(--surface);border-bottom:1px solid var(--border)">
     <div class="tab on" onclick="wTab('status',this)">⏳ Status</div>
     <div class="tab" onclick="wTab('pool',this)">📋 Player Pool</div>
@@ -465,6 +486,10 @@
 <!-- ════ PARTICIPANT BID SCREEN ════ -->
 <div id="pBidScreen" class="screen">
   <div class="conn-bar cb-live">✓ Live</div>
+  <div style="display:flex;justify-content:flex-end;padding:5px 12px;background:var(--surface);border-bottom:1px solid var(--border)">
+    <button class="btn btn-ghost btn-sm" onclick="confirmAction('exitPart')" style="font-size:12px;padding:5px 12px">✕ Exit</button>
+  </div>
+  <div class="pause-bar" id="pPauseBar">⏸ AUCTION PAUSED</div>
   <div class="bid-hdr">
     <div class="bid-hdr-team" id="pTeamName">Team</div>
     <div class="bpill">₹<span id="pBudgetLeft">-</span>L</div>
@@ -528,7 +553,10 @@
   <h1>Auction Complete!</h1>
   <div style="color:var(--text2);font-size:14px;margin-top:7px" id="endSummary"></div>
   <div class="final-list" id="finalList"></div>
-  <button class="btn btn-ghost" style="margin-top:22px;max-width:300px" onclick="showScreen('landingScreen')">🔁 New Auction</button>
+  <div id="exportBtnWrap" style="display:none;margin-top:16px">
+    <button class="btn btn-gold" style="max-width:300px" onclick="exportCSV()">⬇ Export Teams CSV</button>
+  </div>
+  <button class="btn btn-ghost" style="margin-top:12px;max-width:300px" onclick="showScreen('landingScreen')">🔁 New Auction</button>
 </div>
 
 <!-- SOLD OVERLAY (host) -->
@@ -561,6 +589,18 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMsg">This action cannot be undone.</p>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-red" style="flex:1" id="confirmOkBtn" onclick="confirmOk()">Confirm</button>
+    </div>
+  </div>
+</div>
 
 <script>
 var db = null;
@@ -903,6 +943,7 @@ function createRoom(){
     document.getElementById('lobbyRoomName').textContent=rName;
     showScreen('lobbyScreen');
     listenLobby();
+    saveSession();
   });
 }
 
@@ -978,6 +1019,7 @@ function joinTeam(){
         toast('Joined as '+tName+'!');
         document.getElementById('waitTeamName').textContent=tName;
         document.getElementById('pTeamName').textContent=tName;
+        saveSession();
       });
     });
 }
@@ -1003,6 +1045,8 @@ function listenAuction(){
     G=data;
     document.getElementById('hostConnBar').className='conn-bar cb-live';
     document.getElementById('hostConnBar').textContent='Live - Room: '+roomCode;
+    // Handle pause state
+    applyPauseState(!!data.paused);
     if(data.currentPlayerId && document.getElementById('activeBidDiv').style.display!=='none'){
       renderActiveBid(data);
     }
@@ -1010,6 +1054,7 @@ function listenAuction(){
     renderHostPlayers();
     updateHostCount();
     if(data.auctionEnded) showEndScreen();
+    saveSession();
   });
 }
 
@@ -1307,7 +1352,9 @@ function listenParticipant(){
       var key=data.lastSold.player+'|'+data.lastSold.price;
       if(key!==lastSoldKey){lastSoldKey=key;showSoldFlash(data.lastSold);}
     }
-    if(data.auctionEnded){showParticipantEnd();return;}
+    if(data.auctionEnded){clearSession();showParticipantEnd();return;}
+    // Handle pause
+    applyPauseState(!!data.paused);
     updateWaitBudget();
     if(document.getElementById('wpane-pool')&&document.getElementById('wpane-pool').classList.contains('on')) renderWPool();
     if(document.getElementById('wpane-squad')&&document.getElementById('wpane-squad').classList.contains('on')) renderWSquad();
@@ -1403,6 +1450,7 @@ function updatePBidInfo(data){
 // --- PLACE BID ---
 function placeBid(){
   if(!roomRef||myTeamIdx===null) return;
+  if(G.paused){toast('Auction is paused!');return;}
   var myIdx2=parseInt(myTeamIdx);
   roomRef.once('value',function(snap){
     var data=snap.val(); if(!data) return;
@@ -1539,7 +1587,11 @@ function showEndScreen(){
   var sold=(G.players||[]).filter(function(p){return p.status==='sold';}).length;
   var unsold=(G.players||[]).filter(function(p){return p.status==='unsold';}).length;
   document.getElementById('endSummary').textContent=sold+' sold - '+unsold+' unsold';
+  // Show export button only for host
+  var exportWrap = document.getElementById('exportBtnWrap');
+  if (exportWrap) exportWrap.style.display = (role==='host') ? 'block' : 'none';
   renderFinalList();
+  clearSession();
   showScreen('endScreen');
 }
 function showParticipantEnd(){renderFinalList();showScreen('endScreen');}
@@ -1558,7 +1610,165 @@ function renderFinalList(){
   }).join('');
 }
 
+
+// ══ CONFIRM DIALOG ══
+var confirmCallback = null;
+function confirmAction(type) {
+  var titles = {
+    end: 'End Auction?',
+    exitHost: 'Exit Auction?',
+    exitPart: 'Exit Room?'
+  };
+  var msgs = {
+    end: 'This will end the auction for everyone. You can still export results afterwards.',
+    exitHost: 'You will leave the auctioneer view and return to the landing page. The room will remain active.',
+    exitPart: 'You will leave the room and return to the landing page. Your team will remain in the auction.'
+  };
+  document.getElementById('confirmTitle').textContent = titles[type] || 'Are you sure?';
+  document.getElementById('confirmMsg').textContent = msgs[type] || '';
+  document.getElementById('confirmOverlay').classList.add('show');
+  confirmCallback = type;
+}
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('show');
+  confirmCallback = null;
+}
+function confirmOk() {
+  closeConfirm();
+  if (confirmCallback === 'end') doEndAuction();
+  else if (confirmCallback === 'exitHost') doExitHost();
+  else if (confirmCallback === 'exitPart') doExitParticipant();
+}
+
+// ══ PAUSE / RESUME ══
+function togglePause() {
+  var paused = G.paused || false;
+  pushRoom({ paused: !paused });
+}
+
+function applyPauseState(paused) {
+  var pb = document.getElementById('pauseBtn');
+  var pbar = document.getElementById('pauseBar');
+  var ppbar = document.getElementById('pPauseBar');
+  var bbtn = document.getElementById('bigBidBtn');
+  if (pb) pb.textContent = paused ? '▶ Resume' : '⏸ Pause';
+  if (pbar) pbar.classList.toggle('show', paused);
+  if (ppbar) ppbar.classList.toggle('show', paused);
+  if (bbtn) bbtn.disabled = bbtn.disabled || paused; // keep existing disabled state too
+  if (paused) stopTimer(); // stop timer while paused
+}
+
+// ══ END AUCTION ══
+function doEndAuction() {
+  stopTimer();
+  pushRoom({ auctionEnded: true, paused: false, currentPlayerId: null, currentBid: 0, currentBidderIdx: "NONE" });
+  showEndScreen();
+}
+
+// ══ EXIT ══
+function doExitHost() {
+  stopTimer();
+  if (roomRef) roomRef.off();
+  roomRef = null; roomCode = null; G = {};
+  showScreen('landingScreen');
+}
+function doExitParticipant() {
+  if (roomRef) roomRef.off();
+  roomRef = null; roomCode = null; myTeamIdx = null; myTeamName = null; G = {};
+  showScreen('landingScreen');
+}
+
+// ══ EXPORT CSV ══
+function exportCSV() {
+  var teams = G.teams || {};
+  var rows = [['Team', 'Player', 'Skill', 'Nationality', 'Base Price (L)', 'Sold Price (L)']];
+  Object.keys(teams).sort().forEach(function(k) {
+    var t = teams[k];
+    if (t.players && t.players.length) {
+      t.players.forEach(function(p) {
+        rows.push([t.name, p.name, p.role, p.nat, p.base, p.soldPrice]);
+      });
+    } else {
+      rows.push([t.name, '(no players)', '', '', '', '']);
+    }
+  });
+  var csv = rows.map(function(r) {
+    return r.map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'ipl_auction_results.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ══ SESSION PERSISTENCE (localStorage) ══
+function saveSession() {
+  if (!roomCode) return;
+  var session = {
+    roomCode: roomCode,
+    role: role,
+    myName: myName,
+    myTeamIdx: myTeamIdx,
+    myTeamName: myTeamName,
+    ts: Date.now()
+  };
+  localStorage.setItem('ipl_session', JSON.stringify(session));
+}
+
+function clearSession() {
+  localStorage.removeItem('ipl_session');
+}
+
+function tryRestoreSession() {
+  var raw = localStorage.getItem('ipl_session');
+  if (!raw) return;
+  var session;
+  try { session = JSON.parse(raw); } catch(e) { return; }
+  // Expire after 8 hours
+  if (!session.roomCode || Date.now() - session.ts > 8 * 60 * 60 * 1000) {
+    clearSession(); return;
+  }
+  var ref = db.ref('rooms/' + session.roomCode);
+  ref.once('value', function(snap) {
+    var data = snap.val();
+    if (!data || data.auctionEnded) { clearSession(); return; }
+    roomCode = session.roomCode;
+    role = session.role;
+    myName = session.myName;
+    myTeamIdx = session.myTeamIdx;
+    myTeamName = session.myTeamName;
+    roomRef = ref;
+    G = data;
+    if (role === 'host') {
+      document.getElementById('hostCode').textContent = roomCode;
+      document.getElementById('hostConnBar').className = 'conn-bar cb-live';
+      document.getElementById('hostConnBar').textContent = 'Live - Room: ' + roomCode;
+      showScreen('hostAuctionScreen');
+      renderSortedList();
+      listenAuction();
+      toast('Rejoined as host!');
+    } else {
+      // participant
+      if (myTeamIdx !== null && data.teams) {
+        var t = getTeam(data.teams, myTeamIdx);
+        if (t) {
+          document.documentElement.style.setProperty('--team', t.color);
+          document.getElementById('waitTeamName').textContent = t.name;
+          document.getElementById('pTeamName').textContent = t.name;
+        }
+      }
+      showScreen('waitScreen');
+      listenParticipant();
+      toast('Rejoined as ' + (myTeamName || 'participant') + '!');
+    }
+  });
+}
+
 window.addEventListener('DOMContentLoaded',function(){});
+// Try to restore session after Firebase is ready
+window.addEventListener('load',function(){ setTimeout(tryRestoreSession,600); });
 </script>
 </body>
 </html>
