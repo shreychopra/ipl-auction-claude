@@ -1095,7 +1095,7 @@ function renderActiveBid(data){
   var nb = cb===0 ? p.base : nextBid(cb);
   document.getElementById('hNextBidAmt').textContent=fmtL(nb);
   updateHostCount();
-  var bi=(data.currentBidderIdx!==undefined)?data.currentBidderIdx:-1;
+  var bi=(data.currentBidderIdx!==undefined&&data.currentBidderIdx!==null)?parseInt(data.currentBidderIdx):-1;
   var teams=data.teams||[];
   if(bi>=0 && teams[bi]){
     var t=teams[bi];
@@ -1369,20 +1369,27 @@ function renderParticipantBid(data){
 
 function updatePBidInfo(data){
   var cb=data.currentBid||0;
-  var bi=(data.currentBidderIdx!==undefined)?data.currentBidderIdx:-1;
+  var bi=(data.currentBidderIdx!==undefined && data.currentBidderIdx!==null)?parseInt(data.currentBidderIdx):-1;
+  var myIdx=parseInt(myTeamIdx);
   document.getElementById('pCurrent').textContent = cb===0 ? '—' : fmtL(cb);
   // When no bid yet (cb=0), first bid is at base price
   var p2=(G.players||[]).find(function(x){return x.id===G.currentPlayerId;});
   var nb=(cb===0 && p2) ? p2.base : nextBid(cb);
   document.getElementById('pBidAmt').textContent=nb;
-  var mt=G.teams&&G.teams[myTeamIdx];
+  var teams=data.teams||G.teams||[];
+  var mt=teams[myIdx]||teams[''+myIdx];
   var canAfford=mt&&(mt.budget-mt.spent)>=nb;
-  var iLead=bi===myTeamIdx;
+  var iLead=(bi>=0 && bi===myIdx);
   document.getElementById('bigBidBtn').disabled=!canAfford||iLead;
   var lb=document.getElementById('pLeader');
   if(bi<0){lb.textContent='No bids yet — be first!';lb.className='p-leader';document.getElementById('liveCard').classList.remove('leading');}
   else if(iLead){lb.innerHTML="<strong>You're leading! 🎉</strong>";lb.className='p-leader me';document.getElementById('liveCard').classList.add('leading');}
-  else{lb.innerHTML='Leading: <strong>'+(G.teams&&G.teams[bi]?G.teams[bi].name:'?')+'</strong>';lb.className='p-leader';document.getElementById('liveCard').classList.remove('leading');}
+  else{
+    var leadTeam=G.teams&&(G.teams[bi]||G.teams[''+bi]);
+    lb.innerHTML='Leading: <strong>'+(leadTeam?leadTeam.name:'?')+'</strong>';
+    lb.className='p-leader';
+    document.getElementById('liveCard').classList.remove('leading');
+  }
   document.getElementById('pBidHint').textContent=(!canAfford&&!iLead)?'⚠️ Not enough budget':iLead?"You're the highest bidder!":'Tap to raise the bid';
   if(data.timerEnabled&&data.timerLeft!==undefined){
     var tl=data.timerLeft||0,ts=data.timerSeconds||45;
@@ -1394,14 +1401,19 @@ function updatePBidInfo(data){
 
 function placeBid(){
   if(!roomRef||myTeamIdx===null) return;
+  var myIdx2=parseInt(myTeamIdx);
   roomRef.once('value',function(snap){
     var data=snap.val(); if(!data) return;
     var cb=data.currentBid||0;
+    // Don't allow bidding if already leading
+    var curBi=(data.currentBidderIdx!==undefined&&data.currentBidderIdx!==null)?parseInt(data.currentBidderIdx):-1;
+    if(curBi===myIdx2){toast("You're already the highest bidder!");return;}
     var p0=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
     var nb=(cb===0 && p0) ? p0.base : nextBid(cb);
-    var mt=G.teams&&G.teams[myTeamIdx];
+    var teams=data.teams||[];
+    var mt=teams[myIdx2]||teams[''+myIdx2];
     if(!mt||nb>mt.budget-mt.spent){toast('Not enough budget!');return;}
-    roomRef.update({currentBid:nb,currentBidderIdx:myTeamIdx});
+    roomRef.update({currentBid:nb,currentBidderIdx:myIdx2});
   });
 }
 
