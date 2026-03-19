@@ -474,7 +474,7 @@
           <button class="tpbtn" onclick="pickTimer(60,this)">60s</button>
           <button class="tpbtn" onclick="pickTimer(90,this)">90s</button>
         </div>
-        <div style="margin-top:9px"><label>Custom seconds</label><input type="number" id="customTimer" value="45" min="5" max="300"/></div>
+        <div style="margin-top:9px"><label>Custom seconds</label><input type="number" id="customTimer" value="45" min="5" max="9999"/></div>
       </div>
       <div style="margin-top:16px"><button class="btn btn-gold" onclick="createRoom()">Create Room</button></div>
     </div>
@@ -760,7 +760,10 @@
   <div id="exportBtnWrap" style="display:none;margin-top:16px">
     <button class="btn btn-gold" style="max-width:300px" onclick="exportCSV()">Export CSV</button>
   </div>
-  <button class="btn btn-ghost" style="margin-top:12px;max-width:300px" onclick="showScreen('landingScreen')">New Auction</button>
+  <a href="./fantasy.html" style="display:block;max-width:300px;margin-top:12px;text-decoration:none">
+    <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
+  </a>
+  <button class="btn btn-ghost" style="margin-top:8px;max-width:300px" onclick="showScreen('landingScreen')">New Auction</button>
 </div>
 
 <!-- SOLD OVERLAY (host) -->
@@ -1326,6 +1329,11 @@ function joinTeam(){
         document.getElementById('waitTeamName').textContent=tName;
         document.getElementById('pTeamName').textContent=tName;
         saveSession();
+        // Lock the team select screen so they can't rejoin
+        var btn=document.getElementById('joinTeamBtn');
+        var inp=document.getElementById('myTeamName');
+        if(btn){ btn.disabled=true; btn.textContent='Waiting for host to start...'; }
+        if(inp){ inp.disabled=true; }
       });
     });
 }
