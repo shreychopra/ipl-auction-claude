@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>IPL Auction 2026</title>
+  <title>IPL 2026 Mock Auction</title>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#08090d;--surface:#0f1117;--surface2:#161a24;--surface3:#1d2230;
+      --bg:#070a12;--surface:#0d1120;--surface2:#121928;--surface3:#182030;
       --border:#252d3d;--border2:#2e3a52;
       --gold:#f5b800;--gold2:#ffd84d;--golddim:rgba(245,184,0,.12);
-      --blue:#4f8ef7;--bluedim:rgba(79,142,247,.12);
+      --blue:#5091CD;--bluedim:rgba(80,145,205,.14);--ipl-dark:#1D3D8D;--ipl-mid:#5091CD;
       --green:#00d68f;--greendim:rgba(0,214,143,.1);
       --red:#ff4566;--reddim:rgba(255,69,102,.12);
       --text:#eef0f8;--text2:#7c8ba1;--text3:#404d63;
@@ -31,9 +31,9 @@
 
     /* ── HERO ── */
     .page-hero{padding:44px 24px 28px;text-align:center;position:relative;overflow:hidden;flex-shrink:0;
-      background:linear-gradient(180deg,#0d1322 0%,var(--bg) 100%)}
+      background:linear-gradient(180deg,#0e1a3a 0%,#0a0f1e 60%,var(--bg) 100%)}
     .page-hero::before{content:'';position:absolute;inset:0;
-      background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(245,184,0,.1) 0%,transparent 70%)}
+      background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(29,61,141,.35) 0%,rgba(80,145,205,.1) 50%,transparent 70%)}
     .page-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
       background:linear-gradient(90deg,transparent,var(--border2),transparent)}
     .page-hero .icon{font-size:44px;display:block;margin-bottom:10px;position:relative;
@@ -83,8 +83,8 @@
     .btn-gold{background:linear-gradient(135deg,#f5b800,#e09800);color:#0a0800;
       box-shadow:0 4px 20px rgba(245,184,0,.25)}
     .btn-gold:hover{box-shadow:0 4px 28px rgba(245,184,0,.4)}
-    .btn-blue{background:linear-gradient(135deg,#4f8ef7,#2b6de0);color:#fff;
-      box-shadow:0 4px 20px rgba(79,142,247,.25)}
+    .btn-blue{background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;
+      box-shadow:0 4px 20px rgba(29,61,141,.4)}
     .btn-green{background:linear-gradient(135deg,#00d68f,#00b87a);color:#040f0a;
       box-shadow:0 4px 20px rgba(0,214,143,.2)}
     .btn-red{background:var(--reddim);color:var(--red);border:1px solid rgba(255,69,102,.3)}
@@ -115,7 +115,7 @@
     .tpbtn.on,.tpbtn:active{background:var(--gold);color:#0a0800;border-color:var(--gold)}
 
     /* ── ROOM CODE ── */
-    .rc-card{background:linear-gradient(145deg,#111827,#0c1019);
+    .rc-card{background:linear-gradient(145deg,#0e1e4a,#091530);
       border:1px solid var(--border2);border-radius:var(--radius);
       padding:28px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden}
     .rc-card::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);
@@ -141,8 +141,8 @@
       text-align:center;flex-shrink:0}
     .cb-connecting{background:rgba(245,184,0,.08);color:var(--gold);
       border-bottom:1px solid rgba(245,184,0,.15)}
-    .cb-live{background:rgba(0,214,143,.06);color:var(--green);
-      border-bottom:1px solid rgba(0,214,143,.15)}
+    .cb-live{background:rgba(29,61,141,.15);color:var(--blue);
+      border-bottom:1px solid rgba(80,145,205,.25)}
     .cb-error{background:var(--reddim);color:var(--red);border-bottom:1px solid rgba(255,69,102,.2)}
 
     /* ── TABS ── */
@@ -157,7 +157,7 @@
     .tab-pane.on{display:block}
 
     /* ── AUCTION HEADER ── */
-    .a-bar{background:var(--surface);border-bottom:1px solid var(--border);
+    .a-bar{background:linear-gradient(135deg,#0e1e4a,#0d1120);border-bottom:1px solid rgba(80,145,205,.2);
       padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
     .a-bar h2{font-family:var(--font-display);font-size:18px;font-weight:700;
       letter-spacing:.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -172,7 +172,7 @@
     .plyr-card{margin:10px;background:var(--surface);
       border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
     .plyr-banner{padding:16px;display:flex;align-items:center;gap:14px;
-      background:linear-gradient(135deg,#111827 0%,#0d1118 100%);position:relative}
+      background:linear-gradient(135deg,#0e1e4a 0%,#091228 100%);position:relative}
     .plyr-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
       background:linear-gradient(90deg,transparent,var(--border),transparent)}
     .plyr-avi{width:64px;height:64px;border-radius:50%;background:var(--surface3);
@@ -316,8 +316,8 @@
       text-align:right;white-space:nowrap}
 
     /* ── PARTICIPANT BID SCREEN ── */
-    .bid-hdr{padding:10px 14px;background:var(--surface);
-      border-bottom:1px solid var(--border);display:flex;align-items:center;
+    .bid-hdr{padding:10px 14px;background:linear-gradient(135deg,#0e1e4a,#0d1120);
+      border-bottom:1px solid rgba(80,145,205,.2);display:flex;align-items:center;
       justify-content:space-between;flex-shrink:0}
     .bid-hdr-team{font-family:var(--font-display);font-size:17px;font-weight:700;
       color:var(--team);letter-spacing:.5px}
@@ -377,7 +377,7 @@
       60%{transform:rotate(8deg) scale(1.1)}100%{transform:rotate(0) scale(1);opacity:1}}
 
     /* ── WAIT SCREEN ── */
-    #waitScreen{align-items:center;justify-content:center;text-align:center;padding:36px 22px}
+    #waitScreen{align-items:center;justify-content:center;text-align:center;padding:36px 22px;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(29,61,141,.15) 0%,transparent 60%)}
     .wait-pulse{font-size:56px;animation:wp 2.5s ease-in-out infinite}
     @keyframes wp{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
     #waitScreen h2{font-family:var(--font-display);font-size:28px;font-weight:700;
@@ -446,8 +446,8 @@
 <div id="landingScreen" class="screen active">
   <div class="page-hero">
     <span class="icon">🏏</span>
-    <h1>IPL Auction</h1>
-    <p>Friend Edition &nbsp;·&nbsp; 2026</p>
+    <h1>IPL 2026</h1>
+    <p>Mock Auction</p>
   </div>
   <div class="body">
     <div class="card">
@@ -480,16 +480,6 @@
     </div>
     <div class="divider"><span>OR</span></div>
     <div class="card">
-      <div class="card-title">HOST — REJOIN ROOM</div>
-      <label>Your Name</label>
-      <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
-      <div class="gap"></div>
-      <label>Room Code</label>
-      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
-      <div style="margin-top:16px"><button class="btn btn-red" onclick="rejoinAsHost()" style="background:linear-gradient(135deg,#ff4c6a,#c0003a);color:#fff">Rejoin as Host</button></div>
-    </div>
-    <div class="divider"><span>OR</span></div>
-    <div class="card">
       <div class="card-title">JOIN A ROOM</div>
       <label>Your Name</label>
       <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
@@ -500,6 +490,17 @@
     </div>
   </div>
 </div>
+    <div class="divider"><span>OR</span></div>
+    <div class="card">
+      <div class="card-title">HOST — REJOIN ROOM</div>
+      <label>Your Name</label>
+      <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
+      <div class="gap"></div>
+      <label>Room Code</label>
+      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
+      <div style="margin-top:16px"><button class="btn btn-red" onclick="rejoinAsHost()" style="background:linear-gradient(135deg,#ff4c6a,#c0003a);color:#fff">Rejoin as Host</button></div>
+    </div>
+    
 
 <!-- ════ LOBBY ════ -->
 <div id="lobbyScreen" class="screen">
@@ -765,7 +766,7 @@
 
 <!-- SOLD OVERLAY (host) -->
 <div class="overlay ov-sold" id="soldOverlay">
-  <div class="hammer">🏏</div>
+  <div class="hammer">🔨</div>
   <h2 style="color:var(--gold)">SOLD!</h2>
   <div class="ov-player" id="ovPlayer">-</div>
   <div class="ov-to">sold to <strong id="ovTeam" style="color:var(--gold)">-</strong></div>
@@ -784,7 +785,7 @@
 
 <!-- SOLD FLASH (participants) -->
 <div class="overlay ov-sold" id="soldFlash" style="pointer-events:none">
-  <div class="hammer">🏏</div>
+  <div class="hammer">🔨</div>
   <h2 style="color:var(--gold)">SOLD!</h2>
   <div class="ov-player" id="fPlayer">-</div>
   <div class="ov-to">to <strong id="fTeam" style="color:var(--gold)">-</strong></div>
