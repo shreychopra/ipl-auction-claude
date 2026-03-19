@@ -490,15 +490,24 @@
     </div>
   </div>
 </div>
-    <div class="divider"><span>OR</span></div>
-    <div class="card">
-      <div class="card-title">HOST — REJOIN ROOM</div>
-      <label>Your Name</label>
-      <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
-      <div class="gap"></div>
-      <label>Room Code</label>
-      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
-      <div style="margin-top:16px"><button class="btn btn-red" onclick="rejoinAsHost()" style="background:linear-gradient(135deg,#ff4c6a,#c0003a);color:#fff">Rejoin as Host</button></div>
+    <div style="text-align:center;margin:4px 0 8px">
+      <button onclick="toggleRejoin()" id="rejoinToggleBtn"
+        style="background:none;border:none;color:var(--text3);font-size:12px;
+        font-family:var(--font-body);cursor:pointer;letter-spacing:.3px;
+        text-decoration:underline;text-underline-offset:3px;padding:4px 8px">
+        Rejoining as host?
+      </button>
+    </div>
+    <div id="rejoinCard" style="display:none">
+      <div class="card">
+        <div class="card-title">HOST — REJOIN ROOM</div>
+        <label>Your Name</label>
+        <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
+        <div class="gap"></div>
+        <label>Room Code</label>
+        <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
+        <div style="margin-top:16px"><button class="btn btn-blue" onclick="rejoinAsHost()">Rejoin as Host</button></div>
+      </div>
     </div>
     
 
@@ -1199,6 +1208,15 @@ function listenLobby(){
       }).join('');
     }
   });
+}
+
+// --- TOGGLE REJOIN CARD ---
+function toggleRejoin(){
+  var card = document.getElementById('rejoinCard');
+  var btn = document.getElementById('rejoinToggleBtn');
+  var isOpen = card.style.display !== 'none';
+  card.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? 'Rejoining as host?' : 'Hide rejoin';
 }
 
 // --- REJOIN AS HOST ---
@@ -2018,10 +2036,14 @@ function doExitHost() {
   roomRef = null; roomCode = null; G = {};
   showScreen('landingScreen');
   if (savedName) document.getElementById('hostName').value = savedName;
-  // Pre-fill the rejoin fields
+  // Pre-fill and auto-show the rejoin card
   if (savedName) document.getElementById('hostRejoinName').value = savedName;
   if (savedCode) document.getElementById('hostRejoinCode').value = savedCode;
-  if (savedCode) toast('Use "Rejoin as Host" with code: ' + savedCode, 5000);
+  var rc = document.getElementById('rejoinCard');
+  var rb = document.getElementById('rejoinToggleBtn');
+  if (rc) { rc.style.display = 'block'; }
+  if (rb) { rb.textContent = 'Hide rejoin'; }
+  if (savedCode) toast('Rejoin using the section below', 3500);
 }
 function doExitParticipant() {
   if (roomRef) roomRef.off();
@@ -2096,6 +2118,8 @@ function tryRestoreSession() {
     if (session.role === 'host') {
       if (session.myName) document.getElementById('hostRejoinName').value = session.myName;
       if (session.roomCode) document.getElementById('hostRejoinCode').value = session.roomCode;
+      var rc2=document.getElementById('rejoinCard');var rb2=document.getElementById('rejoinToggleBtn');
+      if(rc2){rc2.style.display='block';}if(rb2){rb2.textContent='Hide rejoin';}
     } else {
       if (session.myName) document.getElementById('participantName').value = session.myName;
       if (session.roomCode) document.getElementById('roomCode').value = session.roomCode;
