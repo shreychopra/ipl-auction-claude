@@ -1025,9 +1025,45 @@ function joinRoom(){
     var data=snap.val();
     if(!data){toast('Room not found! Check the code.');return;}
     if(data.auctionEnded){toast('This auction has already ended.');return;}
-    if(data.auctionStarted){toast('Auction already in progress.');return;}
+
     roomCode=code; role='participant'; myName=pName;
     roomRef=ref; G=data;
+
+    // If auction already started, check if this person was already a participant
+    if(data.auctionStarted){
+      var existingPart = null;
+      var existingIdx = null;
+      if(data.participants){
+        var parts = Object.values(data.participants);
+        for(var i=0;i<parts.length;i++){
+          if(parts[i].name && parts[i].name.toLowerCase()===pName.toLowerCase()){
+            existingPart = parts[i];
+            existingIdx = parts[i].teamIdx;
+            break;
+          }
+        }
+      }
+      if(existingPart !== null && existingIdx !== null){
+        // Rejoin with original team
+        myTeamIdx = existingIdx;
+        myTeamName = existingPart.teamName;
+        var t = getTeam(data.teams, myTeamIdx);
+        if(t){
+          document.documentElement.style.setProperty('--team', t.color);
+          document.getElementById('waitTeamName').textContent = t.name;
+          document.getElementById('pTeamName').textContent = t.name;
+        }
+        showScreen('waitScreen');
+        listenParticipant();
+        saveSession();
+        toast('Welcome back, '+pName+'! Rejoined as '+(myTeamName||'your team')+'.');
+      } else {
+        toast('Auction is in progress and you were not part of this room.');
+      }
+      return;
+    }
+
+    // Auction not started yet — go to team selection
     document.getElementById('tsRoomName').textContent=data.roomName;
     document.getElementById('tsRoomCode').textContent=code;
     showScreen('teamSelectScreen');
