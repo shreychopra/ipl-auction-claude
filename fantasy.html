@@ -1140,7 +1140,14 @@ function processMatch(matchId,desc,mNum,done,retryCount){
       done();return;
     }
     // Match is confirmed complete - proceed with full scorecard parse
-    var innings=data.scoreCard||data.inningsScoreList||[];
+    var innings=(data.scoreCard||data.inningsScoreList||[]).filter(function(inn){
+      // Exclude super over innings
+      var label=(inn.inningsId||inn.innId||inn.batTeamDetails&&inn.batTeamDetails.innId||0);
+      var isSuperOver=(inn.isSuperOver||inn.superOver||
+        (typeof label==='string'&&label.toLowerCase().includes('super'))||
+        parseInt(label)>4); // regular innings are 1-4 max (2 per team + follow-on)
+      return !isSuperOver;
+    });
     if(!innings.length){
       logSync('No innings data for completed match '+desc+' — unexpected. Retrying.','warn');
       done();return;
