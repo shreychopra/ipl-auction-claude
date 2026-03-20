@@ -233,12 +233,17 @@
   <div class="tabs">
     <div class="tab on" id="tab-lb" onclick="switchTab('lb')">Leaderboard</div>
     <div class="tab" id="tab-sq" onclick="switchTab('sq')">Squads</div>
-    <div class="tab" id="tab-sy" onclick="switchTab('sy')">Auto Sync</div>
+    <div class="tab" id="tab-sy" onclick="switchTab('sy')" style="display:none">Auto Sync</div>
     <div class="tab" id="tab-hi" onclick="switchTab('hi')">History</div>
   </div>
 
   <!-- LEADERBOARD PANE -->
   <div class="pane on" id="pane-lb">
+    <div id="syncBanner" style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);
+      font-size:12px;color:var(--text3);display:flex;align-items:center;justify-content:space-between">
+      <span id="syncBannerText">Points data loading...</span>
+      <span style="font-size:10px;color:var(--text3)">Auto-updated daily</span>
+    </div>
     <div class="lb-hdr"><div>#</div><div>Team</div><div style="text-align:right">Match</div><div style="text-align:right">Total</div></div>
     <div id="lbList"></div>
   </div>
@@ -258,6 +263,7 @@
         <div id="syncStatus" style="font-size:11px;color:var(--text3);margin-top:2px">Syncs completed IPL 2026 matches daily</div>
       </div>
       <button class="btn btn-blue btn-sm" id="syncNowBtn" style="display:none" onclick="runSync(true)">Sync Now</button>
+      <!-- syncNowAdminBtn is in the admin nav bar -->
     </div>
     <div id="unmatchedSection" style="display:none;padding:10px;border-bottom:1px solid var(--border)">
       <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2px;
@@ -291,8 +297,9 @@
 <!-- ADMIN PANEL -->
 <div class="admin-ov" id="adminPanel">
   <div class="admin-nav">
-    <button onclick="closeAdmin()" class="nav-back">← Back</button>
+    <button onclick="closeAdmin()" class="nav-back" id="adminBackBtn">← Back</button>
     <div style="font-family:var(--fd);font-size:18px;font-weight:700;flex:1">Admin — All Rooms</div>
+    <button class="btn btn-blue btn-sm" id="syncNowAdminBtn" onclick="runSync(true)">Sync Now</button>
     <button onclick="loadAllRooms()" class="nav-back" style="color:var(--gold)">Refresh</button>
   </div>
   <div style="padding:12px" id="adminList"></div>
@@ -318,6 +325,7 @@ var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
 var RAPIDAPI_KEY = '2a8016ce27msh4d7ad33855139d0p1925dajsnae86c2e72164';
+var IS_ADMIN = window.location.search.includes('admin=1');
 var IPL_SCHEDULE = [
   {num:1,  id:"149618", label:"M1 — RCB vs SRH",  date:"2026-03-22"},
   {num:2,  id:"149629", label:"M2 — MI vs KKR",   date:"2026-03-23"},
@@ -425,9 +433,10 @@ function initApp(){
   renderHistory();
   showScreen('mainScreen');
   // Check admin param
-  if(window.location.search.includes('admin=1')){
+  if(IS_ADMIN){
     document.getElementById('adminBtn').style.display='block';
-    document.getElementById('syncNowBtn').style.display='flex';
+    var snb=document.getElementById('syncNowBtn');if(snb)snb.style.display='flex';
+    document.getElementById('tab-sy').style.display='block';
   }
   // Load synced IDs then auto-sync
   loadSyncedIds();
@@ -464,6 +473,20 @@ function teamMatchPts(idx,mNum){
 }
 
 function renderLeaderboard(){
+  // Update sync banner with last synced match
+  var banner = document.getElementById('syncBannerText');
+  if(banner){
+    var synced = Object.keys(G.matchData).filter(function(k){return k.startsWith('match');})
+      .map(function(k){return parseInt(k.replace('match',''));});
+    if(synced.length){
+      var last = Math.max.apply(null,synced);
+      var mk = 'match'+last;
+      var label = (G.matchLabels&&G.matchLabels[mk]) || ('M'+last);
+      banner.textContent = 'Points synced up to: '+label;
+    } else {
+      banner.textContent = 'No match data yet — first sync pending';
+    }
+  }
   var keys=Object.keys(G.teams).sort(function(a,b){return parseInt(a)-parseInt(b);});
   var rows=keys.map(function(k){
     var t=G.teams[k];
@@ -888,7 +911,9 @@ function loadSyncedIds(){
 
 // ── ADMIN ──
 function openAdmin(){document.getElementById('adminPanel').style.display='block';loadAllRooms();}
-function closeAdmin(){document.getElementById('adminPanel').style.display='none';}
+function closeAdmin(){
+  if(!IS_ADMIN) document.getElementById('adminPanel').style.display='none';
+}
 function loadAllRooms(){
   var c=document.getElementById('adminList');
   c.innerHTML='<div class="empty">Loading...</div>';
@@ -943,6 +968,18 @@ function loadAllRooms(){
 
 // ── SESSION RESTORE ──
 window.addEventListener('load',function(){
+  if(IS_ADMIN){
+    document.getElementById('adminPanel').style.display='block';
+    document.getElementById('mainNav').style.display='flex';
+    document.getElementById('adminBtn').style.display='block';
+    document.getElementById('adminBackBtn').style.display='none';
+    document.getElementById('navSub').textContent='Admin Mode';
+    // Need firebase for sync - init with a dummy room ref pointing to root
+    fantasyRef = db.ref('fantasy/_admin_sync');
+    loadSyncedIds();
+    loadAllRooms();
+    return;
+  }
   var code=localStorage.getItem('fl_code');
   var team=localStorage.getItem('fl_team');
   if(code) document.getElementById('setupCode').value=code;
