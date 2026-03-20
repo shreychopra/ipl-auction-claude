@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="IPL Auction">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>IPL 2026 Mock Auction</title>
+  <title>IPL 2026 Fantasy League</title>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -16,857 +16,354 @@
     :root{
       --bg:#070a12;--surface:#0d1120;--surface2:#121928;--surface3:#182030;
       --border:#252d3d;--border2:#2e3a52;
-      --gold:#f5b800;--gold2:#ffd84d;--golddim:rgba(245,184,0,.12);
-      --blue:#5091CD;--bluedim:rgba(80,145,205,.14);--ipl-dark:#1D3D8D;--ipl-mid:#5091CD;
-      --green:#00d68f;--greendim:rgba(0,214,143,.1);
-      --red:#ff4566;--reddim:rgba(255,69,102,.12);
+      --gold:#f5b800;--golddim:rgba(245,184,0,.12);
+      --blue:#5091CD;--ipl-dark:#1D3D8D;--bluedim:rgba(80,145,205,.14);
+      --green:#00d68f;--red:#ff4566;--reddim:rgba(255,69,102,.12);
       --text:#eef0f8;--text2:#7c8ba1;--text3:#404d63;
-      --team:#f5b800;--radius:12px;--rsm:8px;
-      --font-display:'Rajdhani',sans-serif;
-      --font-body:'Space Grotesk',sans-serif;
-      --font-num:'Bebas Neue',sans-serif;
+      --radius:12px;--rsm:8px;
+      --fd:\'Rajdhani\',sans-serif;--fb:\'Space Grotesk\',sans-serif;--fn:\'Bebas Neue\',sans-serif;
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden}
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);overflow-x:hidden}
     ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
-
-    .screen{display:none;min-height:100dvh;flex-direction:column;animation:fadeIn .25s ease}
+    .nav{background:linear-gradient(135deg,#0e1e4a,#0d1120);border-bottom:1px solid rgba(80,145,205,.2);
+      padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+    .nav a,.nav-back{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);
+      padding:6px 12px;font-family:var(--fd);font-size:12px;font-weight:600;color:var(--text2);
+      cursor:pointer;letter-spacing:1px;text-decoration:none;transition:all .15s}
+    .nav-title{font-family:var(--fd);font-size:18px;font-weight:700;flex:1}
+    .nav-sub{font-size:11px;color:var(--text3)}
+    .mpill{font-family:var(--fn);font-size:14px;background:var(--golddim);border:1px solid rgba(245,184,0,.3);
+      color:var(--gold);padding:4px 12px;border-radius:99px}
+    .screen{display:none;min-height:100dvh;flex-direction:column}
     .screen.active{display:flex}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-    /* ── HERO ── */
-    .page-hero{padding:44px 24px 28px;text-align:center;position:relative;overflow:hidden;flex-shrink:0;
-      background:linear-gradient(180deg,#0e1a3a 0%,#0a0f1e 60%,var(--bg) 100%)}
-    .page-hero::before{content:'';position:absolute;inset:0;
-      background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(29,61,141,.35) 0%,rgba(80,145,205,.1) 50%,transparent 70%)}
-    .page-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-      background:linear-gradient(90deg,transparent,var(--border2),transparent)}
-    .page-hero .icon{font-size:44px;display:block;margin-bottom:10px;position:relative;
-      filter:drop-shadow(0 0 24px rgba(245,184,0,.55))}
-    .page-hero h1{font-family:var(--font-display);font-size:clamp(38px,10vw,56px);font-weight:700;
-      letter-spacing:2px;color:var(--gold);line-height:1;position:relative}
-    .page-hero p{color:var(--text3);font-size:11px;margin-top:6px;letter-spacing:2px;
+    .hero{padding:40px 20px 28px;text-align:center;position:relative;overflow:hidden;
+      background:linear-gradient(180deg,#0e1a3a,var(--bg))}
+    .hero::before{content:\'\';position:absolute;inset:0;
+      background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(29,61,141,.3),transparent 70%)}
+    .hero h1{font-family:var(--fd);font-size:clamp(32px,8vw,48px);font-weight:700;
+      letter-spacing:2px;color:var(--gold);position:relative}
+    .hero p{color:var(--text3);font-size:12px;margin-top:6px;letter-spacing:2px;
       text-transform:uppercase;position:relative}
-    .role-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;
-      padding:4px 12px;border-radius:99px;letter-spacing:1.5px;margin-top:10px;
-      text-transform:uppercase;position:relative}
-    .badge-host{background:var(--reddim);border:1px solid rgba(255,69,102,.35);color:var(--red)}
-    .badge-part{background:var(--bluedim);border:1px solid rgba(79,142,247,.35);color:var(--blue)}
-
-    /* ── LAYOUT ── */
-    .body{padding:16px 16px 32px;flex:1;overflow-y:auto}
+    .body{padding:16px;flex:1;overflow-y:auto}
     .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
       padding:18px;margin-bottom:12px}
-    .card-title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:2.5px;
-      text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:7px}
-    .card-title svg{opacity:.6}
-    label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500;letter-spacing:.3px}
-    input[type=text],input[type=number],select{
-      width:100%;background:var(--surface2);border:1px solid var(--border);
-      border-radius:var(--rsm);color:var(--text);font-size:14px;
-      font-family:var(--font-body);padding:11px 14px;outline:none;
-      transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
-    input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--golddim)}
+    .card-title{font-family:var(--fd);font-size:11px;font-weight:600;letter-spacing:2.5px;
+      text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+    label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+    input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);
+      color:var(--text);font-size:14px;font-family:var(--fb);padding:11px 14px;outline:none;
+      transition:border-color .2s;-webkit-appearance:none}
+    input:focus{border-color:var(--gold)}
     input.upper{text-transform:uppercase;letter-spacing:6px;font-weight:700;font-size:20px;
-      text-align:center;font-family:var(--font-num)}
-    select option{background:var(--surface2)}
+      text-align:center;font-family:var(--fn)}
     .gap{height:12px}
-    .divider{height:1px;background:var(--border);margin:18px 0;position:relative}
-    .divider span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-      background:var(--bg);padding:0 12px;font-size:11px;color:var(--text3);
-      font-weight:600;letter-spacing:2px;text-transform:uppercase}
-
-    /* ── BUTTONS ── */
-    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
-      padding:14px 18px;border:none;border-radius:var(--radius);
-      font-family:var(--font-display);font-size:15px;font-weight:700;
-      letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;
-      transition:all .15s;position:relative;overflow:hidden}
-    .btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .15s}
-    .btn:active::after{background:rgba(255,255,255,.08)}
+    .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:14px;border:none;
+      border-radius:var(--radius);font-family:var(--fd);font-size:15px;font-weight:700;
+      letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
+      text-decoration:none}
     .btn:active{transform:scale(.98)}
     .btn-gold{background:linear-gradient(135deg,#f5b800,#e09800);color:#0a0800;
       box-shadow:0 4px 20px rgba(245,184,0,.25)}
-    .btn-gold:hover{box-shadow:0 4px 28px rgba(245,184,0,.4)}
-    .btn-blue{background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;
-      box-shadow:0 4px 20px rgba(29,61,141,.4)}
-    .btn-green{background:linear-gradient(135deg,#00d68f,#00b87a);color:#040f0a;
-      box-shadow:0 4px 20px rgba(0,214,143,.2)}
-    .btn-red{background:var(--reddim);color:var(--red);border:1px solid rgba(255,69,102,.3)}
-    .btn-red:hover{background:rgba(255,69,102,.2)}
+    .btn-blue{background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff}
     .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
-    .btn-ghost:hover{border-color:var(--border2);background:var(--surface3)}
-    .btn-sm{padding:8px 14px;font-size:12px;border-radius:var(--rsm);width:auto}
-    .color-opt{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
-    .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
-    .btn:disabled{opacity:.3;pointer-events:none;box-shadow:none}
-
-    /* ── TOGGLE ── */
-    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
-    .toggle-lbl{font-size:14px;color:var(--text);font-weight:500}
-    .toggle-sub{font-size:11px;color:var(--text3);margin-top:2px}
-    .toggle{position:relative;width:44px;height:26px;flex-shrink:0}
-    .toggle input{opacity:0;width:0;height:0}
-    .tslider{position:absolute;inset:0;background:var(--surface3);border:1px solid var(--border);
-      border-radius:99px;transition:.25s;cursor:pointer}
-    .tslider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;
-      background:var(--text3);top:3px;left:3px;transition:.25s}
-    .toggle input:checked+.tslider{background:var(--gold);border-color:var(--gold)}
-    .toggle input:checked+.tslider::before{transform:translateX(18px);background:#fff}
-    .textra{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-    .textra.show{display:block}
-    .tprow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-    .tpbtn{flex:1;min-width:40px;background:var(--surface2);border:1px solid var(--border);
-      color:var(--text2);font-family:var(--font-display);font-size:13px;font-weight:600;
-      padding:8px 4px;border-radius:var(--rsm);cursor:pointer;text-align:center;transition:all .15s}
-    .tpbtn.on,.tpbtn:active{background:var(--gold);color:#0a0800;border-color:var(--gold)}
-
-    /* ── ROOM CODE ── */
-    .rc-card{background:linear-gradient(145deg,#152454,#0d1a3a);
-      border:1px solid var(--border2);border-radius:var(--radius);
-      padding:28px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden}
-    .rc-card::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);
-      width:200px;height:200px;background:radial-gradient(circle,rgba(245,184,0,.08),transparent 70%)}
-    .rc-lbl{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
-      color:var(--text3);margin-bottom:10px}
-    .rc-code{font-family:var(--font-num);font-size:64px;letter-spacing:12px;color:#fff;
-      line-height:1;filter:drop-shadow(0 0 24px rgba(245,184,0,.7));position:relative;font-weight:400}
-    .rc-sub{font-size:12px;color:var(--text3);margin-top:10px}
-
-    /* ── PARTICIPANTS LIST ── */
-    .plist{margin-top:12px;display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto}
-    .pitem{display:flex;align-items:center;gap:10px;padding:9px 12px;
-      background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border)}
-    .pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .pname{font-size:13px;font-weight:600;flex:1}
-    .pteam{font-size:11px;color:var(--text3)}
-    .wdots::after{content:'...';animation:dots 1.2s steps(4,end) infinite}
-    @keyframes dots{0%,to{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
-
-    /* ── CONNECTION BAR ── */
-    .conn-bar{padding:6px 16px;font-size:11px;font-weight:600;letter-spacing:.5px;
-      text-align:center;flex-shrink:0}
-    .cb-connecting{background:rgba(245,184,0,.08);color:var(--gold);
-      border-bottom:1px solid rgba(245,184,0,.15)}
-    .cb-live{background:rgba(29,61,141,.15);color:var(--blue);
-      border-bottom:1px solid rgba(80,145,205,.25)}
-    .cb-error{background:var(--reddim);color:var(--red);border-bottom:1px solid rgba(255,69,102,.2)}
-
-    /* ── TABS ── */
+    .btn-green{background:linear-gradient(135deg,#00d68f,#00b87a);color:#040f0a}
+    .btn-red{background:var(--reddim);color:var(--red);border:1px solid rgba(255,69,102,.3)}
+    .btn-sm{padding:7px 14px;font-size:12px;border-radius:var(--rsm);width:auto}
     .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
-    .tab{flex:1;padding:12px 6px;font-size:10px;font-weight:600;letter-spacing:1.5px;
-      text-transform:uppercase;color:var(--text3);cursor:pointer;
-      border-bottom:2px solid transparent;transition:all .2s;text-align:center;
-      white-space:nowrap;font-family:var(--font-display)}
+    .tab{flex:1;padding:12px 4px;font-size:10px;font-weight:600;letter-spacing:1.5px;
+      text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+      transition:all .2s;text-align:center;font-family:var(--fd)}
     .tab.on{color:var(--gold);border-bottom-color:var(--gold)}
-
-    .tab-pane{display:none;flex:1;overflow-y:auto}
-    .tab-pane.on{display:block}
-
-    /* ── AUCTION HEADER ── */
-    .a-bar{background:linear-gradient(135deg,#0e1e4a,#0d1120);border-bottom:1px solid rgba(80,145,205,.2);
-      padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
-    .a-bar h2{font-family:var(--font-display);font-size:18px;font-weight:700;
-      letter-spacing:.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pbadge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:99px;
-      white-space:nowrap;letter-spacing:.5px;font-family:var(--font-display)}
-    .pb-gold{background:var(--gold);color:#0a0800}
-    .pb-live{background:var(--blue);color:#fff}
-    .pb-code{background:var(--surface2);color:var(--text2);border:1px solid var(--border);
-      font-family:var(--font-num);font-size:13px;letter-spacing:3px}
-
-    /* ── PLAYER CARD ── */
-    .plyr-card{margin:10px;background:var(--surface);
-      border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-    .plyr-banner{padding:16px;display:flex;align-items:center;gap:14px;
-      background:linear-gradient(135deg,#0e1e4a 0%,#091228 100%);position:relative}
-    .plyr-banner::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-      background:linear-gradient(90deg,transparent,var(--border),transparent)}
-    .plyr-avi{width:64px;height:64px;border-radius:50%;background:var(--surface3);
-      display:flex;align-items:center;justify-content:center;font-size:22px;
-      flex-shrink:0;border:2px solid var(--border2);overflow:hidden;position:relative;
-      box-shadow:0 0 0 4px rgba(245,184,0,.1)}
-    .plyr-avi img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-    .plyr-name{font-family:var(--font-display);font-size:22px;font-weight:700;
-      letter-spacing:.3px;line-height:1.1}
-    .pmeta{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
-    .pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;
-      letter-spacing:.5px;text-transform:uppercase}
-    .pill-role{background:var(--bluedim);color:var(--blue);border:1px solid rgba(79,142,247,.25)}
-    .pill-nat{background:rgba(245,184,0,.08);color:var(--gold2);
-      border:1px solid rgba(245,184,0,.2)}
-
-    /* price row */
-    .price-row{display:flex;padding:14px 16px;gap:1px}
-    .price-box{flex:1;text-align:center;padding:4px 0}
-    .price-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-      color:var(--text3);margin-bottom:3px;font-family:var(--font-display)}
-    .price-val{font-family:var(--font-num);font-size:30px;color:var(--gold);line-height:1}
-    .price-val.big{font-size:40px;color:var(--green)}
-    .price-sep{width:1px;background:var(--border);margin:4px 8px}
-    .leader-row{text-align:center;padding:4px 16px 14px;font-size:13px;color:var(--text2)}
-    .leader-row strong{color:var(--text);font-weight:600}
-
-    /* timer */
-    .twrap{padding:0 16px 14px}
-    .ttop{display:flex;justify-content:space-between;margin-bottom:6px;font-size:10px;
-      font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
-    .tnum{font-family:var(--font-num);font-size:24px;color:var(--text)}
-    .tnum.urgent{color:var(--red);animation:pulse .5s infinite alternate}
-    @keyframes pulse{from{opacity:1}to{opacity:.3}}
-    .ttrack{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden}
-    .tbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));
-      border-radius:99px;transition:width 1.05s linear}
-    .tbar.urgent{background:var(--red)}
-
-    /* bid feed */
-    .bfeed-wrap{padding:0 10px 10px}
-    .bfeed-lbl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
-      text-transform:uppercase;margin-bottom:6px;font-family:var(--font-display)}
-    .bfeed{display:flex;flex-direction:column;gap:5px}
-    .bfeed-item{display:flex;align-items:center;padding:8px 12px;
-      background:var(--surface2);border-radius:var(--rsm);
-      border-left:3px solid var(--gold);border:1px solid var(--border);
-      border-left:3px solid var(--gold)}
-    .bfeed-team{font-size:13px;font-weight:600;flex:1}
-    .bfeed-amt{font-family:var(--font-num);font-size:20px;color:var(--green)}
-
-    /* category filter */
-    .cat-row{padding:8px 10px;display:flex;gap:5px;overflow-x:auto;flex-shrink:0;
-      background:var(--surface);border-bottom:1px solid var(--border)}
-    .cat-row::-webkit-scrollbar{display:none}
-    .cat-btn{flex-shrink:0;padding:5px 12px;border-radius:6px;font-size:11px;
-      font-weight:600;letter-spacing:.5px;background:var(--surface2);
-      border:1px solid var(--border);color:var(--text2);cursor:pointer;
-      transition:all .15s;white-space:nowrap;font-family:var(--font-display)}
-    .cat-btn.on{background:var(--gold);color:#0a0800;border-color:var(--gold)}
-
-    /* player list */
-    .next-wrap{padding:10px}
-    .next-title{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
-      text-transform:uppercase;margin-bottom:7px;font-family:var(--font-display)}
-    .search-inp{background:var(--surface2);border:1px solid var(--border);
-      border-radius:var(--rsm);color:var(--text);font-size:14px;padding:10px 14px;
-      width:100%;outline:none;margin-bottom:8px;font-family:var(--font-body);
-      transition:border-color .2s,box-shadow .2s}
-    .search-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--golddim)}
-    .search-res{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
-    .sr-item{display:flex;justify-content:space-between;align-items:center;
-      padding:9px 10px;background:var(--surface2);border-radius:var(--rsm);cursor:pointer;
-      border:1px solid var(--border);transition:all .15s}
-    .sr-item:hover,.sr-item:active{border-color:var(--gold);background:var(--surface3)}
-    .sr-name{font-size:13px;font-weight:600}
-    .sr-sub{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.3px}
-    .sr-price{font-family:var(--font-num);font-size:17px;color:var(--gold)}
-    .sorted-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
-
-    /* host controls */
-    .host-ctrl-row{display:flex;gap:6px;padding:8px 10px;background:var(--surface);
-      border-bottom:1px solid var(--border);flex-shrink:0}
-    .inc-row{display:flex;gap:6px;padding:0 10px 10px;flex-wrap:wrap}
-    .act-row{display:flex;gap:7px;padding:0 10px 14px}
-
-    /* next bid display */
-    .next-bid-box{background:var(--surface2);border:1px solid var(--border2);
-      border-radius:var(--rsm);padding:10px 14px;
-      font-family:var(--font-num);font-size:20px;color:var(--gold);
-      text-align:center;flex:1;letter-spacing:1px}
-
-    /* teams tab */
-    .teams-list{padding:10px;display:flex;flex-direction:column;gap:8px}
-    .tc{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);overflow:hidden}
-    .tc-hdr{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;
-      transition:background .15s}
-    .tc-hdr:active{background:var(--surface2)}
-    .tc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;
-      box-shadow:0 0 6px currentColor}
-    .tc-name{font-family:var(--font-display);font-size:16px;font-weight:700;flex:1;
-      letter-spacing:.3px}
-    .tc-budget{font-family:var(--font-num);font-size:19px;color:var(--gold)}
-    .tc-body{border-top:1px solid var(--border);padding:12px;display:none}
-    .tc-body.open{display:block}
-    .tc-stats{display:flex;gap:10px;margin-bottom:10px}
-    .ts{flex:1;background:var(--surface2);border-radius:var(--rsm);padding:8px;
-      text-align:center;border:1px solid var(--border)}
-    .ts .v{font-family:var(--font-num);font-size:18px;display:block}
-    .ts .l{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:1.5px;
-      text-transform:uppercase;display:block;margin-top:2px}
-    .acq-row{display:flex;justify-content:space-between;align-items:center;
-      padding:7px 10px;background:var(--surface2);border-radius:var(--rsm);
-      margin-bottom:4px;border:1px solid var(--border)}
-    .acq-name{font-size:13px;font-weight:600}
-    .acq-role{font-size:10px;color:var(--text3);margin-top:1px;letter-spacing:.3px}
-    .acq-price{font-family:var(--font-num);font-size:16px;color:var(--green)}
-
-    /* player pool list */
-    .frow{padding:8px 10px;display:flex;gap:5px;overflow-x:auto;flex-shrink:0}
-    .frow::-webkit-scrollbar{display:none}
-    .fc{flex-shrink:0;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;
-      letter-spacing:.5px;background:var(--surface2);border:1px solid var(--border);
-      color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;
-      font-family:var(--font-display)}
-    .fc.on{background:var(--gold);color:#0a0800;border-color:var(--gold)}
-    .pl-list{padding:0 10px 14px;display:flex;flex-direction:column;gap:4px}
-    .pl-item{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--rsm);padding:9px 11px;display:flex;align-items:center;gap:9px;
-      transition:border-color .15s}
-    .pl-item.faded{opacity:.35}
-    .pl-item.hl{border-color:var(--gold);background:rgba(245,184,0,.04)}
-    .pl-info{flex:1;min-width:0}
-    .pl-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .pl-sub{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.3px}
-    .pl-st{font-size:10px;font-weight:600;margin-top:3px;letter-spacing:.5px;
-      text-transform:uppercase}
-    .s-p{color:var(--text3)}.s-l{color:var(--gold)}.s-s{color:var(--green)}.s-u{color:var(--red)}
-    .pl-price{font-family:var(--font-num);font-size:15px;color:var(--gold2);
-      text-align:right;white-space:nowrap}
-
-    /* ── PARTICIPANT BID SCREEN ── */
-    .bid-hdr{padding:10px 14px;background:linear-gradient(135deg,#0e1e4a,#0d1120);
+    .pane{display:none;flex:1;overflow-y:auto}
+    .pane.on{display:block}
+    /* leaderboard */
+    .lb-hdr{padding:10px 16px;display:grid;grid-template-columns:28px 1fr 80px 80px;gap:8px;
+      font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
+      border-bottom:1px solid var(--border);font-family:var(--fd)}
+    .lb-row{padding:12px 16px;display:grid;grid-template-columns:28px 1fr 80px 80px;gap:8px;
+      align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+    .lb-row:hover{background:var(--surface2)}
+    .lb-row.me{background:rgba(245,184,0,.04);border-left:3px solid var(--gold)}
+    .lb-rank{font-family:var(--fn);font-size:22px;color:var(--text3);text-align:center}
+    .lb-rank.gold{color:#f5b800}.lb-rank.silver{color:#c0c0c0}.lb-rank.bronze{color:#cd7f32}
+    .lb-pts{font-family:var(--fn);font-size:22px;color:var(--green);text-align:right}
+    /* squads */
+    .team-tabs{display:flex;overflow-x:auto;background:var(--surface);
+      border-bottom:1px solid var(--border);padding:6px 10px;gap:6px;flex-shrink:0}
+    .team-tabs::-webkit-scrollbar{display:none}
+    .ttab{flex-shrink:0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;
+      background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+      cursor:pointer;font-family:var(--fd);white-space:nowrap;transition:all .15s}
+    .ttab.on{background:var(--surface3);color:var(--text)}
+    .squad-hdr{padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center}
+    .sp-row{display:flex;align-items:center;gap:10px;padding:9px 14px;
+      border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+    .sp-row:hover{background:var(--surface2)}
+    .sp-avi{width:38px;height:38px;border-radius:50%;background:var(--surface3);flex-shrink:0;
+      overflow:hidden;border:1px solid var(--border2);display:flex;align-items:center;
+      justify-content:center;font-size:14px;color:var(--text3)}
+    .sp-avi img{width:100%;height:100%;object-fit:cover}
+    .sp-pts{font-family:var(--fn);font-size:20px;color:var(--gold);text-align:right;flex-shrink:0}
+    /* sync */
+    .sync-hdr{padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between}
+    .log-item{padding:8px 12px;background:var(--surface2);border-radius:var(--rsm);
+      border:1px solid var(--border);font-size:12px;margin-bottom:5px}
+    /* history */
+    .mh-row{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;
+      align-items:center;gap:12px;cursor:pointer;transition:background .15s}
+    .mh-row:hover{background:var(--surface2)}
+    /* modal */
+    .modal-ov{position:fixed;inset:0;background:rgba(7,10,18,.92);z-index:100;
+      display:flex;align-items:flex-end;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity .25s}
+    .modal-ov.show{opacity:1;pointer-events:all}
+    .modal{background:var(--surface);border:1px solid var(--border2);
+      border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:480px;
+      max-height:85dvh;overflow-y:auto;padding:20px;
+      transform:translateY(40px);transition:transform .25s}
+    .modal-ov.show .modal{transform:translateY(0)}
+    /* scoring */
+    .sg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .sg-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:10px}
+    .sg-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);font-size:11px}
+    .sg-row:last-child{border:none}
+    .sg-pts{font-family:var(--fn);font-size:15px;color:var(--gold)}
+    /* admin */
+    .admin-ov{position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto;display:none}
+    .admin-nav{padding:12px 16px;background:linear-gradient(135deg,#0e1e4a,#0d1120);
       border-bottom:1px solid rgba(80,145,205,.2);display:flex;align-items:center;
-      justify-content:space-between;flex-shrink:0}
-    .bid-hdr-team{font-family:var(--font-display);font-size:17px;font-weight:700;
-      color:var(--team);letter-spacing:.5px}
-    .bpill{font-family:var(--font-num);font-size:15px;background:var(--surface2);
-      border:1px solid var(--border);padding:4px 12px;border-radius:99px;
-      color:var(--text)}
-    .live-card{margin:10px;background:var(--surface);border:2px solid var(--border);
-      border-radius:var(--radius);overflow:hidden;transition:border-color .3s}
-    .live-card.leading{border-color:var(--team);
-      box-shadow:0 0 20px rgba(245,184,0,.1)}
-    .p-leader{text-align:center;padding:4px 16px 12px;font-size:13px;color:var(--text2)}
-    .p-leader.me strong{color:var(--green)}
-    .bid-controls{padding:10px}
-    .big-bid-btn{width:100%;padding:18px;border:none;border-radius:var(--radius);
-      background:linear-gradient(135deg,var(--team),color-mix(in srgb,var(--team) 75%,black));
-      color:#0a0800;font-family:var(--font-display);font-size:24px;font-weight:700;
-      letter-spacing:2px;cursor:pointer;transition:all .15s;
-      box-shadow:0 4px 24px rgba(245,184,0,.3)}
-    .big-bid-btn:active{transform:scale(.97)}
-    .big-bid-btn:disabled{opacity:.25;pointer-events:none;box-shadow:none}
-    .bid-hint{text-align:center;margin-top:8px;font-size:11px;color:var(--text3);
-      letter-spacing:.5px}
-
-    /* squad */
-    .squad-budget{margin:10px;background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);padding:12px}
-    .brow{display:flex;justify-content:space-between;align-items:center;
-      padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
-    .brow:last-child{border:none}
-    .brow .bv{font-family:var(--font-num);font-size:19px;color:var(--gold)}
-    .squad-list{padding:0 10px 12px;display:flex;flex-direction:column;gap:4px}
-    .sq-item{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--rsm);padding:10px 12px;display:flex;
-      justify-content:space-between;align-items:center}
-    .sq-name{font-size:13px;font-weight:600}
-    .sq-role{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.3px}
-    .sq-price{font-family:var(--font-num);font-size:19px;color:var(--green)}
-
-    /* ── OVERLAYS ── */
-    .overlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;text-align:center;padding:32px;
-      opacity:0;pointer-events:none;transition:opacity .3s}
-    .overlay.show{opacity:1;pointer-events:all}
-    .ov-sold{background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
-    .ov-unsold{background:rgba(8,9,13,.94);backdrop-filter:blur(8px)}
-    .overlay h2{font-family:var(--font-display);font-size:58px;letter-spacing:4px;
-      line-height:1;font-weight:700}
-    .ov-player{font-family:var(--font-display);font-size:26px;font-weight:700;
-      margin-top:8px;letter-spacing:.5px}
-    .ov-to{font-size:13px;color:var(--text2);margin-top:5px}
-    .ov-price{font-family:var(--font-num);font-size:72px;color:var(--green);
-      line-height:1;margin:10px 0;filter:drop-shadow(0 0 20px rgba(0,214,143,.4))}
-    .ov-unit{font-size:14px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
-    .hammer{font-size:64px;margin-bottom:10px;animation:hamDrop .5s ease;
-      filter:drop-shadow(0 0 16px rgba(245,184,0,.5))}
-    @keyframes hamDrop{0%{transform:rotate(-40deg) scale(.4);opacity:0}
-      60%{transform:rotate(8deg) scale(1.1)}100%{transform:rotate(0) scale(1);opacity:1}}
-
-    /* ── WAIT SCREEN ── */
-    #waitScreen{align-items:center;justify-content:center;text-align:center;padding:36px 22px;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(29,61,141,.15) 0%,transparent 60%)}
-    .wait-pulse{font-size:56px;animation:wp 2.5s ease-in-out infinite}
-    @keyframes wp{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
-    #waitScreen h2{font-family:var(--font-display);font-size:28px;font-weight:700;
-      letter-spacing:1px;color:var(--text2);margin-top:16px}
-    #waitScreen p{font-size:13px;color:var(--text3);margin-top:6px}
-    .wait-info{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);padding:16px 24px;margin-top:20px;text-align:center}
-    .wait-info .wl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
-      text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
-    .wait-info .wv{font-family:var(--font-num);font-size:34px;color:var(--team)}
-    .wait-team{font-family:var(--font-display);font-size:18px;font-weight:700;
-      color:var(--team);margin-top:12px;letter-spacing:.5px}
-
-    /* ── END SCREEN ── */
-    #endScreen{align-items:center;padding:28px 16px;text-align:center}
-    #endScreen h1{font-family:var(--font-display);font-size:42px;font-weight:700;
-      letter-spacing:2px;color:var(--gold);margin-top:12px}
-    .final-list{width:100%;margin-top:16px;display:flex;flex-direction:column;
-      gap:8px;text-align:left}
-    .ft{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);padding:12px}
-    .ft-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-    .ft-name{font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:.3px}
-    .ft-spent{font-family:var(--font-num);font-size:19px;color:var(--gold)}
-    .fp{font-size:12px;color:var(--text2);padding:5px 0;
-      border-bottom:1px solid var(--border);display:flex;justify-content:space-between;
-      align-items:center}
-    .fp:last-child{border:none}
-    .fp-price{color:var(--green);font-weight:600;font-family:var(--font-num);font-size:14px}
-
-    /* ── TOAST ── */
-    .toast{position:fixed;bottom:24px;left:50%;
-      transform:translateX(-50%) translateY(80px);
-      background:var(--surface2);border:1px solid var(--border2);
-      border-radius:var(--rsm);padding:10px 20px;font-size:13px;font-weight:500;
-      z-index:200;opacity:0;transition:all .25s;white-space:nowrap;
-      max-width:92vw;text-align:center;backdrop-filter:blur(8px)}
+      gap:10px;position:sticky;top:0}
+    .room-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      margin-bottom:10px;overflow:hidden}
+    .room-hdr{padding:12px 14px;background:linear-gradient(135deg,#0e1e4a,#0d1120);
+      cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+    .room-body{padding:12px;display:none;border-top:1px solid var(--border)}
+    /* toast */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+      background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rsm);
+      padding:10px 20px;font-size:13px;z-index:300;opacity:0;transition:all .25s;
+      white-space:nowrap;max-width:92vw;text-align:center}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-    /* ── CONFIRM ── */
-    .confirm-overlay{position:fixed;inset:0;background:rgba(8,9,13,.92);z-index:300;
-      display:flex;align-items:center;justify-content:center;padding:24px;
-      opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px)}
-    .confirm-overlay.show{opacity:1;pointer-events:all}
-    .confirm-box{background:var(--surface);border:1px solid var(--border2);
-      border-radius:var(--radius);padding:28px 24px;max-width:300px;width:100%;
-      text-align:center}
-    .confirm-box h3{font-family:var(--font-display);font-size:20px;font-weight:700;
-      margin-bottom:8px;letter-spacing:.3px}
-    .confirm-box p{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6}
-    .confirm-btns{display:flex;gap:8px}
-
-    /* ── PAUSE ── */
-    .pause-bar{padding:9px 16px;background:rgba(245,184,0,.1);
-      border-bottom:1px solid rgba(245,184,0,.2);color:var(--gold);
-      font-size:11px;font-weight:700;text-align:center;letter-spacing:1.5px;
-      text-transform:uppercase;display:none;font-family:var(--font-display)}
-    .pause-bar.show{display:block}
-
-    .empty{text-align:center;padding:32px 18px;color:var(--text3);font-size:13px}
+    .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
   </style>
 </head>
 <body>
 
-<!-- ════ LANDING ════ -->
-<div id="landingScreen" class="screen active">
-  <div class="page-hero">
-    <span class="icon">🏏</span>
-    <h1>IPL 2026</h1>
-    <p>Mock Auction</p>
+<nav class="nav" id="mainNav" style="display:none">
+  <a href="./fantasy.html" class="nav-back">⌂ Home</a>
+  <div style="flex:1">
+    <div class="nav-title">Fantasy League</div>
+    <div class="nav-sub" id="navSub">IPL 2026</div>
   </div>
-  <div class="body">
-    <div class="card">
-      <div class="card-title">HOST — CREATE ROOM</div>
-      <label>Your Name</label>
-      <input type="text" id="hostName" placeholder="e.g. Rahul" maxlength="20"/>
-      <div class="gap"></div>
-      <label>Room Name</label>
-      <input type="text" id="roomName" placeholder="e.g. IPL Draft 2026" maxlength="30"/>
-      <div class="gap"></div>
-      <label>Budget per Team (₹ Lakhs)</label>
-      <input type="number" id="teamBudget" value="10000" min="100" max="99999"/>
-      <div class="gap"></div>
-      <div class="toggle-row">
-        <div><div class="toggle-lbl">Countdown Timer</div><div class="toggle-sub">Auto-close bids on timeout</div></div>
-        <label class="toggle"><input type="checkbox" id="enableTimer" onchange="toggleTimerExtra()"><span class="tslider"></span></label>
-      </div>
-      <div class="textra" id="timerExtra">
-        <label>Seconds per round</label>
-        <div class="tprow" id="timerPresets">
-          <button class="tpbtn" onclick="pickTimer(15,this)">15s</button>
-          <button class="tpbtn" onclick="pickTimer(30,this)">30s</button>
-          <button class="tpbtn on" onclick="pickTimer(45,this)">45s</button>
-          <button class="tpbtn" onclick="pickTimer(60,this)">60s</button>
-          <button class="tpbtn" onclick="pickTimer(90,this)">90s</button>
-        </div>
-        <div style="margin-top:9px"><label>Custom seconds</label><input type="number" id="customTimer" value="45" min="5" max="300"/></div>
-      </div>
-      <div style="margin-top:16px"><button class="btn btn-gold" onclick="createRoom()">Create Room</button></div>
-    </div>
-    <div class="divider"><span>OR</span></div>
-    <div class="card">
-      <div class="card-title">JOIN A ROOM</div>
-      <label>Your Name</label>
-      <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
-      <div class="gap"></div>
-      <label>Room Code</label>
-      <input type="text" id="roomCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
-      <div style="margin-top:16px"><button class="btn btn-blue" onclick="joinRoom()">Find Room</button></div>
-    </div>
-    <div class="divider"><span>OR</span></div>
-    <div class="card">
-      <div class="card-title">HOST — REJOIN ROOM</div>
-      <label>Your Name</label>
-      <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
-      <div class="gap"></div>
-      <label>Room Code</label>
-      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
-      <div style="margin-top:16px"><button class="btn btn-ghost" onclick="rejoinAsHost()">Rejoin as Host</button></div>
-    </div>
-    <div class="divider"><span>OTHER</span></div>
-    <a href="./fantasy.html" style="display:block;text-decoration:none">
-      <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
-    </a>
-  </div>
-</div>
+  <div class="mpill" id="navMatch">M0</div>
+  <button id="adminBtn" onclick="openAdmin()" style="display:none;background:var(--surface2);
+    border:1px solid var(--border);border-radius:var(--rsm);padding:5px 10px;
+    font-family:var(--fd);font-size:11px;font-weight:600;color:var(--text3);cursor:pointer">
+    ADMIN
+  </button>
+</nav>
 
-<!-- ════ LOBBY ════ -->
-<div id="lobbyScreen" class="screen">
-  <div class="page-hero">
-    <span class="icon">🏆</span>
-    <h1 id="lobbyRoomName">Room</h1>
-    <p id="lobbySubtitle">Share this code with everyone</p>
-    <span class="role-badge badge-host">HOST</span>
-  </div>
-  <div class="body">
-    <div class="rc-card">
-      <div class="rc-lbl">Room Code</div>
-      <div class="rc-code" id="lobbyCode">-</div>
-      <div class="rc-sub">Everyone opens the same link and enters this code</div>
+<!-- SETUP -->
+<div id="setupScreen" class="screen active">
+  <div class="hero">
+    <h1>Fantasy League</h1>
+    <p>IPL 2026 · Track your season</p>
+    <div style="margin-top:14px;position:relative">
+      <button onclick="promptAdmin()" style="background:none;border:none;
+        color:var(--text3);font-size:12px;cursor:pointer;letter-spacing:.5px;
+        text-decoration:underline;text-underline-offset:3px">Admin login</button>
     </div>
-    <div class="card">
-      <div class="card-title">Participants Joined <span id="pCount" style="color:var(--gold)">0</span> / 12 max</div>
-      <div class="plist" id="participantsList">
-        <div style="color:var(--text3);font-size:13px;padding:4px 0">Waiting<span class="wdots"></span></div>
-      </div>
-    </div>
-    <button class="btn btn-gold" onclick="startAuction()">Start Auction</button>
-    <div style="margin-top:9px"><button class="btn btn-ghost" onclick="showScreen('landingScreen')">← Back</button></div>
-  </div>
-</div>
-
-<!-- ════ TEAM SELECT (participant) ════ -->
-<div id="teamSelectScreen" class="screen">
-  <div class="page-hero">
-    <span class="icon">🏏</span>
-    <h1 id="tsRoomName">Room</h1>
-    <p id="tsRoomCode" style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;color:var(--gold)">CODE</p>
-    <span class="role-badge badge-part">PARTICIPANT</span>
   </div>
   <div class="body">
     <div class="card">
+      <div class="card-title">Enter Room Code</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+        Enter the code from your IPL Mock Auction to load squads and track fantasy points.
+      </p>
+      <input type="text" id="setupCode" class="upper" placeholder="XXXXX" maxlength="5"
+        oninput="this.value=this.value.toUpperCase()"/>
+      <div class="gap"></div>
       <div class="card-title">Your Team Name</div>
-      <input type="text" id="myTeamName" placeholder="e.g. Mumbai Mavericks" maxlength="25"/>
+      <input type="text" id="setupTeam" placeholder="e.g. Mumbai Mavericks" maxlength="25"/>
       <div class="gap"></div>
-      <div class="card-title">Team Colour</div>
-      <div id="colorPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
-        <button class="color-opt on" data-color="#e74c3c" style="background:#e74c3c" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#e67e22" style="background:#e67e22" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#f1c40f" style="background:#f1c40f" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#2ecc71" style="background:#2ecc71" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#1abc9c" style="background:#1abc9c" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#3498db" style="background:#3498db" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#9b59b6" style="background:#9b59b6" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#e91e8c" style="background:#e91e8c" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#ffffff" style="background:#ffffff" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#5091CD" style="background:#5091CD" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#f5b800" style="background:#f5b800" onclick="pickColor(this)"></button>
-        <button class="color-opt" data-color="#00d68f" style="background:#00d68f" onclick="pickColor(this)"></button>
-      </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--text3)">Up to 12 teams can join. Each participant creates their own team.</div>
+      <button class="btn btn-gold" onclick="loadRoom()">Load Squads</button>
+      <div class="gap"></div>
+      <a href="./index.html" class="btn btn-ghost">← Back to Auction</a>
     </div>
-    <button class="btn btn-blue" id="joinTeamBtn" onclick="joinTeam()">Join Auction</button>
+    <div class="card">
+      <div class="card-title">Scoring System</div>
+      <div class="sg-grid">
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Batting</div>
+          <div class="sg-row"><span>Run scored</span><span class="sg-pts">1</span></div>
+          <div class="sg-row"><span>Boundary (4)</span><span class="sg-pts">1</span></div>
+          <div class="sg-row"><span>Six (6)</span><span class="sg-pts">2</span></div>
+          <div class="sg-row"><span>25 runs</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>50 runs</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>100 runs</span><span class="sg-pts">16</span></div>
+          <div class="sg-row"><span>Duck</span><span class="sg-pts" style="color:var(--red)">-2</span></div>
+        </div>
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Bowling</div>
+          <div class="sg-row"><span>Wicket</span><span class="sg-pts">25</span></div>
+          <div class="sg-row"><span>LBW / Bowled</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>3 wickets</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>4 wickets</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>5 wickets</span><span class="sg-pts">16</span></div>
+          <div class="sg-row"><span>Maiden over</span><span class="sg-pts">12</span></div>
+          <div class="sg-row"><span>Eco &lt;6 (2+ ov)</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>Eco 6-8 (2+ ov)</span><span class="sg-pts">2</span></div>
+        </div>
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Fielding</div>
+          <div class="sg-row"><span>Catch</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>Stumping</span><span class="sg-pts">12</span></div>
+          <div class="sg-row"><span>Run out</span><span class="sg-pts">6</span></div>
+        </div>
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Other</div>
+          <div class="sg-row"><span>Playing XI</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>Captain</span><span class="sg-pts">2x</span></div>
+          <div class="sg-row"><span>Vice-Captain</span><span class="sg-pts">1.5x</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ════ HOST AUCTION ════ -->
-<div id="hostAuctionScreen" class="screen">
-  <div class="conn-bar cb-connecting" id="hostConnBar">⟳ Connecting...</div>
-  <div class="a-bar">
-    <div style="flex:1;min-width:0">
-      <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">🎙 Auctioneer</div>
-      <h2 id="hostTitle">Ready</h2>
-    </div>
-    <span class="pbadge pb-gold" id="hostCount">0/225</span>
-    <span class="pbadge pb-code" id="hostCode">-</span>
-    <span class="pbadge pb-live" id="hostLive" style="display:none">● LIVE</span>
-  </div>
-  <div class="host-ctrl-row">
-    <button class="btn btn-ghost btn-sm" id="pauseBtn" onclick="togglePause()" style="flex:1">Pause</button>
-    <button class="btn btn-red btn-sm" onclick="confirmAction('end')" style="flex:1">End Auction</button>
-    <button class="btn btn-ghost btn-sm" onclick="confirmAction('exitHost')" style="flex:1">Exit</button>
-  </div>
-  <div class="pause-bar" id="pauseBar">⏸ AUCTION PAUSED — Bidding disabled</div>
+<!-- MAIN -->
+<div id="mainScreen" class="screen">
   <div class="tabs">
-    <div class="tab on" onclick="hTab('bid',this)">Bid</div>
-    <div class="tab" onclick="hTab('teams',this)">Teams</div>
-    <div class="tab" onclick="hTab('players',this)">Players</div>
+    <div class="tab on" id="tab-lb" onclick="switchTab('lb')">Leaderboard</div>
+    <div class="tab" id="tab-sq" onclick="switchTab('sq')">Squads</div>
+    <div class="tab" id="tab-sc" onclick="switchTab('sc')">Schedule</div>
+    <div class="tab" id="tab-sy" onclick="switchTab('sy')" style="display:none">Auto Sync</div>
+    <div class="tab" id="tab-hi" onclick="switchTab('hi')">History</div>
   </div>
 
-  <!-- BID PANE -->
-  <div id="hpane-bid" class="tab-pane on">
-    <div id="noBidDiv">
-      <!-- Category filter -->
-      <div class="cat-row">
-        <button class="cat-btn on" onclick="setHostCat('All',this)">All</button>
-        <button class="cat-btn" onclick="setHostCat('Batter',this)">Batters</button>
-        <button class="cat-btn" onclick="setHostCat('Bowler',this)">Bowlers</button>
-        <button class="cat-btn" onclick="setHostCat('All-Rounder',this)">All-Rounders</button>
-        <button class="cat-btn" onclick="setHostCat('WK',this)">WK</button>
-      </div>
-      <div class="next-wrap">
-        <div class="next-title">Search player</div>
-        <input class="search-inp" id="playerSearch" type="text" placeholder="Type name..." oninput="searchPlayers()"/>
-        <div class="search-res" id="searchResults"></div>
-        <div class="next-title" style="margin-top:10px">Or pick from list (alphabetical)</div>
-        <div class="sorted-list" id="sortedList"></div>
-      </div>
-      <div style="padding:0 12px 12px;display:flex;gap:8px">
-        <button class="btn btn-gold" style="flex:1" onclick="nextRandom()">Random</button>
-      </div>
+  <!-- LEADERBOARD PANE -->
+  <div class="pane on" id="pane-lb">
+    <div id="syncBanner" style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);
+      font-size:12px;color:var(--text3);display:flex;align-items:center;justify-content:space-between">
+      <span id="syncBannerText">Points data loading...</span>
+      <span style="font-size:10px;color:var(--text3)">Auto-updated daily</span>
     </div>
-
-    <div id="activeBidDiv" style="display:none">
-      <div class="plyr-card">
-        <div class="plyr-banner">
-          <div class="plyr-avi" id="hAvi">👤</div>
-          <div><div class="plyr-name" id="hName">-</div><div class="pmeta"><span class="pill pill-role" id="hRole">-</span><span class="pill pill-nat" id="hNat">-</span></div></div>
-        </div>
-        <div class="price-row">
-          <div class="price-box"><div class="price-lbl">Base</div><div class="price-val" id="hBase">₹0</div></div>
-          <div class="price-sep"></div>
-          <div class="price-box"><div class="price-lbl">Current Bid</div><div class="price-val big" id="hCurrent">₹0</div></div>
-        </div>
-        <div class="leader-row" id="hLeader">No bids yet</div>
-        <div id="hTimerWrap" style="display:none">
-          <div class="twrap">
-            <div class="ttop"><span>Time Left</span><span class="tnum" id="hTimerNum">45</span></div>
-            <div class="ttrack"><div class="tbar" id="hTimerBar" style="width:100%"></div></div>
-          </div>
-        </div>
-      </div>
-      <div class="bfeed-wrap">
-        <div class="bfeed-lbl">📡 Live Bids</div>
-        <div class="bfeed" id="hBidFeed"><div style="color:var(--text3);font-size:13px">Waiting for bids...</div></div>
-      </div>
-      <div style="padding:4px 10px 6px;font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:'Rajdhani',sans-serif">OPENING BID</div>
-      <div class="inc-row" id="hNextBidRow">
-        <div class="next-bid-box" id="hNextBidAmt">-</div>
-      </div>
-      <div class="act-row">
-        <button class="btn btn-green btn-sm" onclick="soldNow()" style="flex:2">SOLD!</button>
-        <button class="btn btn-red btn-sm" onclick="markUnsold()" style="flex:1">Unsold</button>
-        <button class="btn btn-ghost btn-sm" onclick="skipPlayer()" style="flex:1">Skip</button>
-      </div>
-    </div>
+    <div class="lb-hdr" style="grid-template-columns:28px 1fr 80px 80px"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
+    <div id="lbList"></div>
   </div>
 
-  <!-- TEAMS PANE -->
-  <div id="hpane-teams" class="tab-pane">
-    <div class="teams-list" id="hTeamsList"></div>
+  <!-- SQUADS PANE -->
+  <div class="pane" id="pane-sq">
+    <div class="team-tabs" id="squadTabs"></div>
+    <div id="squadHeader"></div>
+    <div id="squadList"></div>
   </div>
 
-  <!-- PLAYERS PANE -->
-  <div id="hpane-players" class="tab-pane">
-    <div class="frow">
-      <div class="fc on" onclick="hFilterP('All',this)">All</div>
-      <div class="fc" onclick="hFilterP('Pending',this)">Pending</div>
-      <div class="fc" onclick="hFilterP('Sold',this)">Sold</div>
-      <div class="fc" onclick="hFilterP('Unsold',this)">Unsold</div>
-      <div class="fc" onclick="hFilterP('Batter',this)">Batters</div>
-      <div class="fc" onclick="hFilterP('Bowler',this)">Bowlers</div>
-      <div class="fc" onclick="hFilterP('All-Rounder',this)">AR</div>
-      <div class="fc" onclick="hFilterP('WK',this)">WK</div>
+  <!-- SYNC PANE -->
+  <div class="pane" id="pane-sy">
+    <div class="sync-hdr">
+      <div>
+        <div style="font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Auto Sync</div>
+        <div id="syncStatus" style="font-size:11px;color:var(--text3);margin-top:2px">Syncs completed IPL 2026 matches daily</div>
+      </div>
+      <button class="btn btn-blue btn-sm" id="syncNowBtn" style="display:none" onclick="runSync(true)">Sync Now</button>
+      <!-- syncNowAdminBtn is in the admin nav bar -->
     </div>
-    <div class="pl-list" id="hPlayersList"></div>
+    <div id="unmatchedSection" style="display:none;padding:10px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2px;
+        text-transform:uppercase;color:var(--gold);margin-bottom:8px">Review Low-Confidence Matches</div>
+      <div id="unmatchedList"></div>
+    </div>
+    <div id="syncReviewSection" style="display:none;padding:10px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:2px;
+        text-transform:uppercase;color:var(--gold);margin-bottom:8px;padding:0 4px">
+        Pending Review — Edit Points Before Distributing
+      </div>
+      <div id="syncReviewList"></div>
+    </div>
+    <div style="padding:10px" id="syncLog"></div>
+  </div>
+
+  <!-- SCHEDULE PANE -->
+  <div class="pane" id="pane-sc">
+    <div id="scheduleList"></div>
+  </div>
+
+  <!-- HISTORY PANE -->
+  <div class="pane" id="pane-hi">
+    <div id="historyList"></div>
   </div>
 </div>
 
-<!-- ════ WAIT SCREEN ════ -->
-<div id="waitScreen" class="screen">
-  <div class="conn-bar cb-live" id="waitConnBar">● Connected</div>
-  <div style="display:flex;justify-content:flex-end;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border)">
-    <button class="btn btn-ghost btn-sm" onclick="confirmAction('exitPart')" style="font-size:12px;padding:6px 12px">Exit Room</button>
-  </div>
-  <div class="tabs" style="background:var(--surface);border-bottom:1px solid var(--border)">
-    <div class="tab on" onclick="wTab('status',this)">Status</div>
-    <div class="tab" onclick="wTab('pool',this)">Pool</div>
-    <div class="tab" onclick="wTab('squad',this)">My Squad</div>
-  </div>
-
-  <!-- STATUS -->
-  <div id="wpane-status" class="tab-pane on" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 22px;flex:1">
-    <div class="wait-pulse">⏳</div>
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--text2);margin-top:18px">Waiting for player...</h2>
-    <p style="font-size:14px;color:var(--text3);margin-top:7px">The auctioneer will bring up the next player</p>
-    <div class="wait-team" id="waitTeamName">-</div>
-    <div class="wait-info"><div class="wl">Your Budget</div><div class="wv" id="waitBudget">-</div></div>
-  </div>
-
-  <!-- POOL -->
-  <div id="wpane-pool" class="tab-pane">
-    <div class="frow">
-      <div class="fc on" onclick="wPoolFilter('All',this)">All</div>
-      <div class="fc" onclick="wPoolFilter('Batter',this)">Batters</div>
-      <div class="fc" onclick="wPoolFilter('Bowler',this)">Bowlers</div>
-      <div class="fc" onclick="wPoolFilter('All-Rounder',this)">AR</div>
-      <div class="fc" onclick="wPoolFilter('WK',this)">WK</div>
+<!-- MATCH EDIT MODAL (admin) -->
+<div class="modal-ov" id="matchEditModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;margin-bottom:16px">
+      <div style="flex:1;font-family:var(--fd);font-size:18px;font-weight:700" id="matchEditTitle">Edit Points</div>
+      <button onclick="document.getElementById('matchEditModal').classList.remove('show')"
+        style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
     </div>
-    <div class="pl-list" id="wPoolList"><div class="empty">Loading pool...</div></div>
-  </div>
-
-  <!-- MY SQUAD (wait screen) -->
-  <div id="wpane-squad" class="tab-pane">
-    <div class="squad-budget" id="wSquadBudget"></div>
-    <div class="squad-list" id="wSquadList"></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Edit individual player points for this match. Changes save to Firebase immediately.</div>
+    <div id="matchEditList"></div>
+    <button class="btn btn-green" style="margin-top:12px" onclick="saveMatchEdit()">Save Changes</button>
   </div>
 </div>
 
-<!-- ════ PARTICIPANT BID SCREEN ════ -->
-<div id="pBidScreen" class="screen">
-  <div class="conn-bar cb-live">● Live</div>
-  <div style="display:flex;justify-content:flex-end;padding:5px 12px;background:var(--surface);border-bottom:1px solid var(--border)">
-    <button class="btn btn-ghost btn-sm" onclick="confirmAction('exitPart')" style="font-size:12px;padding:5px 12px">Exit</button>
-  </div>
-  <div class="pause-bar" id="pPauseBar">⏸ AUCTION PAUSED</div>
-  <div class="bid-hdr">
-    <div class="bid-hdr-team" id="pTeamName">Team</div>
-    <div class="bpill">₹<span id="pBudgetLeft">-</span>L</div>
-  </div>
-  <div class="tabs">
-    <div class="tab on" onclick="pTab('live',this)">Live</div>
-    <div class="tab" onclick="pTab('squad',this)">Squad</div>
-    <div class="tab" onclick="pTab('pool',this)">Pool</div>
-  </div>
-
-  <!-- LIVE PANE -->
-  <div id="ppane-live" class="tab-pane on">
-    <div class="live-card" id="liveCard">
-      <div class="plyr-banner">
-        <div class="plyr-avi" id="pAvi">👤</div>
-        <div><div class="plyr-name" id="pName">-</div><div class="pmeta"><span class="pill pill-role" id="pRole">-</span><span class="pill pill-nat" id="pNat">-</span></div></div>
+<!-- PLAYER MODAL -->
+<div class="modal-ov" id="playerModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="sp-avi" id="modalAvi" style="width:52px;height:52px"></div>
+      <div style="flex:1">
+        <div style="font-family:var(--fd);font-size:18px;font-weight:700" id="modalName"></div>
+        <div style="font-size:12px;color:var(--text3)" id="modalSub"></div>
       </div>
-      <div class="price-row">
-        <div class="price-box"><div class="price-lbl">Base</div><div class="price-val" id="pBase">₹0</div></div>
-        <div class="price-sep"></div>
-        <div class="price-box"><div class="price-lbl">Current Bid</div><div class="price-val big" id="pCurrent">₹0</div></div>
-      </div>
-      <div class="p-leader" id="pLeader">No bids yet</div>
-      <div id="pTimerWrap" style="display:none">
-        <div class="twrap">
-          <div class="ttop"><span>Time Left</span><span class="tnum" id="pTimerNum">45</span></div>
-          <div class="ttrack"><div class="tbar" id="pTimerBar" style="width:100%"></div></div>
-        </div>
-      </div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
     </div>
-    <div class="bid-controls">
-      <button class="big-bid-btn" id="bigBidBtn" onclick="placeBid()">
-        BID ₹<span id="pBidAmt">0</span>L
-      </button>
-      <div class="bid-hint" id="pBidHint">Tap to raise the bid</div>
-    </div>
-  </div>
-
-  <!-- SQUAD PANE -->
-  <div id="ppane-squad" class="tab-pane">
-    <div class="squad-budget" id="pSquadBudget"></div>
-    <div class="squad-list" id="pSquadList"></div>
-  </div>
-
-  <!-- POOL PANE (browse remaining players) -->
-  <div id="ppane-pool" class="tab-pane">
-    <div class="frow">
-      <div class="fc on" onclick="pPoolFilter('All',this)">All</div>
-      <div class="fc" onclick="pPoolFilter('Batter',this)">Batters</div>
-      <div class="fc" onclick="pPoolFilter('Bowler',this)">Bowlers</div>
-      <div class="fc" onclick="pPoolFilter('All-Rounder',this)">AR</div>
-      <div class="fc" onclick="pPoolFilter('WK',this)">WK</div>
-    </div>
-    <div class="pl-list" id="pPoolList"></div>
+    <div id="modalBody"></div>
   </div>
 </div>
 
-<!-- ════ END SCREEN ════ -->
-<div id="endScreen" class="screen">
-  <div style="font-size:68px;filter:drop-shadow(0 0 28px rgba(240,180,41,.6))">🏆</div>
-  <h1>Auction Complete!</h1>
-  <div style="color:var(--text2);font-size:14px;margin-top:7px" id="endSummary"></div>
-  <div class="final-list" id="finalList"></div>
-  <div id="exportBtnWrap" style="display:none;margin-top:16px">
-    <button class="btn btn-gold" style="max-width:300px" onclick="exportCSV()">Export CSV</button>
+<!-- ADMIN PANEL -->
+<div class="admin-ov" id="adminPanel">
+  <div class="admin-nav">
+    <button onclick="closeAdmin()" class="nav-back" id="adminBackBtn">← Back</button>
+    <a href="./fantasy.html" class="nav-back">⌂ Home</a>
+    <div style="font-family:var(--fd);font-size:18px;font-weight:700;flex:1">Admin — All Rooms</div>
+    <button class="btn btn-blue btn-sm" id="syncNowAdminBtn" onclick="runSync(true)">Sync Now</button>
+    <button onclick="loadAllRooms()" class="nav-back" style="color:var(--gold)">Refresh</button>
   </div>
-  <div id="cvcSection" style="width:100%;max-width:400px;margin-top:16px;display:none">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:left">
-      <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Pick Your Captain & Vice-Captain</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">One-time choice for the whole tournament. Captain scores 2x points, Vice-Captain 1.5x.</div>
-      <label style="font-size:12px;color:var(--text2);margin-bottom:5px;display:block">Captain</label>
-      <select id="capSelect" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--font-body);padding:10px 12px;outline:none;margin-bottom:10px">
-        <option value="">-- Select Captain --</option>
-      </select>
-      <label style="font-size:12px;color:var(--text2);margin-bottom:5px;display:block">Vice-Captain</label>
-      <select id="vcSelect" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--font-body);padding:10px 12px;outline:none;margin-bottom:12px">
-        <option value="">-- Select Vice-Captain --</option>
-      </select>
-      <button class="btn btn-gold" onclick="saveCaptains()" style="width:100%">Confirm Selection</button>
-      <div id="cvcStatus" style="font-size:12px;color:var(--green);margin-top:8px;text-align:center;display:none">✓ Saved!</div>
-    </div>
-  </div>
-  <a id="fantasyLink" href="./fantasy.html" style="display:block;max-width:300px;margin-top:12px;text-decoration:none">
-    <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
-  </a>
-  <button class="btn btn-ghost" style="margin-top:8px;max-width:300px" onclick="showScreen('landingScreen')">New Auction</button>
-</div>
-
-<!-- SOLD OVERLAY (host) -->
-<div class="overlay ov-sold" id="soldOverlay">
-  <div class="hammer">🔨</div>
-  <h2 style="color:var(--gold)">SOLD!</h2>
-  <div class="ov-player" id="ovPlayer">-</div>
-  <div class="ov-to">sold to <strong id="ovTeam" style="color:var(--gold)">-</strong></div>
-  <div class="ov-price" id="ovPrice">0</div>
-  <div class="ov-unit">LAKHS</div>
-  <button class="btn btn-gold" style="margin-top:20px;max-width:260px" onclick="hideSoldOverlay()">Next Player</button>
-</div>
-
-<!-- UNSOLD OVERLAY (host) -->
-<div class="overlay ov-unsold" id="unsoldOverlay">
-  <div style="font-size:60px">😔</div>
-  <h2 style="color:var(--red)">UNSOLD</h2>
-  <div class="ov-player" id="ovUnsoldPlayer" style="margin-top:8px">-</div>
-  <button class="btn btn-ghost" style="margin-top:20px;max-width:260px" onclick="hideUnsoldOverlay()">Continue</button>
-</div>
-
-<!-- SOLD FLASH (participants) -->
-<div class="overlay ov-sold" id="soldFlash" style="pointer-events:none">
-  <div class="hammer">🔨</div>
-  <h2 style="color:var(--gold)">SOLD!</h2>
-  <div class="ov-player" id="fPlayer">-</div>
-  <div class="ov-to">to <strong id="fTeam" style="color:var(--gold)">-</strong></div>
-  <div class="ov-price" id="fPrice">0</div>
-  <div class="ov-unit">LAKHS</div>
+  <div style="padding:12px" id="adminList"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- CONFIRM DIALOG -->
-<div class="confirm-overlay" id="confirmOverlay">
-  <div class="confirm-box">
-    <h3 id="confirmTitle">Are you sure?</h3>
-    <p id="confirmMsg">This action cannot be undone.</p>
-    <div class="confirm-btns">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeConfirm()">Cancel</button>
-      <button class="btn btn-red" style="flex:1" id="confirmOkBtn" onclick="confirmOk()">Confirm</button>
-    </div>
-  </div>
-</div>
-
 <script>
-var db = null;
-// Initialize Firebase when DOM is ready
-window.addEventListener('load', function(){
-  firebase.initializeApp({
-    apiKey:"AIzaSyAcfJjyEmSUVkk-oXipxVkmsHzq1vwOcwc",
-    authDomain:"ipl-auction-64c8e.firebaseapp.com",
-    databaseURL:"https://ipl-auction-64c8e-default-rtdb.firebaseio.com",
-    projectId:"ipl-auction-64c8e",
-    storageBucket:"ipl-auction-64c8e.appspot.com",
-    appId:"1:152098475113:web:1ca6675ccf43e8d568a6f8"
-  });
-  db = firebase.database();
-  console.log("Firebase ready");
+// ── FIREBASE ──
+firebase.initializeApp({
+  apiKey:'AIzaSyAcfJjyEmSUVkk-oXipxVkmsHzq1vwOcwc',
+  authDomain:'ipl-auction-64c8e.firebaseapp.com',
+  databaseURL:'https://ipl-auction-64c8e-default-rtdb.firebaseio.com',
+  projectId:'ipl-auction-64c8e',
+  storageBucket:'ipl-auction-64c8e.appspot.com',
+  appId:'1:152098475113:web:1ca6675ccf43e8d568a6f8'
 });
+var db = firebase.database();
+
+// ── STATE ──
+var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, auctionEndedAt:0, currentMatch:1};
+var fantasyRef = null;
+var currentSquadTeam = 0;
+var syncedIds = {};
+var WORKER_URL = 'https://ipl-fantasy-proxy.choprashrey17.workers.dev';
+var IS_ADMIN = false; // set via verifyAdmin()
 
 var PLAYERS = [
   {id:1,name:"Ruturaj Gaikwad",role:"Batter",nat:"India",base:200,photo:"./images/322236.1.webp"},
@@ -1123,1167 +620,1281 @@ var PLAYERS = [
 
 var PHOTO_MAP = {};
 (function(){ PLAYERS.forEach(function(p){ if(p.photo) PHOTO_MAP[p.id]=p.photo; }); })();
-function getPhoto(p){ return (p && (p.photo || PHOTO_MAP[p.id])) || ''; }
-
-var COLORS=['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166','#e040fb','#00bcd4'];
-var EMOJI={Batter:'BAT',Bowler:'BWL','All-Rounder':'AR',WK:'WK'};
-
-// Bid increment: <100L: +20L, 100-500L: +25L, >500L: +50L
-function nextBid(current) {
-  if (current < 100) return current + 20;
-  if (current < 500) return current + 25;
-  return current + 50;
-}
-function fmtL(val) { return "₹" + val + "L"; }
-
-// Get team from Firebase data (handles both array and object-with-string-keys)
-function getTeam(teamsData, idx) {
-  if (!teamsData) return null;
-  var n = parseInt(idx);
-  if (isNaN(n)) return null;
-  if (Array.isArray(teamsData)) return teamsData[n] || null;
-  return teamsData[n] || teamsData[String(n)] || null;
+function getPhotoByName(name){
+  var n=(name||'').toLowerCase().trim();
+  for(var i=0;i<PLAYERS.length;i++){
+    if(PLAYERS[i].name.toLowerCase().trim()===n) return PLAYERS[i].photo||'';
+  }
+  return '';
 }
 
-var role=null, roomCode=null, roomRef=null;
-var myTeamIdx=null, myName=null, myTeamName=null;
-var G={};
-var lastPlayerId=null, lastSoldKey=null;
-var hostCat='All', hPFilter='All', pPoolCat='All', wPoolCat='All';
-var timerInterval=null, timerLeft=0;
+var IPL_SCHEDULE = [
+  {num:1,  id:"149618", label:"M1 — RCB vs SRH",   date:"2026-03-28", time:"7:30 PM IST"},
+  {num:2,  id:"149629", label:"M2 — MI vs KKR",    date:"2026-03-29", time:"7:30 PM IST"},
+  {num:3,  id:"149640", label:"M3 — RR vs CSK",    date:"2026-03-30", time:"7:30 PM IST"},
+  {num:4,  id:"149651", label:"M4 — PBKS vs GT",   date:"2026-03-31", time:"7:30 PM IST"},
+  {num:5,  id:"149662", label:"M5 — LSG vs DC",    date:"2026-04-01", time:"7:30 PM IST"},
+  {num:6,  id:"149673", label:"M6 — KKR vs SRH",   date:"2026-04-02", time:"7:30 PM IST"},
+  {num:7,  id:"149684", label:"M7 — CSK vs PBKS",  date:"2026-04-03", time:"7:30 PM IST"},
+  {num:8,  id:"149695", label:"M8 — DC vs MI",     date:"2026-04-04", time:"3:30 PM IST"},
+  {num:9,  id:"149699", label:"M9 — GT vs RR",     date:"2026-04-04", time:"7:30 PM IST"},
+  {num:10, id:"149710", label:"M10 — SRH vs LSG",  date:"2026-04-05", time:"3:30 PM IST"},
+  {num:11, id:"149721", label:"M11 — RCB vs CSK",  date:"2026-04-05", time:"7:30 PM IST"},
+  {num:12, id:"149732", label:"M12 — KKR vs PBKS", date:"2026-04-06", time:"7:30 PM IST"},
+  {num:13, id:"149743", label:"M13 — RR vs MI",    date:"2026-04-07", time:"7:30 PM IST"},
+  {num:14, id:"149746", label:"M14 — DC vs GT",    date:"2026-04-08", time:"7:30 PM IST"},
+  {num:15, id:"149757", label:"M15 — KKR vs LSG",  date:"2026-04-09", time:"7:30 PM IST"},
+  {num:16, id:"149768", label:"M16 — RR vs RCB",   date:"2026-04-10", time:"7:30 PM IST"},
+  {num:17, id:"149779", label:"M17 — PBKS vs SRH", date:"2026-04-11", time:"3:30 PM IST"},
+  {num:18, id:"149790", label:"M18 — CSK vs DC",   date:"2026-04-11", time:"7:30 PM IST"},
+  {num:19, id:"149801", label:"M19 — LSG vs GT",   date:"2026-04-12", time:"3:30 PM IST"},
+  {num:20, id:"149812", label:"M20 — MI vs RCB",   date:"2026-04-12", time:"7:30 PM IST"},
+];
+
 var toastTO;
 
-function showScreen(id){
-  var already=document.getElementById(id).classList.contains('active');
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById(id).classList.add('active');
-  if(id==='waitScreen' && !already){
-    document.querySelectorAll('#waitScreen .tab-pane').forEach(function(p){p.classList.remove('on');});
-    document.querySelectorAll('#waitScreen .tab').forEach(function(t){t.classList.remove('on');});
-    var sp=document.getElementById('wpane-status');
-    var tabs=document.querySelectorAll('#waitScreen .tab');
-    if(sp) sp.classList.add('on');
-    if(tabs[0]) tabs[0].classList.add('on');
-  }
-}
-
-function toast(msg,dur){
+// ── UTILS ──
+function toast(msg, dur){
   var t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTO);
   toastTO=setTimeout(function(){t.classList.remove('show');},dur||2800);
 }
 
-function genCode(){
-  var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';
-  for(var i=0;i<5;i++) s+=c[Math.floor(Math.random()*c.length)];
-  return s;
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var el = document.getElementById(id);
+  if(el) el.classList.add('active');
 }
 
-function toggleTimerExtra(){
-  document.getElementById('timerExtra').classList.toggle('show',document.getElementById('enableTimer').checked);
-}
-
-function pickTimer(s,el){
-  document.getElementById('customTimer').value=s;
-  document.querySelectorAll('.tpbtn').forEach(function(b){b.classList.remove('on');});
-  el.classList.add('on');
-}
-
-// --- CREATE ROOM ---
-function createRoom(){
-  var hName=document.getElementById('hostName').value.trim();
-  var rName=document.getElementById('roomName').value.trim();
-  if(!hName){toast('Enter your name!');return;}
-  if(!rName){toast('Enter a room name!');return;}
-  var budget=parseInt(document.getElementById('teamBudget').value)||10000;
-  var timerOn=document.getElementById('enableTimer').checked;
-  var timerSec=parseInt(document.getElementById('customTimer').value)||45;
-
-  var players=PLAYERS.map(function(p){
-    return {id:p.id,name:p.name,role:p.role,nat:p.nat,base:p.base,status:'pending',soldTo:null,soldPrice:0};
+function switchTab(name){
+  ['lb','sq','sc','sy','hi'].forEach(function(n){
+    var t=document.getElementById('tab-'+n);
+    var p=document.getElementById('pane-'+n);
+    if(t) t.classList.toggle('on', n===name);
+    if(p) p.classList.toggle('on', n===name);
   });
-
-  var code=genCode();
-  roomCode=code; role='host'; myName=hName;
-  roomRef=db.ref('rooms/'+code);
-
-  roomRef.set({
-    roomName:rName, hostName:hName, teamBudget:budget, createdAt:Date.now(),
-    teams:{}, players:players,
-    currentPlayerId:null, currentBid:0, currentBidderIdx:"NONE",
-    timerEnabled:timerOn, timerSeconds:timerSec,
-    auctionStarted:false, auctionEnded:false,
-    participants:{}, lastSold:null, teamCount:0,
-    createdAt:Date.now()
-  }, function(err){
-    if(err){toast('Firebase error: '+err.message);return;}
-    document.getElementById('lobbyCode').textContent=code;
-    document.getElementById('lobbyRoomName').textContent=rName;
-    showScreen('lobbyScreen');
-    listenLobby();
-    saveSession();
-  });
+  if(name==='lb') renderLeaderboard();
+  if(name==='sq') renderSquadPane();
+  if(name==='hi') renderHistory();
 }
 
-// --- LOBBY ---
-function listenLobby(){
-  roomRef.on('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    G=data;
-    var parts=data.participants?Object.values(data.participants):[];
-    document.getElementById('pCount').textContent=parts.length;
-    if(!parts.length){
-      document.getElementById('participantsList').innerHTML='<div style="color:var(--text3);font-size:13px;padding:4px 0">Waiting<span class="wdots"></span></div>';
-    } else {
-      document.getElementById('participantsList').innerHTML=parts.map(function(p){
-        var col=COLORS[p.teamIdx%COLORS.length]||'var(--text3)';
-        return '<div class="pitem"><div class="pdot" style="background:'+col+'"></div>'
-          +'<div class="pname">'+p.name+'</div>'
-          +'<div class="pteam">'+p.teamName+'</div></div>';
-      }).join('');
-    }
-  });
-}
-
-// --- REJOIN AS HOST ---
-function rejoinAsHost() {
-  var hName = document.getElementById('hostRejoinName').value.trim();
-  var code = document.getElementById('hostRejoinCode').value.trim().toUpperCase();
-  if (!hName) { toast('Enter your name!'); return; }
-  if (code.length !== 5) { toast('Enter the 5-character room code!'); return; }
-  var ref = db.ref('rooms/' + code);
-  ref.once('value', function(snap) {
-    var data = snap.val();
-    if (!data) { toast('Room not found! Check the code.'); return; }
-    if (data.auctionEnded) { toast('This auction has already ended.'); return; }
-    // Verify the name matches the original host
-    if (data.hostName && data.hostName.toLowerCase() !== hName.toLowerCase()) {
-      toast('Name does not match the original host.'); return;
-    }
-    roomCode = code; role = 'host'; myName = hName;
-    roomRef = ref; G = data;
-    document.getElementById('hostCode').textContent = roomCode;
-    document.getElementById('hostConnBar').className = 'conn-bar cb-live';
-    document.getElementById('hostConnBar').textContent = 'Live · ' + roomCode;
-    if (data.auctionStarted) {
-      showScreen('hostAuctionScreen');
-      renderSortedList();
-      listenAuction();
-      toast('Rejoined as host!');
-    } else {
-      // Auction not started yet — go back to lobby
-      document.getElementById('lobbyCode').textContent = roomCode;
-      document.getElementById('lobbyRoomName').textContent = data.roomName || roomCode;
-      showScreen('lobbyScreen');
-      listenLobby();
-      toast('Back in the lobby!');
-    }
-    saveSession();
-  });
-}
-
-// --- JOIN ROOM ---
-function joinRoom(){
-  var pName=document.getElementById('participantName').value.trim();
-  var code=document.getElementById('roomCode').value.trim().toUpperCase();
-  if(!pName){toast('Enter your name!');return;}
-  if(code.length!==5){toast('Enter the 5-character room code!');return;}
-  var ref=db.ref('rooms/'+code);
-  ref.once('value',function(snap){
-    var data=snap.val();
-    if(!data){toast('Room not found! Check the code.');return;}
-    if(data.auctionEnded){toast('This auction has already ended.');return;}
-
-    roomCode=code; role='participant'; myName=pName;
-    roomRef=ref; G=data;
-
-    // If auction already started, check if this person was already a participant
-    if(data.auctionStarted){
-      var existingPart = null;
-      var existingIdx = null;
-      if(data.participants){
-        var parts = Object.values(data.participants);
-        for(var i=0;i<parts.length;i++){
-          if(parts[i].name && parts[i].name.toLowerCase()===pName.toLowerCase()){
-            existingPart = parts[i];
-            existingIdx = parts[i].teamIdx;
-            break;
-          }
-        }
-      }
-      if(existingPart !== null && existingIdx !== null){
-        // Rejoin with original team
-        myTeamIdx = existingIdx;
-        myTeamName = existingPart.teamName;
-        var t = getTeam(data.teams, myTeamIdx);
-        if(t){
-          document.documentElement.style.setProperty('--team', t.color);
-          document.getElementById('waitTeamName').textContent = t.name;
-          document.getElementById('pTeamName').textContent = t.name;
-        }
-        showScreen('waitScreen');
-        listenParticipant();
-        saveSession();
-        toast('Welcome back, '+pName+'! Rejoined as '+(myTeamName||'your team')+'.');
-      } else {
-        toast('Auction is in progress and you were not part of this room.');
-      }
-      return;
-    }
-
-    // Auction not started yet — go to team selection
-    document.getElementById('tsRoomName').textContent=data.roomName;
-    document.getElementById('tsRoomCode').textContent=code;
-    showScreen('teamSelectScreen');
-    // Poll for auction start - once started, switch to the main participant listener
-    var startWatcher = roomRef.on('value', function(snap2){
-      var d=snap2.val(); if(!d) return;
-      G=d;
-      if(d.auctionStarted && myTeamIdx!==null){
-        roomRef.off('value', startWatcher); // remove this watcher
-        showScreen('waitScreen');
-        listenParticipant(); // start the one real listener
-      }
-    });
-  });
-}
-
-// --- JOIN TEAM ---
-var selectedColor = '#e74c3c';
-function pickColor(btn){
-  document.querySelectorAll('.color-opt').forEach(function(b){b.classList.remove('on');});
-  btn.classList.add('on');
-  selectedColor = btn.dataset.color;
-}
-function joinTeam(){
-  var tName=document.getElementById('myTeamName').value.trim();
-  if(!tName){toast('Enter your team name!');return;}
-  roomRef.child('teamCount').transaction(function(cur){ return (cur||0)+1; },
-    function(err,committed,snap){
-      if(err||!committed){toast('Join error, try again!');return;}
-      var idx=snap.val()-1;
-      if(idx>=12){toast('Room is full!');return;}
-      myTeamIdx=idx;
-      var color=COLORS[idx%COLORS.length];
-      document.documentElement.style.setProperty('--team',color);
-      var pid=myName.replace(/\s+/g,'_')+'_'+Date.now();
-      var update={};
-      update['participants/'+pid]={name:myName,teamName:tName,teamIdx:idx,joinedAt:Date.now()};
-      update['teams/'+idx]={name:tName,budget:G.teamBudget||10000,spent:0,players:[],color:color};
-      roomRef.update(update,function(e2){
-        if(e2){toast('Error: '+e2.message);return;}
-        myTeamName=tName;
-        toast('Joined as '+tName+'!');
-        document.getElementById('waitTeamName').textContent=tName;
-        document.getElementById('pTeamName').textContent=tName;
-        saveSession();
-        // Lock the team select screen so they can't rejoin
-        var btn=document.getElementById('joinTeamBtn');
-        var inp=document.getElementById('myTeamName');
-        if(btn){ btn.disabled=true; btn.textContent='Waiting for host to start...'; }
-        if(inp){ inp.disabled=true; }
-      });
-    });
-}
-
-// --- START AUCTION ---
-function startAuction(){
-  roomRef.update({auctionStarted:true},function(err){
-    if(err){toast('Error: '+err.message);return;}
-    showScreen('hostAuctionScreen');
-    document.getElementById('hostCode').textContent=roomCode;
-    document.getElementById('hostConnBar').className='conn-bar cb-live';
-    document.getElementById('hostConnBar').textContent='Live · '+roomCode;
-    renderSortedList();
-    listenAuction();
-  });
-}
-
-// --- HOST AUCTION LISTENER ---
-function listenAuction(){
-  document.getElementById('hostCode').textContent=roomCode;
-  roomRef.on('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    G=data;
-    document.getElementById('hostConnBar').className='conn-bar cb-live';
-    document.getElementById('hostConnBar').textContent='Live · '+roomCode;
-    // Handle pause state
-    applyPauseState(!!data.paused);
-    if(data.currentPlayerId && document.getElementById('activeBidDiv').style.display!=='none'){
-      renderActiveBid(data);
-    }
-    renderHostTeams();
-    renderHostPlayers();
-    updateHostCount();
-    if(data.auctionEnded) showEndScreen();
-    saveSession();
-  });
-}
-
-function pushRoom(patch){
-  if(roomRef) roomRef.update(patch);
-}
-
-// --- CATEGORY ---
-function setHostCat(cat,el){
-  hostCat=cat;
-  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('on');});
-  el.classList.add('on');
-  renderSortedList();
-}
-
-function getFilteredPending(){
-  return (G.players||[]).filter(function(p){
-    return p.status==='pending' && (hostCat==='All'||p.role===hostCat);
-  }).sort(function(a,b){return a.name.localeCompare(b.name);});
-}
-
-function renderSortedList(){
-  var list=getFilteredPending();
-  var el=document.getElementById('sortedList');
-  if(!el) return;
-  if(!list.length){el.innerHTML='<div class="empty">No pending players in this category</div>';return;}
-  el.innerHTML=list.map(function(p){
-    return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
-      +'<div style="display:flex;align-items:center;gap:9px">'
-      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
-              :'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
-      +'</div>'
-      +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
-      +'</div>'
-      +'<div class="sr-price">'+fmtL(p.base)+'</div></div>';
-  }).join('');
-}
-
-function searchPlayers(){
-  var q=document.getElementById('playerSearch').value.toLowerCase();
-  var res=document.getElementById('searchResults');
-  if(!q){res.innerHTML='';return;}
-  var matches=(G.players||[]).filter(function(p){
-    return p.status==='pending'&&p.name.toLowerCase().indexOf(q)>=0&&(hostCat==='All'||p.role===hostCat);
-  }).slice(0,8);
-  res.innerHTML=matches.map(function(p){
-    return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
-      +'<div style="display:flex;align-items:center;gap:9px">'
-      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
-              :'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
-      +'</div>'
-      +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
-      +'</div>'
-      +'<div class="sr-price">'+fmtL(p.base)+'</div></div>';
-  }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px">No players found</div>';
-}
-
-function nextRandom(){
-  var list=getFilteredPending();
-  if(!list.length){toast('No pending players!');return;}
-  bringPlayer(list[Math.floor(Math.random()*list.length)].id);
-}
-
-// --- BRING PLAYER ---
-function bringPlayer(id){
-  var p=(G.players||[]).find(function(x){return x.id===id;});
-  if(!p||p.status!=='pending') return;
-  document.getElementById('playerSearch').value='';
-  document.getElementById('searchResults').innerHTML='';
-  stopTimer();
-  pushRoom({currentPlayerId:id, currentBid:0, currentBidderIdx:"NONE"});
-  G.currentPlayerId=id; G.currentBid=0; G.currentBidderIdx="NONE";
-  document.getElementById('noBidDiv').style.display='none';
-  document.getElementById('activeBidDiv').style.display='block';
-  document.getElementById('hostLive').style.display='inline-block';
-  document.getElementById('hostTitle').textContent=p.name;
-  renderActiveBid(G);
-  if(G.timerEnabled) startTimer(G.timerSeconds);
-}
-
-
-function setAvi(el, photo, role) {
-  // Always fully reset the element first to avoid stale img state
-  el.innerHTML = '';
-  if(photo) {
-    var img = document.createElement('img');
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
-    img.onerror = function(){
-      this.onerror = null; // prevent re-triggering
-      this.src = '';
-      el.innerHTML = '<span style="font-size:20px">' + (EMOJI[role]||'?') + '</span>';
-    };
-    img.src = photo; // set src AFTER onerror to avoid race
+function setAvi(el, photo, initial){
+  el.innerHTML='';
+  if(photo){
+    var img=document.createElement('img');
+    img.onerror=function(){this.onerror=null;this.src='';el.textContent=initial||'?';};
+    img.src=photo;
     el.appendChild(img);
   } else {
-    el.innerHTML = '<span style="font-size:20px">' + (EMOJI[role]||'?') + '</span>';
-  }
-}
-function renderActiveBid(data){
-  var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-  if(!p) return;
-  var hAviEl=document.getElementById('hAvi');
-  setAvi(hAviEl, getPhoto(p), p.role);
-  document.getElementById('hName').textContent=p.name;
-  document.getElementById('hRole').textContent=p.role;
-  document.getElementById('hNat').textContent=p.nat;
-  document.getElementById('hBase').textContent=fmtL(p.base);
-  var cb=data.currentBid||0;
-  document.getElementById('hCurrent').textContent=(cb===0)?'No bid yet':fmtL(cb);
-  var nb=(cb===0)?p.base:nextBid(cb);
-  document.getElementById('hNextBidAmt').textContent=fmtL(nb);
-  updateHostCount();
-  var bi=data.currentBidderIdx;
-  var hasLeader=(bi && bi!=="NONE");
-  if(hasLeader){
-    var t=getTeam(data.teams,parseInt(bi));
-    if(t){
-      document.getElementById('hBidFeed').innerHTML='<div class="bfeed-item" style="border-left-color:'+t.color+'">'
-        +'<div class="bfeed-team" style="color:'+t.color+'">'+t.name+'</div>'
-        +'<div class="bfeed-amt">'+fmtL(cb)+'</div></div>';
-      document.getElementById('hLeader').innerHTML='Leading: <strong style="color:'+t.color+'">'+t.name+'</strong>';
-    }
-  } else {
-    document.getElementById('hBidFeed').innerHTML='<div style="color:var(--text3);font-size:13px">Waiting for bids...</div>';
-    document.getElementById('hLeader').textContent='No bids yet';
+    // Show initials instead of single letter
+    var parts=(initial||'?').split(' ');
+    var initials=parts.length>1 ? parts[0][0]+parts[parts.length-1][0] : (initial||'?').slice(0,2);
+    el.textContent=initials.toUpperCase();
+    el.style.fontSize='12px';
+    el.style.fontWeight='700';
+    el.style.fontFamily='var(--fd)';
   }
 }
 
-// --- SOLD ---
-function soldNow(){
-  if(!roomRef) return;
-  roomRef.once('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    var bi=data.currentBidderIdx;
-    var pid=data.currentPlayerId;
-    var cb=data.currentBid||0;
-    if(!pid){toast('No player selected!');return;}
-    if(!bi||bi==="NONE"||cb===0){toast('No bid placed yet!');return;}
-    stopTimer();
-    var biIdx=parseInt(bi);
-    var players=data.players||[];
-    var teams=data.teams||{};
-    var pidx=-1;
-    for(var i=0;i<players.length;i++){if(players[i].id===pid){pidx=i;break;}}
-    if(pidx<0){toast('Player not found!');return;}
-    var team=getTeam(teams,biIdx);
-    if(!team){toast('Team not found!');return;}
-    players[pidx].status='sold';
-    players[pidx].soldTo=biIdx;
-    players[pidx].soldPrice=cb;
-    var teamKey=String(biIdx);
-    if(!teams[teamKey]) teams[teamKey]=teams[biIdx];
-    teams[teamKey].spent=(teams[teamKey].spent||0)+cb;
-    if(!teams[teamKey].players) teams[teamKey].players=[];
-    teams[teamKey].players.push(Object.assign({},players[pidx]));
-    document.getElementById('ovPlayer').textContent=players[pidx].name;
-    document.getElementById('ovTeam').textContent=team.name;
-    document.getElementById('ovTeam').style.color=team.color;
-    document.getElementById('ovPrice').textContent=cb;
-    document.getElementById('soldOverlay').classList.add('show');
-    pushRoom({players:players,teams:teams,currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE",
-      lastSold:{player:players[pidx].name,team:team.name,price:cb}});
+// ── LOAD ROOM ──
+function loadRoom(){
+  var code=document.getElementById('setupCode').value.trim().toUpperCase();
+  var team=document.getElementById('setupTeam').value.trim();
+  if(code.length!==5){toast('Enter a 5-character room code');return;}
+  toast('Loading...');
+  db.ref('rooms/'+code).once('value',function(snap){
+    var data=snap.val();
+    if(!data){toast('Room not found!');return;}
+    if(!data.auctionStarted && !data.auctionEnded){toast('Auction has not started yet');return;}
+    G.roomCode=code; G.myTeamName=team;
+    G.teams=data.teams||{};
+    localStorage.setItem('fl_code',code);
+    localStorage.setItem('fl_team',team);
+    fantasyRef=db.ref('fantasy/'+code);
+    fantasyRef.once('value',function(snap2){
+      var fd=snap2.val()||{};
+      G.matchData=fd.matches||{};
+      G.matchLabels=fd.matchLabels||{};
+      G.currentMatch=fd.currentMatch||1;
+      initApp();
+    });
+    fantasyRef.on('value',function(snap3){
+      var fd=snap3.val()||{};
+      G.matchData=fd.matches||{};
+      G.matchLabels=fd.matchLabels||{};
+      G.currentMatch=fd.currentMatch||1;
+      renderLeaderboard();
+      renderHistory();
+      updateNav();
+    });
   });
 }
 
-function hideSoldOverlay(){
-  document.getElementById('soldOverlay').classList.remove('show');
-  document.getElementById('noBidDiv').style.display='block';
-  document.getElementById('activeBidDiv').style.display='none';
-  document.getElementById('hostLive').style.display='none';
-  document.getElementById('playerSearch').value='';
-  document.getElementById('searchResults').innerHTML='';
-  renderSortedList();
-  updateHostCount();
-}
-
-function markUnsold(){
-  if(!G.currentPlayerId) return;
-  stopTimer();
-  roomRef.once('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    var players=data.players||[];
-    var pidx=-1;
-    for(var i=0;i<players.length;i++){if(players[i].id===data.currentPlayerId){pidx=i;break;}}
-    if(pidx<0) return;
-    players[pidx].status='unsold';
-    document.getElementById('ovUnsoldPlayer').textContent=players[pidx].name;
-    document.getElementById('unsoldOverlay').classList.add('show');
-    pushRoom({players:players,currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE"});
-  });
-}
-
-function hideUnsoldOverlay(){
-  document.getElementById('unsoldOverlay').classList.remove('show');
-  document.getElementById('noBidDiv').style.display='block';
-  document.getElementById('activeBidDiv').style.display='none';
-  document.getElementById('hostLive').style.display='none';
-  renderSortedList();
-  updateHostCount();
-}
-
-function skipPlayer(){
-  stopTimer();
-  pushRoom({currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE"});
-  document.getElementById('noBidDiv').style.display='block';
-  document.getElementById('activeBidDiv').style.display='none';
-  document.getElementById('hostLive').style.display='none';
-  renderSortedList();
-  updateHostCount();
-}
-
-// --- TIMER ---
-function startTimer(sec){
-  timerLeft=sec;
-  document.getElementById('hTimerWrap').style.display='block';
-  updateTimerUI();
-  timerInterval=setInterval(function(){
-    timerLeft--;
-    updateTimerUI();
-    if(timerLeft<=0){
-      stopTimer();
-      var bi=G.currentBidderIdx;
-      if(bi && bi!=="NONE") soldNow(); else markUnsold();
-    }
-  },1000);
-}
-function stopTimer(){clearInterval(timerInterval);timerInterval=null;}
-function updateTimerUI(){
-  var el=document.getElementById('hTimerNum'),bar=document.getElementById('hTimerBar');
-  var sec=G.timerSeconds||45;
-  el.textContent=timerLeft;
-  bar.style.width=(timerLeft/sec*100)+'%';
-  el.classList.toggle('urgent',timerLeft<=10);
-  bar.classList.toggle('urgent',timerLeft<=10);
-  // Push timer to Firebase so participants can see it
-  if(roomRef) roomRef.update({timerLeft:timerLeft});
-}
-
-// --- HOST RENDER ---
-function updateHostCount(){
-  var done=(G.players||[]).filter(function(p){return p.status!=='pending';}).length;
-  document.getElementById('hostCount').textContent=done+'/'+(G.players||[]).length;
-}
-
-function renderHostTeams(){
-  var c=document.getElementById('hTeamsList');
-  var teams=G.teams||{};
-  var keys=Object.keys(teams);
-  if(!keys.length){c.innerHTML='<div class="empty">No teams yet</div>';return;}
-  c.innerHTML=keys.sort().map(function(k){
-    var t=teams[k];
-    return '<div class="tc"><div class="tc-hdr" onclick="toggleTC(this.dataset.k)" data-k="'+k+'">'
-      +'<div class="tc-dot" style="background:'+t.color+'"></div>'
-      +'<div class="tc-name">'+t.name+'</div>'
-      +'<div><div class="tc-budget">'+fmtL(t.budget-t.spent)+'</div>'
-      +'<div style="font-size:10px;color:var(--text3)">'+(t.players?t.players.length:0)+' players</div></div>'
-      +'</div><div class="tc-body" id="tc'+k+'">'
-      +'<div class="tc-stats">'
-      +'<div class="ts"><div class="v">'+fmtL(t.budget)+'</div><div class="l">Budget</div></div>'
-      +'<div class="ts"><div class="v">'+fmtL(t.spent)+'</div><div class="l">Spent</div></div>'
-      +'<div class="ts"><div class="v">'+fmtL(t.budget-t.spent)+'</div><div class="l">Left</div></div>'
-      +'<div class="ts"><div class="v">'+(t.players?t.players.length:0)+'</div><div class="l">Players</div></div>'
-      +'</div>'
-      +(t.players&&t.players.length?t.players.map(function(p){
-        return '<div class="acq-row"><div><div class="acq-name">'+p.name+'</div><div class="acq-role">'+p.role+'</div></div>'
-          +'<div class="acq-price">'+fmtL(p.soldPrice)+'</div></div>';
-      }).join(''):'<div class="empty">No players yet</div>')
-      +'</div></div>';
-  }).join('');
-}
-function toggleTC(k){var b=document.getElementById('tc'+k);if(b)b.classList.toggle('open');}
-
-function hFilterP(f,el){
-  hPFilter=f;
-  document.querySelectorAll('#hpane-players .fc').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  renderHostPlayers();
-}
-
-function renderHostPlayers(){
-  var list=(G.players||[]).filter(function(p){
-    if(hPFilter==='All') return true;
-    if(hPFilter==='Pending') return p.status==='pending';
-    if(hPFilter==='Sold') return p.status==='sold';
-    if(hPFilter==='Unsold') return p.status==='unsold';
-    return p.role===hPFilter;
-  }).sort(function(a,b){return a.name.localeCompare(b.name);});
-  var c=document.getElementById('hPlayersList');
-  if(!list.length){c.innerHTML='<div class="empty">No players</div>';return;}
-  var teams=G.teams||{};
-  c.innerHTML=list.map(function(p){
-    var isCur=p.id===G.currentPlayerId;
-    var soldTeam='';
-    if(p.soldTo!=null){var st=getTeam(teams,p.soldTo);soldTeam=st?st.name:'';}
-    var status=p.status==='sold'?'<span class="s-s pl-st">Sold: '+soldTeam+'</span>'
-      :p.status==='unsold'?'<span class="s-u pl-st">Unsold</span>'
-      :isCur?'<span class="s-l pl-st">Live</span>'
-      :'<span class="s-p pl-st">Pending</span>';
-    var pr=p.status==='sold'?fmtL(p.soldPrice):fmtL(p.base);
-    return '<div class="pl-item '+(p.status==='sold'?'faded':'')+' '+(isCur?'hl':'')+'">'
-      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
-      +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div>'+status+'</div>'
-      +'<div class="pl-price">'+pr+'</div></div>';
-  }).join('');
-}
-
-function hTab(name,el){
-  document.querySelectorAll('#hostAuctionScreen .tab').forEach(function(t){t.classList.remove('on');});
-  document.querySelectorAll('#hostAuctionScreen .tab-pane').forEach(function(t){t.classList.remove('on');});
-  el.classList.add('on');
-  document.getElementById('hpane-'+name).classList.add('on');
-  if(name==='teams') renderHostTeams();
-  if(name==='players') renderHostPlayers();
-}
-
-// --- PARTICIPANT ---
-function listenParticipant(){
-  roomRef.on('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    G=data;
-    if(myTeamIdx!==null && data.teams){
-      var t=getTeam(data.teams,myTeamIdx);
-      if(t) document.documentElement.style.setProperty('--team',t.color);
-    }
-    if(data.lastSold){
-      var key=data.lastSold.player+'|'+data.lastSold.price;
-      if(key!==lastSoldKey){lastSoldKey=key;showSoldFlash(data.lastSold);}
-    }
-    if(data.auctionEnded){clearSession();showParticipantEnd();return;}
-    // Handle pause
-    applyPauseState(!!data.paused);
-    updateWaitBudget();
-    if(document.getElementById('wpane-pool')&&document.getElementById('wpane-pool').classList.contains('on')) renderWPool();
-    if(document.getElementById('wpane-squad')&&document.getElementById('wpane-squad').classList.contains('on')) renderWSquad();
-    if(!data.currentPlayerId){
-      if(document.getElementById('pBidScreen').classList.contains('active')){
-        showScreen('waitScreen');
-        renderWPool();
-        renderWSquad();
-      }
-      return;
-    }
-    if(data.currentPlayerId!==lastPlayerId){
-      lastPlayerId=data.currentPlayerId;
-      showScreen('pBidScreen');
-      renderParticipantBid(data);
-    } else {
-      updatePBidInfo(data);
-    }
-    updatePBudget();
-  });
-}
-
-function updateWaitBudget(){
-  if(myTeamIdx===null||!G.teams) return;
-  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
-  document.getElementById('waitBudget').textContent=fmtL(t.budget-t.spent);
-  document.getElementById('waitTeamName').textContent=t.name;
-}
-
-function renderParticipantBid(data){
-  var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-  if(!p) return;
-  var pAviEl=document.getElementById('pAvi');
-  setAvi(pAviEl, getPhoto(p), p.role);
-  document.getElementById('pName').textContent=p.name;
-  document.getElementById('pRole').textContent=p.role;
-  document.getElementById('pNat').textContent=p.nat;
-  document.getElementById('pBase').textContent=fmtL(p.base);
-  var t=myTeamIdx!==null?getTeam(data.teams,myTeamIdx):null;
-  document.getElementById('pTeamName').textContent=t?t.name:'';
-  document.getElementById('pTimerWrap').style.display=data.timerEnabled?'block':'none';
-  updatePBidInfo(data);
-}
-
-function updatePBidInfo(data){
-  var cb=data.currentBid||0;
-  var bi=data.currentBidderIdx;
-  var hasLeader=(bi && bi!=="NONE");
-  var leaderIdx=hasLeader?parseInt(bi):-1;
-  var myIdx=parseInt(myTeamIdx);
-  var iLead=(hasLeader && leaderIdx===myIdx);
-
-  document.getElementById('pCurrent').textContent=(cb===0)?'No bids yet':fmtL(cb);
-  var p2=(data.players||G.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-  var nb=(cb===0&&p2)?p2.base:nextBid(cb);
-  document.getElementById('pBidAmt').textContent=nb;
-
-  var mt=getTeam(data.teams||G.teams,myIdx);
-  var remaining=mt?(mt.budget-mt.spent):0;
-  var canAfford=!!(mt && remaining>=nb);
-
-  console.log('BID myIdx='+myIdx+' bi='+bi+' leaderIdx='+leaderIdx+' iLead='+iLead+' canAfford='+canAfford+' nb='+nb+' remaining='+remaining);
-
-  document.getElementById('bigBidBtn').disabled=(iLead||!canAfford);
-
-  var lb=document.getElementById('pLeader');
-  var lc=document.getElementById('liveCard');
-  if(!hasLeader){
-    lb.textContent='No bids yet - be first!';
-    lb.className='p-leader';
-    lc.classList.remove('leading');
-  } else if(iLead){
-    lb.innerHTML='<strong>You are leading!</strong>';
-    lb.className='p-leader me';
-    lc.classList.add('leading');
-  } else {
-    var lt=getTeam(data.teams||G.teams,leaderIdx);
-    lb.innerHTML='Leading: <strong>'+(lt?lt.name:'Team '+leaderIdx)+'</strong>';
-    lb.className='p-leader';
-    lc.classList.remove('leading');
-  }
-  document.getElementById('pBidHint').textContent=
-    !canAfford?'Not enough budget':
-    iLead?'You are the highest bidder!':'Tap to raise the bid';
-
-  if(data.timerEnabled&&data.timerSeconds){
-    var tl=(data.timerLeft!==undefined)?data.timerLeft:0;
-    var ts=data.timerSeconds;
-    var tw=document.getElementById('pTimerWrap');
-    var tn=document.getElementById('pTimerNum');
-    var tb=document.getElementById('pTimerBar');
-    if(tw) tw.style.display='block';
-    if(tn){ tn.textContent=tl; tn.classList.toggle('urgent',tl<=10); }
-    if(tb){ tb.style.width=(ts>0?(tl/ts*100):0)+'%'; tb.classList.toggle('urgent',tl<=10); }
-  } else {
-    var tw2=document.getElementById('pTimerWrap');
-    if(tw2) tw2.style.display='none';
+function requestNotifPermission(){
+  if('Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission();
   }
 }
 
-// --- PLACE BID ---
-function placeBid(){
-  if(!roomRef||myTeamIdx===null) return;
-  if(G.paused){toast('Auction is paused!');return;}
-  var myIdx2=parseInt(myTeamIdx);
-  roomRef.once('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    if(!data.currentPlayerId){toast('No active player!');return;}
-    var bi=data.currentBidderIdx;
-    var hasLeader=(bi && bi!=="NONE");
-    if(hasLeader && parseInt(bi)===myIdx2){toast('You are already the highest bidder!');return;}
-    var cb=data.currentBid||0;
-    var p0=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-    if(!p0){toast('Player not found!');return;}
-    var nb=(cb===0)?p0.base:nextBid(cb);
-    var mt=getTeam(data.teams,myIdx2);
-    if(!mt){toast('Team not found!');return;}
-    if(nb>mt.budget-mt.spent){toast('Not enough budget!');return;}
-    console.log('PLACING BID: team='+myIdx2+' bidderIdx="'+String(myIdx2)+'" amount='+nb);
-    roomRef.update({currentBid:nb, currentBidderIdx:String(myIdx2)});
-  });
-}
-
-function updatePBudget(){
-  if(myTeamIdx===null||!G.teams) return;
-  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
-  document.getElementById('pBudgetLeft').textContent=(t.budget-t.spent);
-  renderSquad();
-}
-
-function renderSquad(){
-  if(myTeamIdx===null||!G.teams) return;
-  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
-  document.getElementById('pSquadBudget').innerHTML=
-    '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
-    +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
-    +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
-    +'<div class="brow"><span>Players</span><span class="bv">'+(t.players?t.players.length:0)+'</span></div>';
-  document.getElementById('pSquadList').innerHTML=(t.players&&t.players.length)
-    ?t.players.map(function(p){
-      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+' - '+p.nat+'</div></div>'
-        +'<div class="sq-price">'+fmtL(p.soldPrice)+'</div></div>';
-    }).join('')
-    :'<div class="empty">No players yet</div>';
-}
-
-function pPoolFilter(f,el){
-  pPoolCat=f;
-  document.querySelectorAll('#ppane-pool .fc').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  renderPPool();
-}
-
-function renderPPool(){
-  var list=(G.players||[]).filter(function(p){
-    return p.status==='pending'&&(pPoolCat==='All'||p.role===pPoolCat);
-  }).sort(function(a,b){return a.name.localeCompare(b.name);});
-  var c=document.getElementById('pPoolList');
-  if(!c) return;
-  c.innerHTML=list.length?list.map(function(p){
-    return '<div class="pl-item">'
-      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
-      +'</div>'
-      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
-      +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div></div>'
-      +'<div class="pl-price">'+fmtL(p.base)+'</div></div>';
-  }).join(''):'<div class="empty">No pending players</div>';
-}
-
-function pTab(name,el){
-  document.querySelectorAll('#pBidScreen .tab').forEach(function(t){t.classList.remove('on');});
-  document.querySelectorAll('#pBidScreen .tab-pane').forEach(function(t){t.classList.remove('on');});
-  el.classList.add('on');
-  document.getElementById('ppane-'+name).classList.add('on');
-  if(name==='squad') renderSquad();
-  if(name==='pool') renderPPool();
-}
-
-// --- WAIT SCREEN TABS ---
-function wTab(name,el){
-  document.querySelectorAll('#waitScreen .tab').forEach(function(t){t.classList.remove('on');});
-  document.querySelectorAll('#waitScreen .tab-pane').forEach(function(t){t.classList.remove('on');});
-  el.classList.add('on');
-  document.getElementById('wpane-'+name).classList.add('on');
-  if(name==='pool') renderWPool();
-  if(name==='squad') renderWSquad();
-}
-
-function wPoolFilter(f,el){
-  wPoolCat=f;
-  document.querySelectorAll('#wpane-pool .fc').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  renderWPool();
-}
-
-function renderWPool(){
-  var list=(G.players||[]).filter(function(p){
-    return p.status==='pending'&&(wPoolCat==='All'||p.role===wPoolCat);
-  }).sort(function(a,b){return a.name.localeCompare(b.name);});
-  var c=document.getElementById('wPoolList');
-  if(!c) return;
-  c.innerHTML=list.length?list.map(function(p){
-    return '<div class="pl-item">'
-      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
-      +'</div>'
-      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
-      +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div>'
-      +'<span class="s-p pl-st">Base: '+fmtL(p.base)+'</span></div>'
-      +'<div class="pl-price">'+fmtL(p.base)+'</div></div>';
-  }).join(''):'<div class="empty">No pending players</div>';
-}
-
-function renderWSquad(){
-  if(myTeamIdx===null||!G.teams) return;
-  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
-  var bs=document.getElementById('wSquadBudget');
-  var sl=document.getElementById('wSquadList');
-  if(!bs||!sl) return;
-  bs.innerHTML=
-    '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
-    +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
-    +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
-    +'<div class="brow"><span>Players</span><span class="bv">'+(t.players?t.players.length:0)+'</span></div>';
-  sl.innerHTML=(t.players&&t.players.length)
-    ?t.players.map(function(p){
-      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+'</div></div>'
-        +'<div class="sq-price">'+fmtL(p.soldPrice)+'</div></div>';
-    }).join('')
-    :'<div class="empty">No players yet</div>';
-}
-
-// --- SOLD FLASH ---
-function showSoldFlash(sold){
-  document.getElementById('fPlayer').textContent=sold.player;
-  document.getElementById('fTeam').textContent=sold.team;
-  document.getElementById('fPrice').textContent=sold.price;
-  var fl=document.getElementById('soldFlash');
-  fl.classList.add('show');
-  setTimeout(function(){fl.classList.remove('show');},3000);
-}
-
-// --- END ---
-function populateCvcSelects(){
-  var team = G.teams ? G.teams[myTeamIdx] : null;
-  if(!team||!team.players) return;
-  var cap=document.getElementById('capSelect');
-  var vc=document.getElementById('vcSelect');
-  if(!cap||!vc) return;
-  cap.innerHTML='<option value="">-- Select Captain --</option>';
-  vc.innerHTML='<option value="">-- Select Vice-Captain --</option>';
-  (team.players||[]).forEach(function(p,i){
-    cap.innerHTML+='<option value="'+i+'">'+p.name+' ('+p.role+')</option>';
-    vc.innerHTML+='<option value="'+i+'">'+p.name+' ('+p.role+')</option>';
-  });
-  // Load existing if already saved
-  roomRef.child('captains/'+myTeamIdx).once('value',function(snap){
-    var saved=snap.val()||{};
-    if(saved.c!==undefined) cap.value=saved.c;
-    if(saved.vc!==undefined) vc.value=saved.vc;
-    if(saved.c!==undefined||saved.vc!==undefined){
-      document.getElementById('cvcStatus').style.display='block';
-    }
-  });
-}
-
-function saveCaptains(){
-  var cap=document.getElementById('capSelect').value;
-  var vc=document.getElementById('vcSelect').value;
-  if(!cap&&!vc){toast('Please select at least one');return;}
-  if(cap&&vc&&cap===vc){toast('Captain and Vice-Captain must be different players');return;}
-  var data={};
-  if(cap!=='') data.c=parseInt(cap);
-  if(vc!=='') data.vc=parseInt(vc);
-  if(roomRef){
-    roomRef.child('captains/'+myTeamIdx).set(data,function(err){
-      if(err){toast('Error saving: '+err);return;}
-      document.getElementById('cvcStatus').style.display='block';
-      toast('Captain & Vice-Captain saved!');
+function sendNotif(title, body){
+  if(!('Notification' in window)) return;
+  if(Notification.permission==='granted'){
+    new Notification(title, {
+      body: body,
+      icon: './images/319946.3.webp', // MS Dhoni as icon :)
+      badge: './images/319946.3.webp'
     });
   }
 }
 
-function showEndScreen(){
-  var fl=document.getElementById('fantasyLink');
-  if(fl && roomCode) fl.href='./fantasy.html?code='+roomCode;
-  // Show C/VC picker for participants
-  if(role==='participant' && myTeamIdx!==null){
-    var section=document.getElementById('cvcSection');
-    if(section) section.style.display='block';
-    populateCvcSelects();
+function initApp(){
+  document.getElementById('mainNav').style.display='flex';
+  document.getElementById('navSub').textContent='Room: '+G.roomCode;
+  updateNav();
+  buildSquadTabs();
+  renderLeaderboard();
+  renderSquadPane();
+  renderHistory();
+  showScreen('mainScreen');
+  // Check admin param
+  if(IS_ADMIN){
+    document.getElementById('adminBtn').style.display='block';
+    var snb=document.getElementById('syncNowBtn');if(snb)snb.style.display='flex';
+    document.getElementById('tab-sy').style.display='block';
   }
-  var sold=(G.players||[]).filter(function(p){return p.status==='sold';}).length;
-  var unsold=(G.players||[]).filter(function(p){return p.status==='unsold';}).length;
-  document.getElementById('endSummary').textContent=sold+' sold - '+unsold+' unsold';
-  // Show export button only for host
-  var exportWrap = document.getElementById('exportBtnWrap');
-  if (exportWrap) exportWrap.style.display = (role==='host') ? 'block' : 'none';
-  renderFinalList();
-  clearSession();
-  showScreen('endScreen');
+  // Load synced IDs then auto-sync
+  loadSyncedIds();
+  listenForSyncTrigger();
+  requestNotifPermission();
 }
-function showParticipantEnd(){
-  renderFinalList();
-  // Show C/VC picker for participant
-  if(myTeamIdx!==null){
-    var section=document.getElementById('cvcSection');
-    if(section) section.style.display='block';
-    populateCvcSelects();
-  }
-  // Pre-fill fantasy link
-  var fl=document.getElementById('fantasyLink');
-  if(fl && roomCode) fl.href='./fantasy.html?code='+roomCode;
-  showScreen('endScreen');
+
+function getMatchStatus(schedMatch){
+  if(!schedMatch) return 'unknown';
+  var timeParts=schedMatch.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if(!timeParts) return 'unknown';
+  var h=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+  var mn=parseInt(timeParts[2]);
+  var startUTC=new Date(schedMatch.date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
+  var endUTC=startUTC+(4.5*60*60*1000); // approx end
+  var now=Date.now();
+  if(now<startUTC) return 'upcoming';
+  if(now<endUTC) return 'live';
+  return 'done';
 }
-function renderFinalList(){
-  var sum=document.getElementById('endSummary');
-  var list=document.getElementById('finalList');
-  var teams=G.teams||{};
-  var keys=Object.keys(teams);
-  if(!keys.length){if(list)list.innerHTML='';return;}
-  // Count totals
-  var totalPlayers=0,totalSpent=0;
-  keys.forEach(function(k){var t=teams[k];totalPlayers+=(t.players||[]).length;totalSpent+=t.spent||0;});
-  if(sum) sum.textContent=keys.length+' teams · '+totalPlayers+' players · ₹'+totalSpent+'L spent';
-  if(!list) return;
-  // Sort: participant's own team first, then rest
-  var sorted=keys.slice().sort(function(a,b){
-    if(myTeamIdx!==null){
-      if(parseInt(a)===parseInt(myTeamIdx)) return -1;
-      if(parseInt(b)===parseInt(myTeamIdx)) return 1;
-    }
-    return parseInt(a)-parseInt(b);
+
+function updateNav(){
+  var mk='match'+G.currentMatch;
+  var label=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'';
+  var sched=IPL_SCHEDULE.find(function(m){return m.num===G.currentMatch;});
+  if(!label&&sched) label=sched.label;
+  var status=sched?getMatchStatus(sched):'unknown';
+  var statusColors={upcoming:'var(--text3)',live:'var(--red)',done:'var(--green)',unknown:'var(--gold)'};
+  var statusLabels={upcoming:'Upcoming',live:'● Live',done:'✓ Done',unknown:''};
+  var pill=document.getElementById('navMatch');
+  pill.title=label+(sched?' · '+sched.time+' IST':'');
+  pill.innerHTML='<span>'+(label||('M'+G.currentMatch))+'</span>'
+    +(statusLabels[status]?'<span style="font-size:9px;margin-left:5px;color:'+statusColors[status]+'">'+statusLabels[status]+'</span>':'');
+  pill.style.cursor='help';
+}
+
+// ── LEADERBOARD ──
+function teamTotal(idx){
+  var t=0;
+  Object.keys(G.matchData).forEach(function(m){
+    var md=G.matchData[m];
+    if(md&&md[idx]) Object.keys(md[idx]).forEach(function(p){t+=md[idx][p]||0;});
   });
-  list.innerHTML=sorted.map(function(k){
-    var t=teams[k];
-    var isMe=myTeamIdx!==null&&parseInt(k)===parseInt(myTeamIdx);
-    var players=t.players||[];
-    return '<div class="ft" style="'+(isMe?'border:2px solid var(--gold)':'')+'">'      +'<div class="ft-hdr">'      +'<div>'      +'<div class="ft-name" style="'+(isMe?'color:var(--gold)':'')+'">'+(isMe?'★ ':'')+t.name+'</div>'      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+players.length+' players</div>'      +'</div>'      +'<div class="ft-spent">₹'+t.spent+'L</div>'      +'</div>'      +players.map(function(p){
-        return '<div class="fp"><span>'+p.name+'<span style="font-size:10px;color:var(--text3);margin-left:5px">'+p.role+'</span></span>'          +'<span class="fp-price">₹'+p.soldPrice+'L</span></div>';
-      }).join('')      +'</div>';
+  return t;
+}
+function teamMatchPts(idx,mNum){
+  var t=0, k='match'+mNum;
+  if(G.matchData[k]&&G.matchData[k][idx])
+    Object.keys(G.matchData[k][idx]).forEach(function(p){t+=G.matchData[k][idx][p]||0;});
+  return t;
+}
+
+function renderLeaderboard(){
+  // Update sync banner with last synced match
+  var banner = document.getElementById('syncBannerText');
+  if(banner){
+    var synced = Object.keys(G.matchData).filter(function(k){return k.startsWith('match');})
+      .map(function(k){return parseInt(k.replace('match',''));});
+    if(synced.length){
+      var last = Math.max.apply(null,synced);
+      var mk = 'match'+last;
+      var label = (G.matchLabels&&G.matchLabels[mk]) || ('M'+last);
+      banner.textContent = 'Points synced up to: '+label;
+    } else {
+      banner.textContent = 'No match data yet — first sync pending';
+    }
+  }
+  var keys=Object.keys(G.teams).sort(function(a,b){return parseInt(a)-parseInt(b);});
+  var rows=keys.map(function(k){
+    var t=G.teams[k];
+    return {idx:parseInt(k),name:t.name,color:t.color||'#5091CD',
+      total:teamTotal(parseInt(k)), match:teamMatchPts(parseInt(k),G.currentMatch)};
+  }).sort(function(a,b){
+    if(b.total!==a.total) return b.total-a.total;
+    return a.name.localeCompare(b.name); // tiebreak: alphabetical
+  });
+  var rc=['gold','silver','bronze'];
+  var c=document.getElementById('lbList');
+  if(!c) return;
+  if(!rows.length){c.innerHTML='<div class="empty">No teams</div>';return;}
+  c.innerHTML=rows.map(function(r,i){
+    var isMe=G.myTeamName&&r.name.toLowerCase()===G.myTeamName.toLowerCase();
+    return '<div class="lb-row'+(isMe?' me':'')+'" onclick="squadModal('+r.idx+')">'
+      +'<div class="lb-rank '+(i<3?rc[i]:'')+'">'+(i+1)+'</div>'
+      +'<div><div style="font-size:14px;font-weight:600">'+r.name+'</div>'
+      +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px">'+'<span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';flex-shrink:0;display:inline-block;box-shadow:0 0 6px '+r.color+'"></span>'+'<span style="font-size:11px;color:var(--text3)">'+(isMe?'Your team':'')+'</span></div></div>'
+      +'<div><div class="lb-pts" style="font-size:16px;color:var(--text2)">'+r.match+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:right">This match</div></div>'
+      +'<div><div class="lb-pts">'+r.total+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:right">Total</div></div>'
+      +'</div>';
   }).join('');
 }
 
-function confirmAction(type) {
-  var titles = {
-    end: 'End Auction?',
-    exitHost: 'Exit Auction?',
-    exitPart: 'Exit Room?'
-  };
-  var msgs = {
-    end: 'This will end the auction for everyone. You can still export results afterwards.',
-    exitHost: 'You will leave the auctioneer view and return to the landing page. The room will remain active.',
-    exitPart: 'You will leave the room and return to the landing page. Your team will remain in the auction.'
-  };
-  document.getElementById('confirmTitle').textContent = titles[type] || 'Are you sure?';
-  document.getElementById('confirmMsg').textContent = msgs[type] || '';
-  document.getElementById('confirmOverlay').classList.add('show');
-  confirmCallback = type;
-}
-function closeConfirm() {
-  document.getElementById('confirmOverlay').classList.remove('show');
-  confirmCallback = null;
-}
-function confirmOk() {
-  var action = confirmCallback; // capture before closeConfirm clears it
-  closeConfirm();
-  if (action === 'end') doEndAuction();
-  else if (action === 'exitHost') doExitHost();
-  else if (action === 'exitPart') doExitParticipant();
+// ── SQUADS ──
+function buildSquadTabs(){
+  var c=document.getElementById('squadTabs');
+  if(!c) return;
+  var keys=Object.keys(G.teams).sort(function(a,b){return parseInt(a)-parseInt(b);});
+  c.innerHTML=keys.map(function(k){
+    var t=G.teams[k];
+    return '<button class="ttab" data-idx="'+k+'" onclick="selectSquad('+k+',this)"'
+      +' style="border-left:3px solid '+(t.color||'#5091CD')+'">'+t.name+'</button>';
+  }).join('');
+  // select first
+  var first=c.querySelector('.ttab');
+  if(first){first.classList.add('on');currentSquadTeam=parseInt(first.dataset.idx);}
 }
 
-// ══ PAUSE / RESUME ══
-function togglePause() {
-  var paused = G.paused || false;
-  pushRoom({ paused: !paused });
+function selectSquad(idx,btn){
+  currentSquadTeam=parseInt(idx);
+  document.querySelectorAll('#squadTabs .ttab').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  renderSquadView();
 }
 
-function applyPauseState(paused) {
-  var pb = document.getElementById('pauseBtn');
-  var pbar = document.getElementById('pauseBar');
-  var ppbar = document.getElementById('pPauseBar');
-  var bbtn = document.getElementById('bigBidBtn');
-  if (pb) pb.textContent = paused ? 'Resume' : 'Pause';
-  if (pbar) pbar.classList.toggle('show', paused);
-  if (ppbar) ppbar.classList.toggle('show', paused);
-  if (bbtn) bbtn.disabled = bbtn.disabled || paused; // keep existing disabled state too
-  if (paused) stopTimer(); // stop timer while paused
+function renderSquadPane(){
+  // Just re-render the current squad view
+  renderSquadView();
 }
 
-// ══ END AUCTION ══
-function doEndAuction() {
-  stopTimer();
-  pushRoom({ auctionEnded: true, paused: false, currentPlayerId: null, currentBid: 0, currentBidderIdx: "NONE" });
-  showEndScreen();
-}
-
-// ══ EXIT ══
-function doExitHost() {
-  stopTimer();
-  if (roomRef) roomRef.off();
-  // Pre-fill landing page so host can easily rejoin
-  var savedCode = roomCode;
-  var savedName = myName;
-  roomRef = null; roomCode = null; G = {};
-  showScreen('landingScreen');
-  if (savedName) document.getElementById('hostName').value = savedName;
-  // Pre-fill and auto-show the rejoin card
-  if (savedName) document.getElementById('hostRejoinName').value = savedName;
-  if (savedCode) document.getElementById('hostRejoinCode').value = savedCode;
-if (savedCode) toast('Use Rejoin as Host section with code: ' + savedCode, 4000);
-}
-function doExitParticipant() {
-  if (roomRef) roomRef.off();
-  // Save details before clearing so we can pre-fill landing page
-  var savedCode = roomCode;
-  var savedName = myName;
-  roomRef = null; roomCode = null; myTeamIdx = null; myTeamName = null; G = {};
-  showScreen('landingScreen');
-  // Pre-fill the join fields so they can instantly rejoin
-  if (savedName) document.getElementById('participantName').value = savedName;
-  if (savedCode) document.getElementById('roomCode').value = savedCode;
-  if (savedCode) toast('Tap Find Room to rejoin - code: ' + savedCode, 5000);
-}
-
-// ══ EXPORT CSV ══
-function exportCSV() {
-  var teams = G.teams || {};
-  var rows = [['Team', 'Player', 'Skill', 'Nationality', 'Base Price (L)', 'Sold Price (L)']];
-  Object.keys(teams).sort().forEach(function(k) {
-    var t = teams[k];
-    if (t.players && t.players.length) {
-      t.players.forEach(function(p) {
-        rows.push([t.name, p.name, p.role, p.nat, p.base, p.soldPrice]);
-      });
-    } else {
-      rows.push([t.name, '(no players)', '', '', '', '']);
-    }
+function renderSquadView(){
+  var hdr=document.getElementById('squadHeader');
+  var lst=document.getElementById('squadList');
+  if(!hdr||!lst) return;
+  var t=G.teams[currentSquadTeam];
+  if(!t){hdr.innerHTML='';lst.innerHTML='<div class="empty">No team selected</div>';return;}
+  var total=teamTotal(currentSquadTeam);
+  hdr.innerHTML='<div class="squad-hdr" style="border-left:4px solid '+(t.color||'#5091CD')+'">'
+    +'<div><div style="font-family:var(--fd);font-size:17px;font-weight:700">'+t.name+'</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+(t.players||[]).length+' players · ₹'+(t.spent||0)+'L spent</div></div>'
+    +'<div style="text-align:right"><div style="font-family:var(--fn);font-size:26px;color:var(--green)">'+total+'</div>'
+    +'<div style="font-size:10px;color:var(--text3)">Total pts</div></div>'
+    +'</div>';
+  var players=t.players||[];
+  if(!players.length){lst.innerHTML='<div class="empty">No players</div>';return;}
+  var roleGroups={Batter:[],WK:[],'All-Rounder':[],Bowler:[],Other:[]};
+  players.forEach(function(p,i){
+    var r=p.role||'Other';
+    if(!roleGroups[r]) roleGroups[r]=[];
+    roleGroups[r].push({p:p,i:i});
   });
-  var csv = rows.map(function(r) {
-    return r.map(function(v) { return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
-  }).join('\n');
-  var blob = new Blob([csv], { type: 'text/csv' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = 'ipl_auction_results.csv';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
+  lst.innerHTML='';
+  ['Batter','WK','All-Rounder','Bowler','Other'].forEach(function(role){
+    var grp=roleGroups[role];
+    if(!grp||!grp.length) return;
+    var lbl=document.createElement('div');
+    lbl.style.cssText='padding:7px 14px 3px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:var(--fd)';
+    lbl.textContent=role+'s';
+    lst.appendChild(lbl);
+    grp.forEach(function(item){
+      var p=item.p, idx=item.i;
+      var pts=0;
+      Object.keys(G.matchData).forEach(function(m){
+        var md=G.matchData[m];
+        if(md&&md[currentSquadTeam]&&md[currentSquadTeam][idx]!==undefined)
+          pts+=md[currentSquadTeam][idx];
+      });
+      // Build row
+      var row=document.createElement('div');
+      row.className='sp-row';
+      row.dataset.ti=currentSquadTeam;
+      row.dataset.pi=idx;
+      // Avatar
+      var avi=document.createElement('div');
+      avi.className='sp-avi';
+      var photo=p.photo||getPhotoByName(p.name)||'';
+      var nameParts=p.name.split(' ').filter(function(w){return w.length>0;});
+      var initials=nameParts.length>1?nameParts[0][0]+nameParts[nameParts.length-1][0]:(p.name.slice(0,2));
+      setAvi(avi, photo, initials.toUpperCase());
+      // Info
+      var info=document.createElement('div');
+      info.style.cssText='flex:1;min-width:0';
+      info.innerHTML='<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+p.role+' · '+p.nat+' · ₹'+(p.soldPrice||0)+'L</div>';
+      // Points
+      var ptsDiv=document.createElement('div');
+      ptsDiv.innerHTML='<div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div>';
+      row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
+      row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
+      // Show C/VC badges if set
+      var myCaps=G.captains&&G.captains[currentSquadTeam]?G.captains[currentSquadTeam]:{};
+      if(parseInt(myCaps.c)===idx){
+        var cb=document.createElement('span');
+        cb.style.cssText='background:var(--gold);color:#0a0800;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:5px;font-family:var(--fd)';
+        cb.textContent='C';
+        row.querySelector('div').appendChild(cb);
+      } else if(parseInt(myCaps.vc)===idx){
+        var vcb=document.createElement('span');
+        vcb.style.cssText='background:var(--surface3);color:var(--gold);font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:5px;font-family:var(--fd);border:1px solid var(--gold)';
+        vcb.textContent='VC';
+        row.querySelector('div').appendChild(vcb);
+      }
+      lst.appendChild(row);
+    });
+  });
 }
 
-// ══ SESSION PERSISTENCE (localStorage) ══
-function saveSession() {
-  if (!roomCode) return;
-  var session = {
-    roomCode: roomCode,
-    role: role,
-    myName: myName,
-    myTeamIdx: myTeamIdx,
-    myTeamName: myTeamName,
-    ts: Date.now()
-  };
-  localStorage.setItem('ipl_session', JSON.stringify(session));
-}
-
-function clearSession() {
-  localStorage.removeItem('ipl_session');
-}
-
-function tryRestoreSession() {
-  var raw = localStorage.getItem('ipl_session');
-  if (!raw) return;
-  var session;
-  try { session = JSON.parse(raw); } catch(e) { return; }
-  // Expire after 8 hours
-  if (!session.roomCode || Date.now() - session.ts > 8 * 60 * 60 * 1000) {
-    clearSession(); return;
+function openPlayerModal(ti,pi){
+  var t=G.teams[ti]; if(!t) return;
+  var p=t.players[pi]; if(!p) return;
+  var avi=document.getElementById('modalAvi');
+  var mPhoto=p.photo||getPhotoByName(p.name)||'';
+  var mParts=p.name.split(' ');
+  var mIni=mParts.length>1?mParts[0][0]+mParts[mParts.length-1][0]:(p.name.slice(0,2));
+  setAvi(avi, mPhoto, mIni.toUpperCase());
+  document.getElementById('modalName').textContent=p.name;
+  document.getElementById('modalSub').textContent=p.role+' · '+p.nat+' · ₹'+(p.soldPrice||0)+'L';
+  var matchPts=[];
+  for(var i=1;i<=74;i++){
+    var mk='match'+i;
+    if(G.matchData[mk]&&G.matchData[mk][ti]&&G.matchData[mk][ti][pi]!==undefined)
+      matchPts.push({m:i,pts:G.matchData[mk][ti][pi]});
   }
-  var ref = db.ref('rooms/' + session.roomCode);
-  ref.once('value', function(snap) {
-    var data = snap.val();
-    if (!data || data.auctionEnded) { clearSession(); return; }
-    // Pre-fill rejoin fields from saved session
-    if (session.role === 'host') {
-      if (session.myName) document.getElementById('hostRejoinName').value = session.myName;
-      if (session.roomCode) document.getElementById('hostRejoinCode').value = session.roomCode;
+  var total=matchPts.reduce(function(s,x){return s+x.pts;},0);
+  var avg=matchPts.length?Math.round(total/matchPts.length):0;
+  var body='<div style="display:flex;gap:0;background:var(--surface2);border-radius:var(--rsm);'
+    +'margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">'
+    +['<div style=flex:1;text-align:center;padding:12px>'
+      +'<div style="font-family:var(--fn);font-size:30px;color:var(--green)">'+total+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">TOTAL</div></div>',
+      '<div style=flex:1;text-align:center;padding:12px;border-left:1px solid var(--border)>'
+      +'<div style="font-family:var(--fn);font-size:30px;color:var(--gold)">'+matchPts.length+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">MATCHES</div></div>',
+      '<div style=flex:1;text-align:center;padding:12px;border-left:1px solid var(--border)>'
+      +'<div style="font-family:var(--fn);font-size:30px;color:var(--blue)">'+avg+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">AVG</div></div>'].join('')
+    +'</div>';
+  if(matchPts.length){
+    body+='<div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;'
+      +'text-transform:uppercase;margin-bottom:8px;font-family:var(--fd)">Match History</div>';
+    body+=matchPts.slice().reverse().map(function(x){
+      var col=x.pts>0?'var(--green)':x.pts<0?'var(--red)':'var(--text3)';
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">'
+        +'<span style="font-size:13px">Match '+x.m+'</span>'
+        +'<span style="font-family:var(--fn);font-size:18px;color:'+col+'">'+x.pts+'</span></div>';
+    }).join('');
+  } else {
+    body+='<div class="empty" style="padding:20px">No match data yet</div>';
+  }
+  // Show C/VC status in modal (read-only - set during auction)
+  var myCaps2=G.captains&&G.captains[ti]?G.captains[ti]:{};
+  var isCurrC=parseInt(myCaps2.c)===pi;
+  var isCurrVC=parseInt(myCaps2.vc)===pi;
+  if(isCurrC||isCurrVC){
+    body+='<div style="margin-top:12px;padding:8px 12px;background:var(--golddim);border-radius:var(--rsm);border:1px solid rgba(245,184,0,.3);font-size:12px;font-family:var(--fd);font-weight:700;letter-spacing:1px;color:var(--gold)">'
+      +(isCurrC?'★ CAPTAIN (2×)':'◆ VICE-CAPTAIN (1.5×)')+'</div>';
+  }
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('playerModal').classList.add('show');
+}
+var matchEditData = {matchNum:0, teamIdx:0, edits:{}};
 
-    } else {
-      if (session.myName) document.getElementById('participantName').value = session.myName;
-      if (session.roomCode) document.getElementById('roomCode').value = session.roomCode;
+function openMatchEdit(matchNum, teamIdx){
+  var t=G.teams[teamIdx]; if(!t) return;
+  var mk='match'+matchNum;
+  var lbl=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'Match '+matchNum;
+  document.getElementById('matchEditTitle').textContent='Edit: '+lbl+' — '+t.name;
+  matchEditData={matchNum:matchNum, teamIdx:teamIdx, edits:{}};
+  var saved=G.matchData[mk]&&G.matchData[mk][teamIdx]?G.matchData[mk][teamIdx]:{};
+  var list=document.getElementById('matchEditList');
+  list.innerHTML='';
+  (t.players||[]).forEach(function(p,pi){
+    var pts=saved[pi]!==undefined?saved[pi]:0;
+    if(pts===0) return; // only show players with points
+    matchEditData.edits[pi]=pts;
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML='<div style="flex:1;font-size:13px;font-weight:600">'+p.name+'</div>'
+      +'<input type="number" value="'+pts+'" data-pi="'+pi+'" '
+      +'style="width:70px;background:var(--surface2);border:1px solid var(--border);'
+      +'border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--fn);'
+      +'padding:6px;text-align:center;outline:none">';
+    list.appendChild(row);
+    row.querySelector('input').addEventListener('input',function(){
+      matchEditData.edits[parseInt(this.dataset.pi)]=parseFloat(this.value)||0;
+    });
+  });
+  if(!list.children.length) list.innerHTML='<div class="empty" style="padding:16px">No points recorded for this match</div>';
+  document.getElementById('matchEditModal').classList.add('show');
+}
+
+function saveMatchEdit(){
+  var mk='match'+matchEditData.matchNum;
+  var upd={};
+  upd['matches/'+mk+'/'+matchEditData.teamIdx]=matchEditData.edits;
+  if(fantasyRef){
+    fantasyRef.update(upd,function(err){
+      if(err){toast('Error: '+err);return;}
+      if(!G.matchData[mk]) G.matchData[mk]={};
+      G.matchData[mk][matchEditData.teamIdx]=matchEditData.edits;
+      toast('Points updated!');
+      document.getElementById('matchEditModal').classList.remove('show');
+      renderLeaderboard(); renderHistory();
+    });
+  }
+}
+
+function setCaptain(ti,pi,role){
+  var mk='match'+G.currentMatch;
+  if(!G.captains) G.captains={};
+  if(!G.captains[mk]) G.captains[mk]={};
+  if(!G.captains[mk][ti]) G.captains[mk][ti]={};
+  // Toggle off if already set
+  if(G.captains[mk][ti][role]===pi){
+    delete G.captains[mk][ti][role];
+  } else {
+    G.captains[mk][ti][role]=pi;
+    // Can't be both C and VC
+    var other=role==='c'?'vc':'c';
+    if(G.captains[mk][ti][other]===pi) delete G.captains[mk][ti][other];
+  }
+  if(fantasyRef){
+    var upd={};
+    upd['captains/'+mk+'/'+ti]=G.captains[mk][ti];
+    fantasyRef.update(upd,function(err){
+      if(err){toast('Error saving: '+err);return;}
+      toast((role==='c'?'Captain':'Vice Captain')+' set!');
+      closeModal();
+      renderSquadView();
+    });
+  }
+}
+function closeModal(){document.getElementById('playerModal').classList.remove('show');}
+function squadModal(idx){
+  selectSquad(idx,document.querySelector('#squadTabs [data-idx="'+idx+'"]'));
+  switchTab('sq');
+}
+document.getElementById('playerModal').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+// ── HISTORY ──
+function renderSchedule(){
+  var c=document.getElementById('scheduleList'); if(!c) return;
+  c.innerHTML='';
+  var now=Date.now();
+  // Group by date
+  var byDate={};
+  IPL_SCHEDULE.forEach(function(m){
+    if(!byDate[m.date]) byDate[m.date]=[];
+    byDate[m.date].push(m);
+  });
+  Object.keys(byDate).sort().forEach(function(date){
+    // Date header
+    var dHdr=document.createElement('div');
+    dHdr.style.cssText='padding:8px 14px;font-family:var(--fd);font-size:10px;font-weight:700;'
+      +'letter-spacing:2px;text-transform:uppercase;color:var(--text3);'
+      +'background:var(--surface);border-bottom:1px solid var(--border);'
+      +'position:sticky;top:0;z-index:1';
+    var d=new Date(date+'T12:00:00Z');
+    dHdr.textContent=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+    c.appendChild(dHdr);
+    byDate[date].forEach(function(m){
+      var timeParts=m.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      var h=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+      var mn=parseInt(timeParts[2]);
+      var startUTC=new Date(date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
+      var endUTC=startUTC+(4.5*60*60*1000);
+      var status=now<startUTC?'upcoming':now<endUTC?'live':'done';
+      var synced=syncedIds[m.id]||false;
+      var row=document.createElement('div');
+      row.style.cssText='padding:12px 14px;border-bottom:1px solid var(--border);'
+        +'display:flex;align-items:center;gap:12px;'
+        +(status==='live'?'background:rgba(255,69,102,.04)':'');
+      var numDiv=document.createElement('div');
+      numDiv.style.cssText='font-family:var(--fn);font-size:24px;color:var(--text3);width:32px;text-align:center';
+      numDiv.textContent=m.num;
+      var infoDiv=document.createElement('div');
+      infoDiv.style.cssText='flex:1';
+      var teams=m.label.replace('M'+m.num+' — ','');
+      infoDiv.innerHTML='<div style="font-size:14px;font-weight:600">'+teams+'</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+m.time+'</div>';
+      var statusDiv=document.createElement('div');
+      statusDiv.style.cssText='text-align:right';
+      var statusMap={
+        upcoming:{label:'Upcoming',color:'var(--text3)'},
+        live:{label:'● Live',color:'var(--red)'},
+        done:{label:synced?'✓ Synced':'✓ Done',color:synced?'var(--green)':'var(--text3)'}
+      };
+      var st=statusMap[status];
+      statusDiv.innerHTML='<div style="font-size:12px;font-weight:600;color:'+st.color+'">'+st.label+'</div>'
+        +(status==='upcoming'?'<div style="font-size:10px;color:var(--text3);margin-top:2px">'
+          +timeUntil(startUTC)+'</div>':'');
+      row.appendChild(numDiv); row.appendChild(infoDiv); row.appendChild(statusDiv);
+      c.appendChild(row);
+    });
+  });
+}
+
+function timeUntil(ts){
+  var diff=ts-Date.now();
+  if(diff<=0) return '';
+  var d=Math.floor(diff/86400000);
+  var h=Math.floor((diff%86400000)/3600000);
+  var m=Math.floor((diff%3600000)/60000);
+  if(d>0) return 'in '+d+'d '+h+'h';
+  if(h>0) return 'in '+h+'h '+m+'m';
+  return 'in '+m+'m';
+}
+
+function renderHistory(){
+  var c=document.getElementById('historyList'); if(!c) return;
+  var matches=[];
+  for(var i=1;i<=74;i++){
+    var mk='match'+i;
+    if(G.matchData[mk]){
+      var lbl=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'Match '+i;
+      var teamPts={};
+      Object.keys(G.teams).forEach(function(k){teamPts[k]=teamMatchPts(parseInt(k),i);});
+      matches.push({n:i,lbl:lbl,teamPts:teamPts});
     }
-    if (!data.auctionStarted && session.role === 'participant') {
-      // Auction hasn't started yet - just pre-fill the join form
-      document.getElementById('participantName').value = session.myName || '';
-      document.getElementById('roomCode').value = session.roomCode || '';
-      clearSession();
+  }
+  if(!matches.length){c.innerHTML='<div class="empty">No match data yet</div>';return;}
+  c.innerHTML='';
+  var keys=Object.keys(G.teams).sort(function(a,b){return parseInt(a)-parseInt(b);});
+  matches.reverse().forEach(function(m){
+    var ranked=keys.slice().sort(function(a,b){return (m.teamPts[b]||0)-(m.teamPts[a]||0);});
+    // Outer wrapper
+    var wrap=document.createElement('div');
+    wrap.style.borderBottom='1px solid var(--border2)';
+    // Header row
+    var hdr=document.createElement('div');
+    hdr.className='mh-row';
+    hdr.style.cursor='pointer';
+    hdr.innerHTML='<div style="font-family:var(--fn);font-size:28px;color:var(--text3);width:36px;text-align:center">'+m.n+'</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+m.lbl+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">Tap to expand</div></div>'
+      +'<div style="font-family:var(--fn);font-size:16px;color:var(--gold)">&#9658;</div>';
+    // Detail panel
+    var detail=document.createElement('div');
+    detail.style.cssText='display:none;padding:8px 14px 12px';
+    ranked.forEach(function(k,ri){
+      var t=G.teams[k];
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px';
+      var left=document.createElement('div');
+      left.style.cssText='display:flex;align-items:center;gap:6px';
+      left.innerHTML='<span style="font-family:var(--fn);font-size:14px;color:var(--text3);width:16px">'+(ri+1)+'</span>'
+        +'<span style="width:8px;height:8px;border-radius:50%;background:'+(t.color||'#5091CD')+';flex-shrink:0;display:inline-block"></span>'
+        +'<span style="font-weight:600">'+t.name+'</span>';
+      if(IS_ADMIN){
+        var eb=document.createElement('button');
+        eb.style.cssText='margin-left:8px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:10px;padding:2px 6px;cursor:pointer;font-family:var(--fd)';
+        eb.textContent='Edit';
+        eb.addEventListener('click',function(e){e.stopPropagation();openMatchEdit(m.n,parseInt(k));});
+        left.appendChild(eb);
+      }
+      var pts=document.createElement('span');
+      pts.style.cssText='font-family:var(--fn);font-size:16px;color:var(--green)';
+      pts.textContent=(m.teamPts[k]||0);
+      row.appendChild(left); row.appendChild(pts);
+      detail.appendChild(row);
+    });
+    hdr.addEventListener('click',function(){
+      detail.style.display=detail.style.display==='block'?'none':'block';
+    });
+    wrap.appendChild(hdr); wrap.appendChild(detail);
+    c.appendChild(wrap);
+  });
+}
+
+
+function normName(n){
+  return (n||'').toLowerCase().replace(/[^a-z\s]/g,'').replace(/\s+/g,' ').trim();
+}
+function similarity(a,b){
+  a=normName(a); b=normName(b);
+  if(a===b) return 1;
+  if(a.includes(b)||b.includes(a)) return 0.9;
+  var aw=a.split(' '), bw=b.split(' ');
+  if(aw.length&&bw.length&&aw[aw.length-1]===bw[bw.length-1]) return 0.85;
+  var shared=aw.filter(function(w){return w.length>2&&bw.indexOf(w)>=0;}).length;
+  return shared?(0.65+shared*0.05):0;
+}
+function findPlayer(apiName){
+  var best=null, bestScore=0;
+  Object.keys(G.teams).forEach(function(k){
+    (G.teams[k].players||[]).forEach(function(p,i){
+      var s=similarity(apiName,p.name);
+      if(s>bestScore){bestScore=s;best={ti:parseInt(k),pi:i,name:p.name};}
+    });
+  });
+  return {player:best,score:bestScore};
+}
+function calcPts(bat,bowl,field,isCap,isVC,playedXI){
+  // Playing XI bonus only if actually participated (batted or bowled), not just as sub
+  var pts=playedXI?4:0;
+  if(bat){
+    pts+=bat.runs+(bat.fours||0)+(bat.sixes||0)*2;
+    if(bat.runs>=100) pts+=16; else if(bat.runs>=50) pts+=8; else if(bat.runs>=25) pts+=4;
+    if(bat.runs===0&&bat.dismissed) pts-=2;
+  }
+  if(bowl){
+    pts+=bowl.wkts*25+(bowl.lbwBowled||0)*8;
+    if(bowl.wkts>=5) pts+=16; else if(bowl.wkts>=4) pts+=8; else if(bowl.wkts>=3) pts+=4;
+    pts+=bowl.maidens*12;
+    if(bowl.overs>=2){var eco=bowl.runs/bowl.overs;pts+=eco<6?4:eco<=8?2:0;}
+  }
+  if(field){pts+=(field.c||0)*8+(field.st||0)*12+(field.ro||0)*6;}
+  if(isCap) pts=Math.round(pts*2);
+  else if(isVC) pts=Math.round(pts*1.5);
+  return pts;
+}
+function parseCard(scard){
+  var stats={};
+  function get(name){if(!stats[name])stats[name]={bat:null,bowl:null,field:{c:0,st:0,ro:0},played:true};return stats[name];}
+  (scard.scoreCard||scard.inningsScoreList||[]).forEach(function(inn){
+    (inn.batCard||inn.batsmen||[]).forEach(function(b){
+      var name=b.batName||b.name||''; if(!name) return;
+      var runs=parseInt(b.runs||b.r||0);
+      var dis=(b.outDesc||b.dismissal||'').toLowerCase();
+      var dismissed=dis&&dis!=='not out'&&dis!=='';
+      get(name).bat={runs:runs,fours:parseInt(b.fours||b['4s']||0),sixes:parseInt(b.sixes||b['6s']||0),dismissed:dismissed};
+      // fielding from dismissal
+      var cm=dis.match(/^c\s+(.+?)\s+b\s/i);
+      var sm=dis.match(/^st\s+(.+?)\s+b\s/i);
+      var rm=dis.match(/run\s*out\s*\(?([^)]+)\)?/i);
+      if(cm){var f=cm[1].trim();if(f&&f!=='sub'){get(f).field.c++;}}
+      if(sm){var f2=sm[1].trim();if(f2)get(f2).field.st++;}
+      if(rm){var f3=rm[1].split(/[/,&]/)[0].trim();if(f3)get(f3).field.ro++;}
+      // lbw/bowled bonus
+      if(dis.match(/^lbw\s+b\s|^b\s+[a-z]/i)||dis.match(/^bowled\s/i)){
+        var bname=dis.replace(/^(lbw\s+b|b|bowled)\s+/i,'').trim().split(' ')[0];
+        if(bname){if(!stats[bname])get(bname);stats[bname]._lb=(stats[bname]._lb||0)+1;}
+      }
+    });
+    (inn.bowlCard||inn.bowlers||[]).forEach(function(b){
+      var name=b.bowlName||b.name||''; if(!name) return;
+      var st=get(name);
+      var rawOv=parseFloat(b.overs||b.ov||0);
+      var fullOv=Math.floor(rawOv), balls=Math.round((rawOv-fullOv)*10);
+      var realOv=fullOv+(balls/6); // e.g. 3.4 -> 3.667
+      st.bowl={wkts:parseInt(b.wickets||b.wkts||b.w||0),
+        overs:realOv,runs:parseInt(b.runs||b.r||0),
+        maidens:parseInt(b.maidens||b.m||0),lbwBowled:stats[name]._lb||0};
+    });
+  });
+  return stats;
+}
+function apiGet(path,cb){
+  fetch(WORKER_URL+'/cricbuzz'+path)
+  .then(function(r){
+    if(!r.ok) return r.text().then(function(t){throw new Error('HTTP '+r.status+' — '+t.slice(0,120));});
+    return r.json();
+  })
+  .then(function(d){cb(d,null);})
+  .catch(function(e){console.error('API error:',e);cb(null,e.message);});
+}
+function logSync(msg,type){
+  var c=document.getElementById('syncLog'); if(!c) return;
+  var cols={info:'var(--text2)',ok:'var(--green)',warn:'var(--gold)',err:'var(--red)'};
+  var d=document.createElement('div');
+  d.className='log-item';
+  d.style.color=cols[type]||cols.info;
+  d.style.borderLeft='3px solid '+(cols[type]||cols.info);
+  d.textContent=new Date().toLocaleTimeString()+' — '+msg;
+  c.insertBefore(d,c.firstChild);
+}
+function nextMatchNum(){
+  var nums=Object.keys(G.matchData).filter(function(k){return k.startsWith('match');})
+    .map(function(k){return parseInt(k.replace('match',''));});
+  return nums.length?Math.max.apply(null,nums)+1:1;
+}
+var pendingConfirm={};
+// Staged sync results waiting for admin review
+var stagedResults = {}; // matchId -> {mNum, desc, playerPts, results, lowConf}
+
+function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
+  if(mNum===undefined) mNum=nextMatchNum();
+  retryCount=retryCount||0;
+  apiGet('/mcenter/v1/'+matchId+'/scard',function(data,err){
+    if(err){
+      if(retryCount<2){
+        logSync('Retrying '+desc+' (attempt '+(retryCount+2)+')...','warn');
+        setTimeout(function(){processMatch(matchId,desc,mNum,done,retryCount+1);},3000);
+        return;
+      }
+      logSync('Failed after 3 attempts: '+desc+' — '+err,'err');
+      done();return;
+    }
+    // Check match state from matchHeader (most reliable signal)
+    var matchState=(data.matchHeader&&data.matchHeader.state)||'';
+    var matchStatus=(data.matchHeader&&data.matchHeader.status)||'';
+    matchState=matchState.toLowerCase();
+    if(matchState==='abandon'){
+      // Abandoned - no points, mark as synced so we don't retry forever
+      logSync(desc+' was abandoned (no result). Skipping with 0 points.','warn');
+      var upd={};
+      upd['syncedIds/'+matchId]=true;
+      if(fantasyRef) fantasyRef.update(upd);
+      syncedIds[matchId]=true;
+      done();return;
+    }
+    if(matchState!=='complete'){
+      // Not finished yet (in progress, innings break, preview, etc)
+      logSync(desc+' not complete yet (state: '+matchState+'). Will retry next sync.','warn');
+      done();return;
+    }
+    // Match is confirmed complete - proceed with full scorecard parse
+    var innings=(data.scoreCard||data.inningsScoreList||[]).filter(function(inn){
+      // Exclude super over innings
+      var label=(inn.inningsId||inn.innId||inn.batTeamDetails&&inn.batTeamDetails.innId||0);
+      var isSuperOver=(inn.isSuperOver||inn.superOver||
+        (typeof label==='string'&&label.toLowerCase().includes('super'))||
+        parseInt(label)>4); // regular innings are 1-4 max (2 per team + follow-on)
+      return !isSuperOver;
+    });
+    if(!innings.length){
+      logSync('No innings data for completed match '+desc+' — unexpected. Retrying.','warn');
+      done();return;
+    }
+    var stats=parseCard(data);
+    var results={};
+    var lowConf=[];
+    Object.keys(stats).forEach(function(apiName){
+      var m=findPlayer(apiName);
+      if(!m.player) return;
+      var st=stats[apiName];
+      var playedXI=!!(st.bat||st.bowl); var pts=calcPts(st.bat,st.bowl,st.field,false,false,playedXI);
+      if(pts<=0) return;
+      if(m.score>=0.85){
+        var ti=m.player.ti,pi=m.player.pi;
+        if(!results[ti]) results[ti]={};
+        results[ti][pi]=(results[ti][pi]||0)+pts;
+      } else if(m.score>=0.6){
+        lowConf.push({apiName:apiName,matched:m.player.name,score:m.score,pts:pts,
+          ti:m.player.ti,pi:m.player.pi,matchId:matchId,mNum:mNum});
+      }
+    });
+    // Stage all results for review before distributing to rooms
+    stageForReview(matchId, mNum, desc, stats, results, lowConf, schedMatch);
+    done();
+  });
+}
+
+function stageForReview(matchId, mNum, desc, stats, autoResults, lowConf, schedMatch){
+  // Build flat player->pts list
+  var playerPts = [];
+  Object.keys(autoResults).forEach(function(ti){
+    Object.keys(autoResults[ti]).forEach(function(pi){
+      var p = G.teams[ti] && G.teams[ti].players && G.teams[ti].players[pi];
+      if(!p) return;
+      playerPts.push({name:p.name,role:p.role,ti:parseInt(ti),pi:parseInt(pi),pts:autoResults[ti][pi],confidence:1.0});
+    });
+  });
+  lowConf.forEach(function(item){
+    playerPts.push({name:item.apiName,matched:item.matched,ti:item.ti,pi:item.pi,pts:item.pts,confidence:item.score,isLowConf:true});
+  });
+  playerPts.sort(function(a,b){if(a.ti!==b.ti)return a.ti-b.ti;return b.pts-a.pts;});
+  stagedResults[matchId]={mNum:mNum,desc:desc,playerPts:playerPts,autoResults:autoResults,schedMatch:schedMatch||null};
+  // AUTO-DISTRIBUTE immediately, then show corrections panel
+  logSync('Auto-distributing '+desc+'...','info');
+  distributeToAllRooms(matchId, true); // true = auto mode, show corrections after
+}
+
+function renderSyncReview(){
+  var sec = document.getElementById('syncReviewSection');
+  var lst = document.getElementById('syncReviewList');
+  if(!sec||!lst) return;
+  var pendingIds = Object.keys(stagedResults);
+  if(!pendingIds.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  lst.innerHTML='';
+  pendingIds.forEach(function(matchId){
+    var staged = stagedResults[matchId];
+    var wrap = document.createElement('div');
+    wrap.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden';
+    // Header
+    var hdr = document.createElement('div');
+    hdr.style.cssText='padding:10px 14px;background:linear-gradient(135deg,#0e1e4a,#0d1120);display:flex;align-items:center;justify-content:space-between';
+    hdr.innerHTML='<div><div style="font-family:var(--fd);font-size:14px;font-weight:700">'+staged.desc+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+staged.playerPts.length+' player entries — review and edit before saving</div></div>';
+    var approveBtn = document.createElement('button');
+    approveBtn.className='btn btn-green btn-sm';
+    approveBtn.textContent='Re-Save Corrections';
+    approveBtn.style.flexShrink='0';
+    approveBtn.addEventListener('click',function(){ distributeToAllRooms(matchId); });
+    hdr.appendChild(approveBtn);
+    wrap.appendChild(hdr);
+    // Player list
+    var body = document.createElement('div');
+    body.style.padding='0';
+    var currentTeam = -1;
+    staged.playerPts.forEach(function(entry, idx){
+      // Team separator
+      if(entry.ti !== currentTeam){
+        currentTeam = entry.ti;
+        var t = G.teams[entry.ti];
+        var tHdr = document.createElement('div');
+        tHdr.style.cssText='padding:6px 14px;background:var(--surface2);border-top:1px solid var(--border);'
+          +'font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;'
+          +'color:var(--text3);border-left:3px solid '+(t?t.color||'#5091CD':'#5091CD');
+        tHdr.textContent=t?t.name:'Team '+entry.ti;
+        body.appendChild(tHdr);
+      }
+      var row = document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--border)';
+      if(entry.isLowConf) row.style.background='rgba(255,69,102,.05)';
+      var nameDiv = document.createElement('div');
+      nameDiv.style.cssText='flex:1;min-width:0';
+      nameDiv.innerHTML='<div style="font-size:13px;font-weight:600">'
+        +(entry.isLowConf?'<span style="color:var(--red);font-size:10px;margin-right:4px">⚠</span>':'')
+        +(entry.matched||entry.name)+'</div>'
+        +(entry.isLowConf?'<div style="font-size:10px;color:var(--text3)">API name: '+entry.name+' ('+Math.round(entry.confidence*100)+'% match)</div>':'')
+        +'<div style="font-size:10px;color:var(--text3)">'+(entry.role||'')+'</div>';
+      var inp = document.createElement('input');
+      inp.type='number'; inp.value=entry.pts;
+      inp.style.cssText='width:65px;background:var(--surface2);border:1px solid var(--border);'
+        +'border-radius:var(--rsm);color:var(--text);font-size:15px;font-family:var(--fn);'
+        +'padding:6px;text-align:center;outline:none';
+      inp.dataset.idx=idx;
+      inp.addEventListener('input',function(){
+        stagedResults[matchId].playerPts[parseInt(this.dataset.idx)].pts=parseFloat(this.value)||0;
+      });
+      // Toggle include/exclude
+      var tog = document.createElement('button');
+      tog.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);'
+        +'color:var(--text3);font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--fd);white-space:nowrap';
+      tog.textContent=entry.excluded?'Excluded':'Include';
+      tog.style.color=entry.excluded?'var(--red)':'var(--green)';
+      tog.addEventListener('click',function(){
+        var e2=stagedResults[matchId].playerPts[parseInt(inp.dataset.idx)];
+        e2.excluded=!e2.excluded;
+        tog.textContent=e2.excluded?'Excluded':'Include';
+        tog.style.color=e2.excluded?'var(--red)':'var(--green)';
+        row.style.opacity=e2.excluded?'0.4':'1';
+      });
+      row.appendChild(nameDiv); row.appendChild(inp); row.appendChild(tog);
+      body.appendChild(row);
+    });
+    wrap.appendChild(body);
+    lst.appendChild(wrap);
+  });
+}
+
+function distributeToAllRooms(matchId, autoMode){
+  var staged = stagedResults[matchId];
+  if(!staged){ toast('No staged data for this match'); return; }
+  // Rebuild results from edited playerPts
+  var finalResults = {};
+  staged.playerPts.forEach(function(entry){
+    if(entry.excluded) return;
+    if(!finalResults[entry.ti]) finalResults[entry.ti]={};
+    finalResults[entry.ti][entry.pi]=(finalResults[entry.ti][entry.pi]||0)+entry.pts;
+  });
+  // Apply captain/VC multipliers
+  Object.keys(finalResults).forEach(function(ti){
+    var cap=G.captains&&G.captains[ti]?G.captains[ti]:{};
+    if(!cap.c&&!cap.vc) return;
+    Object.keys(finalResults[ti]).forEach(function(pi){
+      var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
+      var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
+      if(isCap) finalResults[ti][pi]=Math.round(finalResults[ti][pi]*2);
+      else if(isVC) finalResults[ti][pi]=Math.round(finalResults[ti][pi]*1.5);
+    });
+  });
+  // Now distribute to ALL rooms in Firebase that are eligible
+  logSync('Distributing '+staged.desc+' to all eligible rooms...','info');
+  db.ref('rooms').once('value',function(rsnap){
+    var rooms=rsnap.val()||{};
+    var roomCodes=Object.keys(rooms);
+    var updates={}; var count=0;
+    roomCodes.forEach(function(code){
+      var room=rooms[code];
+      if(!room.auctionEnded) return; // skip rooms not ended
+      // Check eligibility
+      var endedAt=room.auctionEndedAt||0;
+      var timeParts=staged.schedMatch?staged.schedMatch.time.match(/(\d+):(\d+)\s*(AM|PM)/i):null;
+      var eligible=true;
+      if(endedAt&&timeParts){
+        var h=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+        var mn=parseInt(timeParts[2]);
+        var matchStartUTC=new Date(staged.schedMatch.date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
+        eligible=endedAt<matchStartUTC;
+      }
+      if(!eligible) return;
+      // Write points for each team in this room that has matching players
+      var roomTeams=room.teams||{};
+      Object.keys(roomTeams).forEach(function(rk){
+        var rTeam=roomTeams[rk];
+        var rPlayers=rTeam.players||[];
+        // Match by player name across teams
+        var teamPts={};
+        staged.playerPts.forEach(function(entry){
+          if(entry.excluded) return;
+          // Find matching player in this room's team
+          rPlayers.forEach(function(rp,rpi){
+            if(rp.name===entry.name||(entry.matched&&rp.name===entry.matched)){
+              teamPts[rpi]=(teamPts[rpi]||0)+entry.pts;
+            }
+          });
+        });
+        if(Object.keys(teamPts).length){
+          updates['fantasy/'+code+'/matches/match'+staged.mNum+'/'+rk]=teamPts;
+          count++;
+        }
+      });
+      updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
+      updates['fantasy/'+code+'/matchLabels/match'+staged.mNum]=staged.desc;
+    });
+    db.ref().update(updates,function(err){
+      if(err){ logSync('Distribution error: '+err,'err'); return; }
+      logSync('Distributed to '+count+' team(s) across all rooms!','ok');
+      syncedIds[matchId]=true;
+      if(!autoMode) delete stagedResults[matchId];
+      sendNotif('Fantasy Points Updated',staged.desc+' points synced to all rooms!');
+      // Update local data if current room is loaded
+      if(G.roomCode && fantasyRef){
+        fantasyRef.once('value',function(s){
+          var fd=s.val()||{};
+          G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{};
+          renderLeaderboard(); renderHistory(); updateNav();
+        });
+      }
+      // Show corrections panel (admin only)
+      if(autoMode) renderSyncReview();
+      else { delete stagedResults[matchId]; renderSyncReview(); }
+    });
+  });
+}
+function saveResults(results,mNum,matchId,desc){
+  // Apply captain/VC multipliers (fixed for whole tournament, stored in rooms/{code}/captains/{teamIdx})
+  Object.keys(results).forEach(function(ti){
+    var cap=G.captains&&G.captains[ti]?G.captains[ti]:{};
+    if(!cap.c&&!cap.vc) return;
+    Object.keys(results[ti]).forEach(function(pi){
+      var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
+      var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
+      if(isCap) results[ti][pi]=Math.round(results[ti][pi]*2);
+      else if(isVC) results[ti][pi]=Math.round(results[ti][pi]*1.5);
+    });
+  });
+  var upd={};
+  Object.keys(results).forEach(function(ti){upd['matches/'+mk+'/'+ti]=results[ti];});
+  upd['syncedIds/'+matchId]=true;
+  upd['matchLabels/'+mk]=desc; // store match label (e.g. 'M1 — RCB vs SRH')
+  if(!G.matchLabels) G.matchLabels={};
+  G.matchLabels[mk]=desc;
+  if(fantasyRef){
+    fantasyRef.update(upd,function(err){
+      if(err){logSync('Save error: '+err,'err');return;}
+      syncedIds[matchId]=true;
+      G.matchData[mk]=results;
+      logSync('Saved Match '+mNum+' ('+desc+')','ok');
+      sendNotif('Fantasy Points Updated', desc+' points have been synced!');
+      renderLeaderboard();
+      renderSquadView();
+      updateNav();
+    });
+  }
+}
+function showUnmatched(lowConf,autoResults,mNum,matchId){
+  pendingConfirm[matchId]={autoResults:autoResults,mNum:mNum,items:lowConf.slice()};
+  var sec=document.getElementById('unmatchedSection');
+  var lst=document.getElementById('unmatchedList');
+  if(!sec||!lst) return;
+  sec.style.display='block';
+  lowConf.forEach(function(item,i){
+    var div=document.createElement('div');
+    div.style.cssText='padding:9px;background:var(--surface2);border-radius:var(--rsm);'
+      +'margin-bottom:5px;border:1px solid var(--border)';
+    div.innerHTML='<div style="display:flex;justify-content:space-between">'
+      +'<div style="font-size:13px;font-weight:600">'+item.apiName+'</div>'
+      +'<div style="font-family:var(--fn);font-size:16px;color:var(--gold)">'+item.pts+'pts</div></div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:3px">Matched: '
+      +'<span style="color:var(--blue)">'+item.matched+'</span> ('
+      +Math.round(item.score*100)+'%)</div>'
+      +'<div style="display:flex;gap:6px;margin-top:7px">'
+      +'<button class="btn btn-green btn-sm acc-btn">Accept</button>'
+      +'<button class="btn btn-red btn-sm rej-btn">Reject</button></div>';
+    div.querySelector('.acc-btn').addEventListener('click',function(){confirmItem(matchId,i,true);div.remove();});
+    div.querySelector('.rej-btn').addEventListener('click',function(){confirmItem(matchId,i,false);div.remove();});
+    lst.appendChild(div);
+  });
+}
+function confirmItem(matchId,i,accept){
+  var pm=pendingConfirm[matchId]; if(!pm) return;
+  var item=pm.items[i]; if(!item) return;
+  if(accept){
+    if(!pm.autoResults[item.ti]) pm.autoResults[item.ti]={};
+    pm.autoResults[item.ti][item.pi]=(pm.autoResults[item.ti][item.pi]||0)+item.pts;
+  }
+  pm.items[i]=null;
+  var allDone=pm.items.every(function(x){return x===null;});
+  if(allDone){
+    saveResults(pm.autoResults,pm.mNum,matchId,'(reviewed)');
+    delete pendingConfirm[matchId];
+    if(!Object.keys(pendingConfirm).length){
+      var sec=document.getElementById('unmatchedSection');
+      if(sec) sec.style.display='none';
+    }
+  }
+}
+function isMatchEligible(schedMatch){
+  // A match is eligible only if auction ended BEFORE the match started
+  // (strictly before start time - if ended at or after start, skip that match)
+  if(!G.auctionEndedAt) return true; // no timestamp = old room, include all
+  var timeParts=schedMatch.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  var hours=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+  var mins=parseInt(timeParts[2]);
+  var matchStartUTC=new Date(schedMatch.date+'T00:00:00Z').getTime()
+    +(hours*60+mins-330)*60000;
+  return G.auctionEndedAt < matchStartUTC;
+}
+
+function runSync(manual){
+  if(manual) logSync('Manual sync started','info');
+  document.getElementById('syncStatus').textContent='Syncing...';
+  // Use hardcoded schedule — no API call needed to find matches
+  var now = Date.now();
+  var toSync = IPL_SCHEDULE.filter(function(m){
+    // Parse match start time in IST (UTC+5:30)
+    var timeParts = m.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    var hours = parseInt(timeParts[1]) + (timeParts[3].toUpperCase()==='PM' && timeParts[1]!=='12' ? 12 : 0);
+    var mins = parseInt(timeParts[2]);
+    var matchStartUTC = new Date(m.date + 'T00:00:00Z').getTime()
+      + (hours * 60 + mins - 330) * 60000; // subtract IST offset (330 mins)
+    var syncAfter = matchStartUTC + (4.5 * 60 * 60 * 1000); // 4.5 hours after start
+    return now >= syncAfter && !syncedIds[m.id];
+  });
+  logSync('Schedule: '+IPL_SCHEDULE.length+' matches known, '+toSync.length+' new to sync','info');
+  if(!toSync.length){
+    document.getElementById('syncStatus').textContent='Up to date · '+new Date().toLocaleTimeString();
+    return;
+  }
+  var idx=0;
+  function next(){
+    if(idx>=toSync.length){
+      document.getElementById('syncStatus').textContent='Done · '+new Date().toLocaleTimeString();
       return;
     }
-    roomCode = session.roomCode;
-    role = session.role;
-    myName = session.myName;
-    myTeamIdx = session.myTeamIdx;
-    myTeamName = session.myTeamName;
-    roomRef = ref;
-    G = data;
-    if (role === 'host') {
-      document.getElementById('hostCode').textContent = roomCode;
-      document.getElementById('hostConnBar').className = 'conn-bar cb-live';
-      document.getElementById('hostConnBar').textContent = 'Live · ' + roomCode;
-      showScreen('hostAuctionScreen');
-      renderSortedList();
-      listenAuction();
-      toast('Rejoined as host!');
-    } else {
-      // participant
-      if (myTeamIdx !== null && data.teams) {
-        var t = getTeam(data.teams, myTeamIdx);
-        if (t) {
-          document.documentElement.style.setProperty('--team', t.color);
-          document.getElementById('waitTeamName').textContent = t.name;
-          document.getElementById('pTeamName').textContent = t.name;
-        }
-      }
-      showScreen('waitScreen');
-      listenParticipant();
-      toast('Rejoined as ' + (myTeamName || 'participant') + '!');
+    var m=toSync[idx++];
+    logSync('Fetching '+m.label,'info');
+    setTimeout(function(){processMatch(m.id, m.label, m.num, next);},600);
+  }
+  next();
+}
+function listenForSyncTrigger(){
+  // Listen for cron-triggered sync from Cloudflare Worker
+  db.ref('syncTrigger').on('value',function(snap){
+    var d=snap.val();
+    if(!d||!d.triggeredAt) return;
+    var last=parseInt(localStorage.getItem('fl_lastTrigger')||'0');
+    if(d.triggeredAt>last){
+      localStorage.setItem('fl_lastTrigger',d.triggeredAt.toString());
+      logSync('Scheduled sync triggered by server','info');
+      runSync(false);
     }
   });
 }
 
-window.addEventListener('DOMContentLoaded',function(){});
-// Try to restore session after Firebase is ready
-window.addEventListener('load',function(){ setTimeout(tryRestoreSession,600); });
+function loadSyncedIds(){
+  if(!fantasyRef) return;
+  fantasyRef.child('syncedIds').once('value',function(snap){
+    var ids=snap.val()||{};
+    Object.keys(ids).forEach(function(id){syncedIds[id]=true;});
+    // Auto-sync if >12h since last
+    var last=parseInt(localStorage.getItem('fl_sync')||'0');
+    if(Date.now()-last>12*60*60*1000){
+      localStorage.setItem('fl_sync',Date.now().toString());
+      runSync(false);
+    }
+  });
+}
+
+// ── ADMIN ──
+function openAdmin(){document.getElementById('adminPanel').style.display='block';loadAllRooms();}
+function activateAdmin(){
+  IS_ADMIN=true;
+  document.getElementById('adminPanel').style.display='block';
+  document.getElementById('mainNav').style.display='flex';
+  document.getElementById('adminBtn').style.display='block';
+  var backBtn=document.getElementById('adminBackBtn');
+  if(backBtn) backBtn.style.display='none';
+  document.getElementById('navSub').textContent='Admin Mode';
+  // Admin mode - no fantasyRef needed for room list, set per-room when loading
+  loadAllRooms();
+}
+
+function promptAdmin(){
+  var pw=window.prompt('Enter admin password:');
+  if(!pw) return;
+  // Try Worker verification first, fall back to local check
+  fetch(WORKER_URL+'/admin/verify',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({password:pw})
+  }).then(function(r){
+    if(r.ok){ activateAdmin(); }
+    else { alert('Incorrect password'); }
+  }).catch(function(e){
+    // Worker unreachable - log and inform
+    console.error('Worker error:',e);
+    alert('Could not reach the auth server. Make sure the Cloudflare Worker is deployed.');
+  });
+}
+
+function loadRoomAsAdmin(code){
+  db.ref('rooms/'+code).once('value',function(snap){
+    var data=snap.val(); if(!data){toast('Room not found');return;}
+    G.roomCode=code; G.myTeamName=''; G.teams=data.teams||{};
+    if(fantasyRef) fantasyRef.off();
+    fantasyRef=db.ref('fantasy/'+code);
+    fantasyRef.once('value',function(snap2){
+      var fd=snap2.val()||{};
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      // Load captains and auctionEndedAt
+      db.ref('rooms/'+code).once('value',function(rs){
+        var rd=rs.val()||{};
+        G.captains=rd.captains||{};
+        G.auctionEndedAt=rd.auctionEndedAt||0;
+      });
+      document.getElementById('adminPanel').style.display='none';
+      document.getElementById('navSub').textContent='Room: '+code+' (Admin)';
+      updateNav(); buildSquadTabs(); renderLeaderboard(); renderSquadPane(); renderHistory();
+      document.getElementById('tab-sy').style.display='block';
+      showScreen('mainScreen'); toast('Loaded room '+code);
+    });
+    fantasyRef.on('value',function(snap3){
+      var fd=snap3.val()||{};
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      renderLeaderboard(); renderHistory(); updateNav();
+    });
+    // Load captains and auctionEndedAt from auction room data
+    db.ref('rooms/'+code).once('value',function(rsnap2){
+      var rd=rsnap2.val()||{};
+      G.captains=rd.captains||{};
+      G.auctionEndedAt=rd.auctionEndedAt||0;
+    });
+  });
+}
+function closeAdmin(){
+  if(!IS_ADMIN) document.getElementById('adminPanel').style.display='none';
+}
+function loadAllRooms(){
+  var c=document.getElementById('adminList');
+  c.innerHTML='<div class="empty">Loading...</div>';
+  db.ref('rooms').once('value',function(rsnap){
+    var rooms=rsnap.val()||{};
+    db.ref('fantasy').once('value',function(fsnap){
+      var fdata=fsnap.val()||{};
+      var codes=Object.keys(rooms).sort(function(a,b){
+        // Sort by creation time descending (newest first)
+        // Room codes contain no timestamp, use Firebase's push order or createdAt if present
+        // Fall back: sort by teamBudget createdAt or just reverse alphabetical as proxy
+        var ra=rooms[a], rb=rooms[b];
+        var ta=ra.createdAt||ra.startTime||0;
+        var tb=rb.createdAt||rb.startTime||0;
+        if(tb!==ta) return tb-ta; // newest first
+        return b.localeCompare(a); // fallback reverse alpha
+      });
+      c.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:10px">'+codes.length+' rooms</div>';
+      codes.forEach(function(code){
+        var room=rooms[code];
+        var teams=room.teams||{};
+        var fd=fdata[code];
+        var div=document.createElement('div');
+        div.className='room-card';
+        var hdr=document.createElement('div');
+        hdr.className='room-hdr';
+        hdr.innerHTML='<div>'
+          +'<div style="font-family:var(--fn);font-size:22px;color:var(--gold);letter-spacing:4px">'+code+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'
+          +(room.roomName||'Unnamed')+' · '+(room.hostName?'Host: '+room.hostName+' · ':'')+Object.keys(teams).length+' teams'
+          +(room.auctionEnded?' · Ended':room.auctionStarted?' · In progress':' · Not started')
+          +(fd?' · ✓ Fantasy active':'')+'</div></div>'
+          +'<div style="font-size:11px;color:var(--text3)">▶</div>';
+        var body=document.createElement('div');
+        body.className='room-body';
+        var bhtml='';
+        Object.keys(teams).sort(function(a,b){return parseInt(a)-parseInt(b);}).forEach(function(k){
+          var t=teams[k];
+          bhtml+='<div style="margin-bottom:10px;padding:10px;background:var(--surface2);'
+            +'border-radius:var(--rsm);border-left:3px solid '+(t.color||'#5091CD')+'">'
+            +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+            +'<div style="font-family:var(--fd);font-size:15px;font-weight:700">'+t.name+'</div>'
+            +'<div style="font-family:var(--fn);font-size:15px;color:var(--gold)">₹'+(t.spent||0)+'L</div></div>'
+            +(t.players||[]).map(function(p){
+              return '<div style="display:flex;justify-content:space-between;font-size:12px;'
+                +'padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2)">'
+                +'<span>'+p.name+'</span><span style="color:var(--green);font-family:var(--fn)">₹'+(p.soldPrice||0)+'L</span></div>';
+            }).join('')+'</div>';
+        });
+        if(fd&&fd.matches) bhtml+='<div style="margin-top:8px;padding:8px;background:var(--golddim);'
+          +'border-radius:var(--rsm);font-size:12px;color:var(--gold)">Fantasy: '+Object.keys(fd.matches).length+' matches</div>';
+        // Add Load Fantasy button at top of body
+        var loadBtn=document.createElement('button');
+        loadBtn.className='btn btn-blue btn-sm';
+        loadBtn.style.cssText='margin-bottom:12px;width:auto';
+        loadBtn.textContent='Load Fantasy for this room';
+        loadBtn.addEventListener('click',function(e){
+          e.stopPropagation();
+          loadRoomAsAdmin(code);
+        });
+        body.innerHTML='';
+        body.appendChild(loadBtn);
+        var bodyContent=document.createElement('div');
+        bodyContent.innerHTML=bhtml;
+        body.appendChild(bodyContent);
+        hdr.addEventListener('click',function(){
+          body.style.display=body.style.display==='block'?'none':'block';
+        });
+        div.appendChild(hdr); div.appendChild(body); c.appendChild(div);
+      });
+    });
+  });
+}
+
+// ── SESSION RESTORE ──
+window.addEventListener('load',function(){
+  // Pre-fill code from URL param (e.g. coming from auction end screen)
+  var urlCode=new URLSearchParams(window.location.search).get('code');
+  if(urlCode && !IS_ADMIN){
+    document.getElementById('setupCode').value=urlCode.toUpperCase();
+  }
+  if(IS_ADMIN){
+    document.getElementById('adminPanel').style.display='block';
+    document.getElementById('mainNav').style.display='flex';
+    document.getElementById('adminBtn').style.display='block';
+    document.getElementById('adminBackBtn').style.display='none';
+    document.getElementById('navSub').textContent='Admin Mode';
+    // Need firebase for sync - init with a dummy room ref pointing to root
+    // Admin mode - fantasyRef set per-room
+    loadSyncedIds();
+    loadAllRooms();
+    return;
+  }
+  var code=localStorage.getItem('fl_code');
+  var team=localStorage.getItem('fl_team');
+  if(code) document.getElementById('setupCode').value=code;
+  if(team) document.getElementById('setupTeam').value=team||'';
+});
 </script>
   <script>
     if('serviceWorker' in navigator){
