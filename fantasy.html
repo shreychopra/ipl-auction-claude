@@ -716,6 +716,7 @@ function initApp(){
   }
   // Load synced IDs then auto-sync
   loadSyncedIds();
+  listenForSyncTrigger();
 }
 
 function updateNav(){
@@ -1027,8 +1028,9 @@ function findPlayer(apiName){
   });
   return {player:best,score:bestScore};
 }
-function calcPts(bat,bowl,field,isCap,isVC){
-  var pts=4; // playing XI
+function calcPts(bat,bowl,field,isCap,isVC,playedXI){
+  // Playing XI bonus only if actually participated (batted or bowled), not just as sub
+  var pts=playedXI?4:0;
   if(bat){
     pts+=bat.runs+(bat.fours||0)+(bat.sixes||0)*2;
     if(bat.runs>=100) pts+=16; else if(bat.runs>=50) pts+=8; else if(bat.runs>=25) pts+=4;
@@ -1106,10 +1108,32 @@ function nextMatchNum(){
   return nums.length?Math.max.apply(null,nums)+1:1;
 }
 var pendingConfirm={};
-function processMatch(matchId,desc,mNum,done){
-  if(mNum===undefined) mNum=nextMatchNum(); // fallback
+function processMatch(matchId,desc,mNum,done,retryCount){
+  if(mNum===undefined) mNum=nextMatchNum();
+  retryCount=retryCount||0;
   apiGet('/mcenter/v1/'+matchId+'/scard',function(data,err){
-    if(err){logSync('Error fetching '+desc+': '+err,'err');done();return;}
+    if(err){
+      if(retryCount<2){
+        logSync('Retrying '+desc+' (attempt '+(retryCount+2)+')...','warn');
+        setTimeout(function(){processMatch(matchId,desc,mNum,done,retryCount+1);},3000);
+        return;
+      }
+      logSync('Failed after 3 attempts: '+desc+' — '+err,'err');
+      done();return;
+    }
+    // Check scorecard has meaningful data (guard against rain delays/incomplete matches)
+    var innings=data.scoreCard||data.inningsScoreList||[];
+    if(!innings.length){
+      logSync('No scorecard data yet for '+desc+' — may be rain delay or incomplete. Will retry next sync.','warn');
+      // Don't mark as synced so it retries next time
+      done();return;
+    }
+    var totalBatters=0;
+    innings.forEach(function(inn){totalBatters+=(inn.batCard||inn.batsmen||[]).length;});
+    if(totalBatters<11){
+      logSync('Incomplete scorecard for '+desc+' ('+totalBatters+' batters). Will retry next sync.','warn');
+      done();return;
+    }
     var stats=parseCard(data);
     var results={};
     var lowConf=[];
@@ -1117,7 +1141,7 @@ function processMatch(matchId,desc,mNum,done){
       var m=findPlayer(apiName);
       if(!m.player) return;
       var st=stats[apiName];
-      var pts=calcPts(st.bat,st.bowl,st.field);
+      var playedXI=!!(st.bat||st.bowl); var pts=calcPts(st.bat,st.bowl,st.field,false,false,playedXI);
       if(pts<=0) return;
       if(m.score>=0.85){
         var ti=m.player.ti,pi=m.player.pi;
@@ -1253,6 +1277,20 @@ function runSync(manual){
   }
   next();
 }
+function listenForSyncTrigger(){
+  // Listen for cron-triggered sync from Cloudflare Worker
+  db.ref('syncTrigger').on('value',function(snap){
+    var d=snap.val();
+    if(!d||!d.triggeredAt) return;
+    var last=parseInt(localStorage.getItem('fl_lastTrigger')||'0');
+    if(d.triggeredAt>last){
+      localStorage.setItem('fl_lastTrigger',d.triggeredAt.toString());
+      logSync('Scheduled sync triggered by server','info');
+      runSync(false);
+    }
+  });
+}
+
 function loadSyncedIds(){
   if(!fantasyRef) return;
   fantasyRef.child('syncedIds').once('value',function(snap){
@@ -1277,7 +1315,7 @@ function activateAdmin(){
   var backBtn=document.getElementById('adminBackBtn');
   if(backBtn) backBtn.style.display='none';
   document.getElementById('navSub').textContent='Admin Mode';
-  fantasyRef=db.ref('fantasy/_admin_sync_');
+  // Admin mode - no fantasyRef needed for room list, set per-room when loading
   loadAllRooms();
 }
 
@@ -1424,7 +1462,7 @@ window.addEventListener('load',function(){
     document.getElementById('adminBackBtn').style.display='none';
     document.getElementById('navSub').textContent='Admin Mode';
     // Need firebase for sync - init with a dummy room ref pointing to root
-    fantasyRef = db.ref('fantasy/_admin_sync');
+    // Admin mode - fantasyRef set per-room
     loadSyncedIds();
     loadAllRooms();
     return;
