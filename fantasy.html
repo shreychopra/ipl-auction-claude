@@ -235,7 +235,7 @@
   <div style="padding:16px;background:linear-gradient(135deg,#0e1e4a,#0d1120);
     border-bottom:1px solid rgba(80,145,205,.2);display:flex;align-items:center;gap:12px;
     position:sticky;top:0;z-index:10">
-    <button onclick="document.getElementById('adminPanel').style.display='none'"
+    <button id="adminBackBtn"
       style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);
       padding:6px 12px;color:var(--text2);cursor:pointer;font-family:var(--font-display);
       font-size:12px;font-weight:600">← Back</button>
@@ -493,7 +493,6 @@ function renderApp(){
   document.getElementById('mainNav').style.display = 'flex';
   document.getElementById('navRoomCode').textContent = 'Room: ' + G.roomCode;
   updateNavMatch();
-  renderTeamTabs('entryTeamTabs', selectEntryTeam);
   renderTeamTabs('squadTeamTabs', selectSquadTeam);
   renderLeaderboard();
   renderSquads();
@@ -527,14 +526,7 @@ function renderTeamTabs(containerId, onSelect){
   }
 }
 
-function selectEntryTeam(idx, btn){
-  currentEntryTeam = parseInt(idx);
-  document.querySelectorAll('#entryTeamTabs button').forEach(function(b){
-    b.style.background='var(--surface2)'; b.style.color='var(--text2)';
-  });
-  if(btn){ btn.style.background='var(--surface3)'; btn.style.color='var(--text)'; }
-  renderEntryPlayers();
-}
+function selectEntryTeam(idx, btn){ currentEntryTeam=parseInt(idx); }
 
 function selectSquadTeam(idx, btn){
   currentSquadTeam = parseInt(idx);
@@ -765,12 +757,12 @@ function renderHistory(){
 function jumpToMatch(num){
   G.currentMatch = num;
   updateNavMatch();
-  // Switch to entry tab
-  var entryTab = document.querySelectorAll('#mainScreen .tab')[1];
-  mainTab('entry', entryTab);
-  entryTab.classList.add('on');
+  // Switch to sync tab
+  var syncTab = document.querySelectorAll('#mainScreen .tab')[1];
+  document.querySelectorAll('#mainScreen .tab').forEach(function(t){t.classList.remove('on');});
   document.querySelectorAll('#mainScreen .tab-pane').forEach(function(p){p.classList.remove('on');});
-  document.getElementById('pane-entry').classList.add('on');
+  syncTab.classList.add('on');
+  document.getElementById('pane-sync').classList.add('on');
 }
 
 // ── PLAYER DETAIL ──
@@ -1270,10 +1262,13 @@ function loadSyncedIds(){
 
 // ── ADMIN: VIEW ALL ROOMS ──
 function initAdmin(){
-  // Check URL param ?admin=1
   if(window.location.search.includes('admin=1')){
     document.getElementById('adminBtn').style.display='block';
   }
+  var backBtn=document.getElementById('adminBackBtn');
+  if(backBtn) backBtn.addEventListener('click',function(){
+    document.getElementById('adminPanel').style.display='none';
+  });
 }
 
 function showAdminPanel(){
