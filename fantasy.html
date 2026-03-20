@@ -284,6 +284,20 @@
   </div>
 </div>
 
+<!-- MATCH EDIT MODAL (admin) -->
+<div class="modal-ov" id="matchEditModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;margin-bottom:16px">
+      <div style="flex:1;font-family:var(--fd);font-size:18px;font-weight:700" id="matchEditTitle">Edit Points</div>
+      <button onclick="document.getElementById('matchEditModal').classList.remove('show')"
+        style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Edit individual player points for this match. Changes save to Firebase immediately.</div>
+    <div id="matchEditList"></div>
+    <button class="btn btn-green" style="margin-top:12px" onclick="saveMatchEdit()">Save Changes</button>
+  </div>
+</div>
+
 <!-- PLAYER MODAL -->
 <div class="modal-ov" id="playerModal">
   <div class="modal">
@@ -699,6 +713,23 @@ function loadRoom(){
   });
 }
 
+function requestNotifPermission(){
+  if('Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+}
+
+function sendNotif(title, body){
+  if(!('Notification' in window)) return;
+  if(Notification.permission==='granted'){
+    new Notification(title, {
+      body: body,
+      icon: './images/319946.3.webp', // MS Dhoni as icon :)
+      badge: './images/319946.3.webp'
+    });
+  }
+}
+
 function initApp(){
   document.getElementById('mainNav').style.display='flex';
   document.getElementById('navSub').textContent='Room: '+G.roomCode;
@@ -717,6 +748,7 @@ function initApp(){
   // Load synced IDs then auto-sync
   loadSyncedIds();
   listenForSyncTrigger();
+  requestNotifPermission();
 }
 
 function updateNav(){
@@ -948,6 +980,53 @@ function openPlayerModal(ti,pi){
   document.getElementById('modalBody').innerHTML=body;
   document.getElementById('playerModal').classList.add('show');
 }
+var matchEditData = {matchNum:0, teamIdx:0, edits:{}};
+
+function openMatchEdit(matchNum, teamIdx){
+  var t=G.teams[teamIdx]; if(!t) return;
+  var mk='match'+matchNum;
+  var lbl=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'Match '+matchNum;
+  document.getElementById('matchEditTitle').textContent='Edit: '+lbl+' — '+t.name;
+  matchEditData={matchNum:matchNum, teamIdx:teamIdx, edits:{}};
+  var saved=G.matchData[mk]&&G.matchData[mk][teamIdx]?G.matchData[mk][teamIdx]:{};
+  var list=document.getElementById('matchEditList');
+  list.innerHTML='';
+  (t.players||[]).forEach(function(p,pi){
+    var pts=saved[pi]!==undefined?saved[pi]:0;
+    if(pts===0) return; // only show players with points
+    matchEditData.edits[pi]=pts;
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML='<div style="flex:1;font-size:13px;font-weight:600">'+p.name+'</div>'
+      +'<input type="number" value="'+pts+'" data-pi="'+pi+'" '
+      +'style="width:70px;background:var(--surface2);border:1px solid var(--border);'
+      +'border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--fn);'
+      +'padding:6px;text-align:center;outline:none">';
+    list.appendChild(row);
+    row.querySelector('input').addEventListener('input',function(){
+      matchEditData.edits[parseInt(this.dataset.pi)]=parseFloat(this.value)||0;
+    });
+  });
+  if(!list.children.length) list.innerHTML='<div class="empty" style="padding:16px">No points recorded for this match</div>';
+  document.getElementById('matchEditModal').classList.add('show');
+}
+
+function saveMatchEdit(){
+  var mk='match'+matchEditData.matchNum;
+  var upd={};
+  upd['matches/'+mk+'/'+matchEditData.teamIdx]=matchEditData.edits;
+  if(fantasyRef){
+    fantasyRef.update(upd,function(err){
+      if(err){toast('Error: '+err);return;}
+      if(!G.matchData[mk]) G.matchData[mk]={};
+      G.matchData[mk][matchEditData.teamIdx]=matchEditData.edits;
+      toast('Points updated!');
+      document.getElementById('matchEditModal').classList.remove('show');
+      renderLeaderboard(); renderHistory();
+    });
+  }
+}
+
 function setCaptain(ti,pi,role){
   var mk='match'+G.currentMatch;
   if(!G.captains) G.captains={};
@@ -989,23 +1068,62 @@ function renderHistory(){
   for(var i=1;i<=74;i++){
     var mk='match'+i;
     if(G.matchData[mk]){
-      var tot=0;
-      Object.keys(G.teams).forEach(function(k){tot+=teamMatchPts(parseInt(k),i);});
-      matches.push({n:i,tot:tot});
+      var lbl=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'Match '+i;
+      var teamPts={};
+      Object.keys(G.teams).forEach(function(k){teamPts[k]=teamMatchPts(parseInt(k),i);});
+      matches.push({n:i,lbl:lbl,teamPts:teamPts});
     }
   }
   if(!matches.length){c.innerHTML='<div class="empty">No match data yet</div>';return;}
-  c.innerHTML=matches.reverse().map(function(m){
-    return '<div class="mh-row">'
-      +'<div style="font-family:var(--fn);font-size:28px;color:var(--text3);width:36px;text-align:center">'+m.n+'</div>'
-      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">Match '+m.n+'</div>'
-      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">Points recorded</div></div>'
-      +'<div style="font-family:var(--fn);font-size:20px;color:var(--green)">'+m.tot+'</div>'
-      +'</div>';
-  }).join('');
+  c.innerHTML='';
+  var keys=Object.keys(G.teams).sort(function(a,b){return parseInt(a)-parseInt(b);});
+  matches.reverse().forEach(function(m){
+    var ranked=keys.slice().sort(function(a,b){return (m.teamPts[b]||0)-(m.teamPts[a]||0);});
+    // Outer wrapper
+    var wrap=document.createElement('div');
+    wrap.style.borderBottom='1px solid var(--border2)';
+    // Header row
+    var hdr=document.createElement('div');
+    hdr.className='mh-row';
+    hdr.style.cursor='pointer';
+    hdr.innerHTML='<div style="font-family:var(--fn);font-size:28px;color:var(--text3);width:36px;text-align:center">'+m.n+'</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+m.lbl+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">Tap to expand</div></div>'
+      +'<div style="font-family:var(--fn);font-size:16px;color:var(--gold)">&#9658;</div>';
+    // Detail panel
+    var detail=document.createElement('div');
+    detail.style.cssText='display:none;padding:8px 14px 12px';
+    ranked.forEach(function(k,ri){
+      var t=G.teams[k];
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px';
+      var left=document.createElement('div');
+      left.style.cssText='display:flex;align-items:center;gap:6px';
+      left.innerHTML='<span style="font-family:var(--fn);font-size:14px;color:var(--text3);width:16px">'+(ri+1)+'</span>'
+        +'<span style="width:8px;height:8px;border-radius:50%;background:'+(t.color||'#5091CD')+';flex-shrink:0;display:inline-block"></span>'
+        +'<span style="font-weight:600">'+t.name+'</span>';
+      if(IS_ADMIN){
+        var eb=document.createElement('button');
+        eb.style.cssText='margin-left:8px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text3);font-size:10px;padding:2px 6px;cursor:pointer;font-family:var(--fd)';
+        eb.textContent='Edit';
+        eb.addEventListener('click',function(e){e.stopPropagation();openMatchEdit(m.n,parseInt(k));});
+        left.appendChild(eb);
+      }
+      var pts=document.createElement('span');
+      pts.style.cssText='font-family:var(--fn);font-size:16px;color:var(--green)';
+      pts.textContent=(m.teamPts[k]||0);
+      row.appendChild(left); row.appendChild(pts);
+      detail.appendChild(row);
+    });
+    hdr.addEventListener('click',function(){
+      detail.style.display=detail.style.display==='block'?'none':'block';
+    });
+    wrap.appendChild(hdr); wrap.appendChild(detail);
+    c.appendChild(wrap);
+  });
 }
 
-// ── AUTO SYNC (RapidAPI / Cricbuzz) ──
+
 function normName(n){
   return (n||'').toLowerCase().replace(/[^a-z\s]/g,'').replace(/\s+/g,' ').trim();
 }
@@ -1203,6 +1321,7 @@ function saveResults(results,mNum,matchId,desc){
       syncedIds[matchId]=true;
       G.matchData[mk]=results;
       logSync('Saved Match '+mNum+' ('+desc+')','ok');
+      sendNotif('Fantasy Points Updated', desc+' points have been synced!');
       renderLeaderboard();
       renderSquadView();
       updateNav();
