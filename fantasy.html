@@ -240,6 +240,9 @@
       <div class="gap"></div>
       <div class="card-title">Your Team Name <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(to highlight your team)</span></div>
       <input type="text" id="setupTeamName" placeholder="e.g. Mumbai Mavericks" maxlength="25"/>
+      <div class="gap"></div>
+      <div class="card-title">RapidAPI Key <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(from rapidapi.com)</span></div>
+      <input type="text" id="setupApiKey" placeholder="Paste your x-rapidapi-key here" autocomplete="off"/>
       <div style="margin-top:16px">
         <button class="btn btn-gold" onclick="loadRoom()">Load Squads</button>
       </div>
@@ -289,7 +292,7 @@
 <div id="mainScreen" class="screen">
   <div class="tabs">
     <div class="tab on" onclick="mainTab('leaderboard',this)">Leaderboard</div>
-    <div class="tab" onclick="mainTab('entry',this)">Enter Points</div>
+    <div class="tab" onclick="mainTab('sync',this)">Auto Sync</div>
     <div class="tab" onclick="mainTab('squads',this)">Squads</div>
     <div class="tab" onclick="mainTab('history',this)">History</div>
   </div>
@@ -302,26 +305,30 @@
     <div id="lbList"></div>
   </div>
 
-  <!-- ENTRY -->
-  <div id="pane-entry" class="tab-pane">
-    <div class="match-selector">
-      <button class="match-nav-btn" onclick="changeMatch(-1)">&#8249;</button>
-      <div class="match-num" id="matchNum">M1</div>
-      <button class="match-nav-btn" onclick="changeMatch(1)">&#8250;</button>
-      <div style="flex:1"></div>
-      <div class="match-label" id="entryStatus"></div>
-    </div>
-    <div style="padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);
-      display:flex;gap:8px;align-items:center">
-      <div style="flex:1;font-size:12px;color:var(--text3)">
-        Enter points for each player. Use the scoring guide on the setup screen.
+  <!-- SYNC -->
+  <div id="pane-sync" class="tab-pane">
+    <div style="padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div>
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
+          letter-spacing:1px;text-transform:uppercase">Auto Sync</div>
+        <div id="syncStatusText" style="font-size:11px;color:var(--text3);margin-top:2px">
+          Syncs completed IPL 2026 matches automatically
+        </div>
       </div>
-      <button class="btn btn-green btn-sm" onclick="saveMatchPoints()">Save Match</button>
+      <button class="btn btn-blue btn-sm" onclick="runSync(true)">Sync Now</button>
     </div>
-    <!-- Team selector -->
-    <div id="entryTeamTabs" style="display:flex;overflow-x:auto;background:var(--surface);
-      border-bottom:1px solid var(--border);padding:6px 10px;gap:6px"></div>
-    <div id="entryPlayerList"></div>
+    <!-- Sync log -->
+    <div id="syncLog" style="padding:10px;display:flex;flex-direction:column;gap:6px"></div>
+    <!-- Review unmatched players -->
+    <div id="unmatchedSection" style="display:none;padding:10px">
+      <div style="font-family:var(--font-display);font-size:11px;font-weight:700;
+        letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">
+        Low Confidence Matches — Review
+      </div>
+      <div id="unmatchedList"></div>
+      <button class="btn btn-gold" style="margin-top:10px" onclick="confirmMatches()">Confirm & Save</button>
+    </div>
   </div>
 
   <!-- SQUADS -->
@@ -412,7 +419,7 @@ function mainTab(name, el){
   el.classList.add('on');
   document.getElementById('pane-'+name).classList.add('on');
   if(name==='leaderboard') renderLeaderboard();
-  if(name==='entry') renderEntry();
+  if(name==='sync') { /* sync pane is self-contained */ }
   if(name==='squads') renderSquads();
   if(name==='history') renderHistory();
 }
@@ -450,6 +457,13 @@ function loadRoom(){
       renderHistory();
       updateNavMatch();
     });
+    // Load synced IDs and start auto-sync
+    var apiKeyEl = document.getElementById('setupApiKey');
+    if(apiKeyEl && apiKeyEl.value.trim()){
+      RAPIDAPI_KEY = apiKeyEl.value.trim();
+      localStorage.setItem('fantasy_apikey', RAPIDAPI_KEY);
+    }
+    loadSyncedIds();
   });
 }
 
@@ -779,6 +793,12 @@ function showPlayerDetail(teamIdx, playerIdx){
         +'<span style="font-family:var(--font-num);font-size:18px;color:'+col+'">'+m.pts+'</span>'
         +'</div>';
     }).join('');
+  // Wire up accept/reject buttons using event delegation
+  list.addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-mid]');
+    if(!btn) return;
+    confirmItem(btn.dataset.mid, parseInt(btn.dataset.i), btn.dataset.accept==='1');
+  });
   } else {
     content+='<div class="empty" style="padding:20px">No match data yet</div>';
   }
@@ -811,13 +831,437 @@ function showSquadModal(teamIdx){
   renderSquadView();
 }
 
+
+// ══════════════════════════════════════════════
+// AUTO SYNC — Cricbuzz via RapidAPI
+// ══════════════════════════════════════════════
+
+var RAPIDAPI_KEY = '';
+var IPL_2026_SERIES_ID = '9237'; // Cricbuzz series ID for IPL 2026
+var pendingMatches = {}; // matchId -> parsed scorecard data awaiting confirm
+var syncedMatchIds = {}; // matchId -> true (already synced)
+
+// ── FUZZY NAME MATCHING ──
+function normName(n){
+  return (n||'').toLowerCase()
+    .replace(/\./g,'').replace(/\s+/g,' ').trim()
+    .replace(/^(st|md|sk|sk|aj|rr|ab|ms|kl|jj|dp)\s/,''); // remove initials prefix
+}
+function nameSimilarity(a, b){
+  a = normName(a); b = normName(b);
+  if(a===b) return 1.0;
+  if(a.includes(b)||b.includes(a)) return 0.9;
+  var aw=a.split(' '), bw=b.split(' ');
+  // last name match
+  if(aw.length && bw.length && aw[aw.length-1]===bw[bw.length-1]) return 0.85;
+  // count shared words
+  var shared=aw.filter(function(w){return w.length>2&&bw.includes(w);}).length;
+  if(shared>0) return 0.7 + (shared*0.05);
+  return 0;
+}
+function findPlayer(apiName, allPlayers){
+  // allPlayers: [{teamIdx, playerIdx, name, role}]
+  var best=null, bestScore=0;
+  allPlayers.forEach(function(p){
+    var s=nameSimilarity(apiName, p.name);
+    if(s>bestScore){ bestScore=s; best=p; }
+  });
+  return {player:best, score:bestScore};
+}
+
+// ── BUILD FLAT PLAYER LIST FROM ALL TEAMS ──
+function getAllPlayers(){
+  var list=[];
+  Object.keys(G.teams).forEach(function(k){
+    var t=G.teams[k];
+    (t.players||[]).forEach(function(p,i){
+      list.push({teamIdx:parseInt(k), playerIdx:i, name:p.name, role:p.role});
+    });
+  });
+  return list;
+}
+
+// ── CALCULATE FANTASY POINTS FROM SCORECARD ──
+function calcPlayerPoints(bat, bowl, field){
+  // bat: {runs, fours, sixes, dismissal} bowl: {wickets, overs, runs, maidens, lbwBowled}
+  // field: {catches, stumpings, runouts}  all optional
+  var pts = 0;
+
+  // Playing XI
+  pts += 4;
+
+  // Batting
+  if(bat){
+    var r=bat.runs||0, f=bat.fours||0, s=bat.sixes||0;
+    pts += r;           // 1pt per run
+    pts += f;           // 1pt per boundary
+    pts += s*2;         // 2pts per six
+    if(r>=100) pts+=16; else if(r>=50) pts+=8; else if(r>=25) pts+=4;
+    if(r===0 && bat.dismissed) pts-=2; // duck
+  }
+
+  // Bowling
+  if(bowl){
+    var w=bowl.wickets||0, ov=bowl.overs||0, rc=bowl.runs||0, m=bowl.maidens||0;
+    pts += w*25;
+    pts += (bowl.lbwBowled||0)*8;
+    if(w>=5) pts+=16; else if(w>=4) pts+=8; else if(w>=3) pts+=4;
+    pts += m*12;
+    // Economy (min 2 overs)
+    if(ov>=2){
+      var eco = rc/ov;
+      if(eco<6) pts+=4;
+      else if(eco<=8) pts+=2;
+    }
+  }
+
+  // Fielding
+  if(field){
+    pts += (field.catches||0)*8;
+    pts += (field.stumpings||0)*12;
+    pts += (field.runouts||0)*6;
+  }
+
+  return pts;
+}
+
+// ── PARSE CRICBUZZ SCORECARD ──
+function parseScorecardToPlayerStats(scard){
+  // scard is the scorecard object from Cricbuzz API
+  // Returns: {playerName -> {bat, bowl, field, played}}
+  var stats = {};
+
+  function getOrCreate(name){
+    if(!stats[name]) stats[name]={bat:null,bowl:null,field:{catches:0,stumpings:0,runouts:0},played:true};
+    return stats[name];
+  }
+
+  // Process each innings
+  var innings = scard.scoreCard || scard.inningsScoreList || [];
+  innings.forEach(function(inn){
+    // Batting
+    var batCard = inn.batCard || inn.batsmen || [];
+    batCard.forEach(function(b){
+      var name = b.batName || b.name || '';
+      if(!name) return;
+      var st = getOrCreate(name);
+      var runs = parseInt(b.runs||b.r||0);
+      var fours = parseInt(b.fours||b['4s']||0);
+      var sixes = parseInt(b.sixes||b['6s']||0);
+      var dismissal = (b.outDesc||b.wicketCode||b.dismissal||'').toLowerCase();
+      var isDismissed = dismissal && dismissal!=='not out' && dismissal!=='';
+      st.bat = {runs:runs, fours:fours, sixes:sixes, dismissed:isDismissed};
+
+      // Parse fielding from dismissal text
+      // "c Rohit b Bumrah" -> Rohit gets a catch
+      // "st Pant b Chahal" -> Pant gets a stumping
+      // "run out (Jadeja)" -> Jadeja gets a run-out
+      var catchMatch = dismissal.match(/^c\s+([a-z\s]+)\s+b\s/i);
+      var stumpMatch = dismissal.match(/^st\s+([a-z\s]+)\s+b\s/i);
+      var runoutMatch = dismissal.match(/run\s*out\s*\(?([a-z\s/]+)\)?/i);
+
+      if(catchMatch){
+        var fielder = catchMatch[1].trim();
+        if(fielder && fielder.toLowerCase()!=='sub'){
+          getOrCreate(fielder).field.catches++;
+        }
+      }
+      if(stumpMatch){
+        var stumper = stumpMatch[1].trim();
+        if(stumper) getOrCreate(stumper).field.stumpings++;
+      }
+      if(runoutMatch){
+        // "Jadeja/Kohli" - credit first fielder
+        var ros = runoutMatch[1].split(/[/,&]/)[0].trim();
+        if(ros) getOrCreate(ros).field.runouts++;
+      }
+      // LBW or bowled - credit bowler bonus
+      if(dismissal.match(/^lbw\s+b\s/i)){
+        var bowlerLbw = dismissal.replace(/^lbw\s+b\s+/i,'').trim();
+        if(!stats[bowlerLbw]) getOrCreate(bowlerLbw);
+        if(!stats[bowlerLbw]._lbwBowled) stats[bowlerLbw]._lbwBowled=0;
+        stats[bowlerLbw]._lbwBowled++;
+      }
+      if(dismissal.match(/^b\s+/i) && !dismissal.match(/^bowled/i)){
+        var bowlerB = dismissal.replace(/^b\s+/i,'').trim();
+        if(!stats[bowlerB]) getOrCreate(bowlerB);
+        if(!stats[bowlerB]._lbwBowled) stats[bowlerB]._lbwBowled=0;
+        stats[bowlerB]._lbwBowled++;
+      }
+      // "bowled NAME"
+      if(dismissal.match(/^bowled\s+/i)){
+        var bowlerBo = dismissal.replace(/^bowled\s+/i,'').trim();
+        if(!stats[bowlerBo]) getOrCreate(bowlerBo);
+        if(!stats[bowlerBo]._lbwBowled) stats[bowlerBo]._lbwBowled=0;
+        stats[bowlerBo]._lbwBowled++;
+      }
+    });
+
+    // Bowling
+    var bowlCard = inn.bowlCard || inn.bowlers || [];
+    bowlCard.forEach(function(b){
+      var name = b.bowlName || b.name || '';
+      if(!name) return;
+      var st = getOrCreate(name);
+      var overs = parseFloat(b.overs||b.ov||0);
+      var runs = parseInt(b.runs||b.r||0);
+      var wkts = parseInt(b.wickets||b.wkts||b.w||0);
+      var maidens = parseInt(b.maidens||b.m||0);
+      st.bowl = {
+        wickets:wkts, overs:overs, runs:runs, maidens:maidens,
+        lbwBowled:st._lbwBowled||0
+      };
+    });
+  });
+
+  // Apply accumulated lbwBowled to bowl objects
+  Object.keys(stats).forEach(function(name){
+    if(stats[name]._lbwBowled && stats[name].bowl){
+      stats[name].bowl.lbwBowled = stats[name]._lbwBowled;
+    }
+  });
+
+  return stats;
+}
+
+// ── API CALLS ──
+function apiCall(path, cb){
+  var key = RAPIDAPI_KEY || localStorage.getItem('fantasy_apikey') || '';
+  if(!key){ cb(null, 'No API key'); return; }
+  var url = 'https://cricbuzz-cricket.p.rapidapi.com' + path;
+  fetch(url, {
+    headers:{
+      'x-rapidapi-key': key,
+      'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com'
+    }
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(d){ cb(d, null); })
+  .catch(function(e){ cb(null, e.message); });
+}
+
+function logSync(msg, type){
+  var c=document.getElementById('syncLog');
+  if(!c) return;
+  var d=document.createElement('div');
+  var colors={info:'var(--text2)',ok:'var(--green)',warn:'var(--gold)',err:'var(--red)'};
+  d.style.cssText='padding:8px 12px;background:var(--surface2);border-radius:var(--rsm);'
+    +'border:1px solid var(--border);font-size:12px;color:'+(colors[type]||colors.info)+';'
+    +'border-left:3px solid '+(colors[type]||colors.info);
+  d.textContent=(new Date().toLocaleTimeString())+' — '+msg;
+  c.insertBefore(d,c.firstChild);
+}
+
+// ── MAIN SYNC FUNCTION ──
+function runSync(manual){
+  var key = document.getElementById('setupApiKey') ?
+    document.getElementById('setupApiKey').value.trim() : '';
+  if(!key) key = localStorage.getItem('fantasy_apikey')||'';
+  if(!key){ toast('Enter your RapidAPI key on the setup screen'); return; }
+  RAPIDAPI_KEY = key;
+  localStorage.setItem('fantasy_apikey', key);
+
+  document.getElementById('syncStatusText').textContent='Syncing...';
+  if(manual) logSync('Manual sync started', 'info');
+
+  // Step 1: Get list of recent IPL matches
+  apiCall('/matches/v1/recent', function(data, err){
+    if(err){ logSync('Failed to fetch matches: '+err,'err'); return; }
+    var iplMatches=[];
+    (data.typeMatches||[]).forEach(function(tm){
+      (tm.seriesMatches||[]).forEach(function(sm){
+        var sw=sm.seriesAdWrapper||sm;
+        if(!sw||typeof sw!=='object') return;
+        var sName=(sw.seriesName||'').toLowerCase();
+        if(!sName.includes('ipl')&&!sName.includes('indian premier')) return;
+        (sw.matches||[]).forEach(function(m){
+          var mi=m.matchInfo||{};
+          // Only completed matches
+          if(mi.state&&mi.state.toLowerCase().includes('complete')){
+            iplMatches.push({matchId:mi.matchId, desc:mi.matchDesc||'Match'});
+          }
+        });
+      });
+    });
+
+    logSync('Found '+iplMatches.length+' completed IPL matches','info');
+
+    // Filter already synced
+    var toSync=iplMatches.filter(function(m){
+      return !syncedMatchIds[m.matchId] && !G.matchData['cb_'+m.matchId];
+    });
+
+    if(!toSync.length){ logSync('All matches already synced','ok'); document.getElementById('syncStatusText').textContent='Up to date'; return; }
+    logSync('Syncing '+toSync.length+' new matches','info');
+
+    // Process matches one by one with delay to avoid rate limits
+    var idx=0;
+    function nextMatch(){
+      if(idx>=toSync.length){
+        logSync('Sync complete!','ok');
+        document.getElementById('syncStatusText').textContent='Last sync: '+new Date().toLocaleTimeString();
+        renderLeaderboard();
+        renderHistory();
+        return;
+      }
+      var m=toSync[idx++];
+      logSync('Fetching '+m.desc+' (id:'+m.matchId+')','info');
+      setTimeout(function(){
+        fetchAndProcessMatch(m.matchId, m.desc, function(){ nextMatch(); });
+      }, 500); // 500ms between calls
+    }
+    nextMatch();
+  });
+}
+
+function fetchAndProcessMatch(matchId, desc, done){
+  apiCall('/mcenter/v1/'+matchId+'/scard', function(data, err){
+    if(err){ logSync('Error fetching scorecard for '+desc+': '+err,'err'); done(); return; }
+
+    var playerStats = parseScorecardToPlayerStats(data);
+    var apiNames = Object.keys(playerStats);
+    var allPlayers = getAllPlayers();
+    var matchNum = findNextMatchNum();
+
+    var results={};      // teamIdx -> {playerIdx -> pts}
+    var lowConf=[];      // items needing review
+
+    apiNames.forEach(function(apiName){
+      var m=findPlayer(apiName, allPlayers);
+      if(!m.player) return;
+      var st=playerStats[apiName];
+      var pts=calcPlayerPoints(st.bat, st.bowl, st.field);
+      if(pts===0 && !st.played) return; // skip non-participants
+
+      var ti=m.player.teamIdx, pi=m.player.playerIdx;
+      if(!results[ti]) results[ti]={};
+
+      if(m.score>=0.85){
+        // High confidence — auto-assign
+        results[ti][pi]=(results[ti][pi]||0)+pts;
+      } else if(m.score>=0.6){
+        // Low confidence — flag for review
+        lowConf.push({apiName:apiName, matched:m.player.name, score:m.score,
+          pts:pts, teamIdx:ti, playerIdx:pi, matchId:matchId, matchNum:matchNum});
+      }
+      // Below 0.6 — skip (unrecognised player, e.g. opposition)
+    });
+
+    if(lowConf.length){
+      logSync(lowConf.length+' low-confidence matches for '+desc+' — review needed','warn');
+      showUnmatched(lowConf, results, matchNum, matchId);
+    } else {
+      saveMatchResults(results, matchNum, matchId, desc);
+    }
+    done();
+  });
+}
+
+function findNextMatchNum(){
+  var existing=Object.keys(G.matchData)
+    .filter(function(k){return k.startsWith('match');})
+    .map(function(k){return parseInt(k.replace('match',''));});
+  if(!existing.length) return 1;
+  return Math.max.apply(null,existing)+1;
+}
+
+function saveMatchResults(results, matchNum, matchId, desc){
+  var update={};
+  var m='match'+matchNum;
+  Object.keys(results).forEach(function(ti){
+    update['matches/'+m+'/'+ti]=results[ti];
+  });
+  update['syncedIds/'+matchId]=true;
+  if(fantasyRef){
+    fantasyRef.update(update,function(err){
+      if(err){ logSync('Error saving match '+matchNum+': '+err,'err'); return; }
+      syncedMatchIds[matchId]=true;
+      G.matchData[m]=results;
+      logSync('Match '+matchNum+' saved ('+desc+')','ok');
+    });
+  }
+}
+
+function showUnmatched(lowConf, autoResults, matchNum, matchId){
+  var sec=document.getElementById('unmatchedSection');
+  var list=document.getElementById('unmatchedList');
+  sec.style.display='block';
+  pendingMatches[matchId]={autoResults:autoResults,matchNum:matchNum,lowConf:lowConf};
+
+  list.innerHTML+='<div style="font-size:12px;font-weight:600;color:var(--gold);'
+    +'margin:8px 0 4px;padding:4px 0;border-bottom:1px solid var(--border)">'+matchId+'</div>'
+    +lowConf.map(function(item,i){
+      return '<div style="padding:9px 10px;background:var(--surface2);border-radius:var(--rsm);'
+        +'margin-bottom:5px;border:1px solid var(--border)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center">'
+        +'<div style="font-size:13px;font-weight:600">'+item.apiName+'</div>'
+        +'<div style="font-family:var(--font-num);font-size:16px;color:var(--gold)">'+item.pts+'pts</div>'
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:3px">'
+        +'Matched to: <span style="color:var(--blue)">'+item.matched+'</span>'
+        +' ('+Math.round(item.score*100)+'% confidence)'
+        +'</div>'
+        +'<div style="display:flex;gap:6px;margin-top:7px">'
+        +'<button class="btn btn-green btn-sm" data-mid="'+matchId+'" data-i="'+i+'" data-accept="1">Accept</button>'
+        +'<button class="btn btn-red btn-sm" data-mid="'+matchId+'" data-i="'+i+'" data-accept="0">Reject</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+}
+
+function confirmItem(matchId, i, accept){
+  var pm=pendingMatches[matchId];
+  if(!pm) return;
+  var item=pm.lowConf[i];
+  if(accept && item){
+    var ti=item.teamIdx, pi=item.playerIdx;
+    if(!pm.autoResults[ti]) pm.autoResults[ti]={};
+    pm.autoResults[ti][pi]=(pm.autoResults[ti][pi]||0)+item.pts;
+  }
+  pm.lowConf[i]=null; // mark processed
+  // Check if all items for this matchId are done
+  var allDone=pm.lowConf.every(function(x){return x===null;});
+  if(allDone){
+    saveMatchResults(pm.autoResults,pm.matchNum,matchId,'(reviewed)');
+    delete pendingMatches[matchId];
+    // Hide section if no more pending
+    if(!Object.keys(pendingMatches).length)
+      document.getElementById('unmatchedSection').style.display='none';
+    document.getElementById('unmatchedList').innerHTML='';
+  }
+}
+
+// Load already-synced match IDs from Firebase
+function loadSyncedIds(){
+  if(!fantasyRef) return;
+  fantasyRef.child('syncedIds').once('value',function(snap){
+    var ids=snap.val()||{};
+    Object.keys(ids).forEach(function(id){syncedMatchIds[id]=true;});
+    // Auto-sync daily: if last sync > 12h ago
+    var lastSync=parseInt(localStorage.getItem('fantasy_lastSync')||'0');
+    var now=Date.now();
+    if(now-lastSync>12*60*60*1000){
+      localStorage.setItem('fantasy_lastSync',now.toString());
+      runSync(false);
+    }
+  });
+}
+
 // ── SESSION RESTORE ──
 window.addEventListener('load', function(){
   var savedCode = localStorage.getItem('fantasy_room');
   var savedTeam = localStorage.getItem('fantasy_team');
+  var savedKey = localStorage.getItem('fantasy_apikey');
   if(savedCode){
     document.getElementById('setupCode').value=savedCode;
     document.getElementById('setupTeamName').value=savedTeam||'';
+  }
+  if(savedKey){
+    document.getElementById('setupApiKey').value=savedKey;
+    RAPIDAPI_KEY=savedKey;
   }
 });
 </script>
