@@ -238,6 +238,7 @@
   <div class="tabs">
     <div class="tab on" id="tab-lb" onclick="switchTab('lb')">Leaderboard</div>
     <div class="tab" id="tab-sq" onclick="switchTab('sq')">Squads</div>
+    <div class="tab" id="tab-sc" onclick="switchTab('sc')">Schedule</div>
     <div class="tab" id="tab-sy" onclick="switchTab('sy')" style="display:none">Auto Sync</div>
     <div class="tab" id="tab-hi" onclick="switchTab('hi')">History</div>
   </div>
@@ -283,6 +284,11 @@
       <div id="syncReviewList"></div>
     </div>
     <div style="padding:10px" id="syncLog"></div>
+  </div>
+
+  <!-- SCHEDULE PANE -->
+  <div class="pane" id="pane-sc">
+    <div id="scheduleList"></div>
   </div>
 
   <!-- HISTORY PANE -->
@@ -657,7 +663,7 @@ function showScreen(id){
 }
 
 function switchTab(name){
-  ['lb','sq','sy','hi'].forEach(function(n){
+  ['lb','sq','sc','sy','hi'].forEach(function(n){
     var t=document.getElementById('tab-'+n);
     var p=document.getElementById('pane-'+n);
     if(t) t.classList.toggle('on', n===name);
@@ -758,18 +764,33 @@ function initApp(){
   requestNotifPermission();
 }
 
+function getMatchStatus(schedMatch){
+  if(!schedMatch) return 'unknown';
+  var timeParts=schedMatch.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if(!timeParts) return 'unknown';
+  var h=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+  var mn=parseInt(timeParts[2]);
+  var startUTC=new Date(schedMatch.date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
+  var endUTC=startUTC+(4.5*60*60*1000); // approx end
+  var now=Date.now();
+  if(now<startUTC) return 'upcoming';
+  if(now<endUTC) return 'live';
+  return 'done';
+}
+
 function updateNav(){
   var mk='match'+G.currentMatch;
-  // Try stored label first, then fall back to schedule
   var label=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'';
-  if(!label){
-    var sched=IPL_SCHEDULE.find(function(m){return m.num===G.currentMatch;});
-    if(sched) label=sched.label;
-  }
+  var sched=IPL_SCHEDULE.find(function(m){return m.num===G.currentMatch;});
+  if(!label&&sched) label=sched.label;
+  var status=sched?getMatchStatus(sched):'unknown';
+  var statusColors={upcoming:'var(--text3)',live:'var(--red)',done:'var(--green)',unknown:'var(--gold)'};
+  var statusLabels={upcoming:'Upcoming',live:'● Live',done:'✓ Done',unknown:''};
   var pill=document.getElementById('navMatch');
-  pill.textContent=label||('M'+G.currentMatch);
-  pill.title=label;
-  pill.style.cursor=label?'help':'default';
+  pill.title=label+(sched?' · '+sched.time+' IST':'');
+  pill.innerHTML='<span>'+(label||('M'+G.currentMatch))+'</span>'
+    +(statusLabels[status]?'<span style="font-size:9px;margin-left:5px;color:'+statusColors[status]+'">'+statusLabels[status]+'</span>':'');
+  pill.style.cursor='help';
 }
 
 // ── LEADERBOARD ──
@@ -821,7 +842,7 @@ function renderLeaderboard(){
     return '<div class="lb-row'+(isMe?' me':'')+'" onclick="squadModal('+r.idx+')">'
       +'<div class="lb-rank '+(i<3?rc[i]:'')+'">'+(i+1)+'</div>'
       +'<div><div style="font-size:14px;font-weight:600">'+r.name+'</div>'
-      +'<div style="font-size:11px;color:'+r.color+'">&#9679;'+(isMe?' Your team':'')+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px">'+'<span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';flex-shrink:0;display:inline-block;box-shadow:0 0 6px '+r.color+'"></span>'+'<span style="font-size:11px;color:var(--text3)">'+(isMe?'Your team':'')+'</span></div></div>'
       +'<div><div class="lb-pts" style="font-size:16px;color:var(--text2)">'+r.match+'</div>'
       +'<div style="font-size:10px;color:var(--text3);text-align:right">This match</div></div>'
       +'<div><div class="lb-pts">'+r.total+'</div>'
@@ -1069,6 +1090,74 @@ document.getElementById('playerModal').addEventListener('click',function(e){
 });
 
 // ── HISTORY ──
+function renderSchedule(){
+  var c=document.getElementById('scheduleList'); if(!c) return;
+  c.innerHTML='';
+  var now=Date.now();
+  // Group by date
+  var byDate={};
+  IPL_SCHEDULE.forEach(function(m){
+    if(!byDate[m.date]) byDate[m.date]=[];
+    byDate[m.date].push(m);
+  });
+  Object.keys(byDate).sort().forEach(function(date){
+    // Date header
+    var dHdr=document.createElement('div');
+    dHdr.style.cssText='padding:8px 14px;font-family:var(--fd);font-size:10px;font-weight:700;'
+      +'letter-spacing:2px;text-transform:uppercase;color:var(--text3);'
+      +'background:var(--surface);border-bottom:1px solid var(--border);'
+      +'position:sticky;top:0;z-index:1';
+    var d=new Date(date+'T12:00:00Z');
+    dHdr.textContent=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+    c.appendChild(dHdr);
+    byDate[date].forEach(function(m){
+      var timeParts=m.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      var h=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+      var mn=parseInt(timeParts[2]);
+      var startUTC=new Date(date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
+      var endUTC=startUTC+(4.5*60*60*1000);
+      var status=now<startUTC?'upcoming':now<endUTC?'live':'done';
+      var synced=syncedIds[m.id]||false;
+      var row=document.createElement('div');
+      row.style.cssText='padding:12px 14px;border-bottom:1px solid var(--border);'
+        +'display:flex;align-items:center;gap:12px;'
+        +(status==='live'?'background:rgba(255,69,102,.04)':'');
+      var numDiv=document.createElement('div');
+      numDiv.style.cssText='font-family:var(--fn);font-size:24px;color:var(--text3);width:32px;text-align:center';
+      numDiv.textContent=m.num;
+      var infoDiv=document.createElement('div');
+      infoDiv.style.cssText='flex:1';
+      var teams=m.label.replace('M'+m.num+' — ','');
+      infoDiv.innerHTML='<div style="font-size:14px;font-weight:600">'+teams+'</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+m.time+'</div>';
+      var statusDiv=document.createElement('div');
+      statusDiv.style.cssText='text-align:right';
+      var statusMap={
+        upcoming:{label:'Upcoming',color:'var(--text3)'},
+        live:{label:'● Live',color:'var(--red)'},
+        done:{label:synced?'✓ Synced':'✓ Done',color:synced?'var(--green)':'var(--text3)'}
+      };
+      var st=statusMap[status];
+      statusDiv.innerHTML='<div style="font-size:12px;font-weight:600;color:'+st.color+'">'+st.label+'</div>'
+        +(status==='upcoming'?'<div style="font-size:10px;color:var(--text3);margin-top:2px">'
+          +timeUntil(startUTC)+'</div>':'');
+      row.appendChild(numDiv); row.appendChild(infoDiv); row.appendChild(statusDiv);
+      c.appendChild(row);
+    });
+  });
+}
+
+function timeUntil(ts){
+  var diff=ts-Date.now();
+  if(diff<=0) return '';
+  var d=Math.floor(diff/86400000);
+  var h=Math.floor((diff%86400000)/3600000);
+  var m=Math.floor((diff%3600000)/60000);
+  if(d>0) return 'in '+d+'d '+h+'h';
+  if(h>0) return 'in '+h+'h '+m+'m';
+  return 'in '+m+'m';
+}
+
 function renderHistory(){
   var c=document.getElementById('historyList'); if(!c) return;
   var matches=[];
