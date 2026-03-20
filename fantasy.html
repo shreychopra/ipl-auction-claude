@@ -833,12 +833,14 @@ function renderSquadView(){
     if(!roleGroups[r]) roleGroups[r]=[];
     roleGroups[r].push({p:p,i:i});
   });
-  var html='';
+  lst.innerHTML='';
   ['Batter','WK','All-Rounder','Bowler','Other'].forEach(function(role){
     var grp=roleGroups[role];
     if(!grp||!grp.length) return;
-    html+='<div style="padding:7px 14px 3px;font-size:9px;font-weight:700;letter-spacing:2px;'
-      +'text-transform:uppercase;color:var(--text3);font-family:var(--fd)">'+role+'s</div>';
+    var lbl=document.createElement('div');
+    lbl.style.cssText='padding:7px 14px 3px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:var(--fd)';
+    lbl.textContent=role+'s';
+    lst.appendChild(lbl);
     grp.forEach(function(item){
       var p=item.p, idx=item.i;
       var pts=0;
@@ -847,34 +849,33 @@ function renderSquadView(){
         if(md&&md[currentSquadTeam]&&md[currentSquadTeam][idx]!==undefined)
           pts+=md[currentSquadTeam][idx];
       });
-      html+='<div class="sp-row" data-ti="'+currentSquadTeam+'" data-pi="'+idx+'">'
-        +'<div class="sp-avi">'+(p.photo?'<img src="'+p.photo+'" onerror="this.onerror=null;this.src=\'\';this.parentNode.textContent=\''+( p.role?p.role[0]:'?')+'\'">':( p.role?p.role[0]:'?'))+'</div>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name+'</div>'
-        +'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+p.role+' · '+p.nat+' · ₹'+(p.soldPrice||0)+'L</div>'
-        +'</div>'
-        +'<div><div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div></div>'
-        +'</div>';
+      // Build row
+      var row=document.createElement('div');
+      row.className='sp-row';
+      row.dataset.ti=currentSquadTeam;
+      row.dataset.pi=idx;
+      // Avatar
+      var avi=document.createElement('div');
+      avi.className='sp-avi';
+      var photo=p.photo||getPhotoByName(p.name)||'';
+      var nameParts=p.name.split(' ').filter(function(w){return w.length>0;});
+      var initials=nameParts.length>1?nameParts[0][0]+nameParts[nameParts.length-1][0]:(p.name.slice(0,2));
+      setAvi(avi, photo, initials.toUpperCase());
+      // Info
+      var info=document.createElement('div');
+      info.style.cssText='flex:1;min-width:0';
+      info.innerHTML='<div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+p.role+' · '+p.nat+' · ₹'+(p.soldPrice||0)+'L</div>';
+      // Points
+      var ptsDiv=document.createElement('div');
+      ptsDiv.innerHTML='<div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div>';
+      row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
+      row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
+      lst.appendChild(row);
     });
-  });
-  lst.innerHTML=html;
-  // Wire click events
-  lst.querySelectorAll('.sp-row').forEach(function(row){
-    row.addEventListener('click',function(){
-      openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));
-    });
-  });
-  // Load photos by player name
-  lst.querySelectorAll('.sp-avi[data-name]').forEach(function(el){
-    var name=el.dataset.name||'';
-    var photo=getPhotoByName(name);
-    var initials=name.split(' ').filter(function(w){return w.length>0;});
-    var ini=initials.length>1?initials[0][0]+initials[initials.length-1][0]:(name.slice(0,2));
-    setAvi(el, photo, ini.toUpperCase());
   });
 }
 
-// ── PLAYER MODAL ──
 function openPlayerModal(ti,pi){
   var t=G.teams[ti]; if(!t) return;
   var p=t.players[pi]; if(!p) return;
