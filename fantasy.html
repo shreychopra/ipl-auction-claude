@@ -1121,17 +1121,19 @@ function processMatch(matchId,desc,mNum,done,retryCount){
       logSync('Failed after 3 attempts: '+desc+' — '+err,'err');
       done();return;
     }
-    // Check scorecard has meaningful data (guard against rain delays/incomplete matches)
+    // Check scorecard has meaningful data (guard against rain delays/abandoned matches)
     var innings=data.scoreCard||data.inningsScoreList||[];
     if(!innings.length){
-      logSync('No scorecard data yet for '+desc+' — may be rain delay or incomplete. Will retry next sync.','warn');
-      // Don't mark as synced so it retries next time
+      logSync('No scorecard data yet for '+desc+' — may be rain delay. Will retry next sync.','warn');
       done();return;
     }
-    var totalBatters=0;
-    innings.forEach(function(inn){totalBatters+=(inn.batCard||inn.batsmen||[]).length;});
-    if(totalBatters<11){
-      logSync('Incomplete scorecard for '+desc+' ('+totalBatters+' batters). Will retry next sync.','warn');
+    // Need at least 2 innings with bowling data (both teams must have bowled)
+    // This handles chase wins (fewer batters) correctly
+    var innWithBowling=innings.filter(function(inn){
+      return (inn.bowlCard||inn.bowlers||[]).length>0;
+    }).length;
+    if(innWithBowling<2){
+      logSync('Incomplete match data for '+desc+' ('+innWithBowling+'/2 innings bowled). Will retry.','warn');
       done();return;
     }
     var stats=parseCard(data);
