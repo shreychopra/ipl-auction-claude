@@ -456,8 +456,8 @@
   <div class="page-hero" style="position:relative">
     <button onclick="document.getElementById('howItWorksModal').classList.add('show')"
       style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);
-      border-radius:var(--rsm);padding:5px 10px;color:var(--text3);font-family:var(--fd);font-size:11px;cursor:pointer;
-      font-weight:700;letter-spacing:1px">HOW IT WORKS</button>
+      border-radius:var(--rsm);padding:5px 10px;color:var(--text3);font-family:var(--fd);
+      font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px">HOW IT WORKS</button>
     <span class="icon">🏏</span>
     <h1>IPL 2026</h1>
     <p>Mock Auction</p>
@@ -498,7 +498,7 @@
       <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
-      <input type="text" id="roomCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
+      <input type="text" id="roomCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
       <div style="margin-top:16px"><button class="btn btn-blue" onclick="joinRoom()">Find Room</button></div>
     </div>
     <div class="divider"><span>OR</span></div>
@@ -508,14 +508,13 @@
       <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
-      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
+      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
       <div style="margin-top:16px"><button class="btn btn-ghost" onclick="rejoinAsHost()">Rejoin as Host</button></div>
     </div>
     <div class="divider"><span>OTHER</span></div>
     <a href="./fantasy.html" style="display:block;text-decoration:none">
       <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
     </a>
-  </div>
   </div>
 </div>
 
@@ -846,8 +845,22 @@
 </div>
 
   <!-- ERROR BOUNDARY -->
-      
-  
+      <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
+      color:#f5b800;margin-bottom:8px">Something went wrong</div>
+    <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
+      id="errorMsg">An unexpected error occurred.</div>
+    <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);
+      color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;
+      font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
+  </div>
+  <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
+    color:#f5b800;margin-bottom:8px">Something went wrong</div>
+  <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
+    id="errorMsg">An unexpected error occurred.</div>
+  <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);
+    color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;
+    font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
+</div>
 <div class="toast" id="toast"></div>
 
 <!-- CONFIRM DIALOG -->
@@ -2305,9 +2318,17 @@ window.addEventListener('load',function(){ setTimeout(tryRestoreSession,600); })
     }
   </script>
 
-  
+  <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#f5b800;margin-bottom:8px">Something went wrong</div>
+  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div>
+  <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
+</div>
 
-
+<div id="errorBoundary" style="display:none;position:fixed;inset:0;z-index:9999;background:#070a12;align-items:center;justify-content:center;padding:32px;text-align:center;flex-direction:column">
+  <div style="font-size:48px;margin-bottom:16px">&#9888;</div>
+  <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#f5b800;margin-bottom:8px">Something went wrong</div>
+  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div>
+  <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
+</div>
 
 <!-- HOW IT WORKS MODAL -->
 <div class="modal-ov" id="howItWorksModal">
