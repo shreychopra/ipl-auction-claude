@@ -185,7 +185,7 @@
       <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">
         Enter the code from your IPL Mock Auction to load squads and track fantasy points.
       </p>
-      <input type="text" id="setupCode" class="upper" placeholder="XXXXX" maxlength="5"
+      <input type="text" id="setupCode" class="upper" placeholder="XXXXXX" maxlength="6"
         oninput="this.value=this.value.toUpperCase()"/>
       <div class="gap"></div>
       <div class="card-title">Your Team Name</div>
@@ -347,11 +347,7 @@
 
   <!-- ERROR BOUNDARY -->
       
-    <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
-      id="errorMsg">An unexpected error occurred.</div></div>
   
-  <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
-    id="errorMsg">An unexpected error occurred.</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -712,7 +708,7 @@ function setAvi(el, photo, initial){
 function loadRoom(){
   var code=document.getElementById('setupCode').value.trim().toUpperCase();
   var team=document.getElementById('setupTeam').value.trim();
-  if(code.length!==5){toast('Enter a 5-character room code');return;}
+  if(code.length!==6){toast('Enter a 6-character room code');return;}
   toast('Loading...');
   db.ref('rooms/'+code).once('value',function(snap){
     var data=snap.val();
@@ -1917,7 +1913,6 @@ window.addEventListener('load',function(){
   </script>
 
   
-  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div></div>
 
 
 </body>
