@@ -1216,7 +1216,7 @@ function toast(msg,dur){
 
 function genCode(){
   var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';
-  for(var i=0;i<5;i++) s+=c[Math.floor(Math.random()*c.length)];
+  for(var i=0;i<6;i++) s+=c[Math.floor(Math.random()*c.length)];
   return s;
 }
 
@@ -1291,7 +1291,7 @@ function rejoinAsHost() {
   var hName = document.getElementById('hostRejoinName').value.trim();
   var code = document.getElementById('hostRejoinCode').value.trim().toUpperCase();
   if (!hName) { toast('Enter your name!'); return; }
-  if (code.length !== 5) { toast('Enter the 5-character room code!'); return; }
+  if (code.length !== 5) { toast('Enter the 6-character room code!'); return; }
   var ref = db.ref('rooms/' + code);
   ref.once('value', function(snap) {
     var data = snap.val();
@@ -1328,7 +1328,7 @@ function joinRoom(){
   var pName=document.getElementById('participantName').value.trim();
   var code=document.getElementById('roomCode').value.trim().toUpperCase();
   if(!pName){toast('Enter your name!');return;}
-  if(code.length!==5){toast('Enter the 5-character room code!');return;}
+  if(code.length!==6){toast('Enter the 6-character room code!');return;}
   var ref=db.ref('rooms/'+code);
   ref.once('value',function(snap){
     var data=snap.val();
