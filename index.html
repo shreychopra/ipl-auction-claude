@@ -494,7 +494,7 @@
       <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
-      <input type="text" id="roomCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
+      <input type="text" id="roomCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
       <div style="margin-top:16px"><button class="btn btn-blue" onclick="joinRoom()">Find Room</button></div>
     </div>
     <div class="divider"><span>OR</span></div>
@@ -504,7 +504,7 @@
       <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
-      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
+      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
       <div style="margin-top:16px"><button class="btn btn-ghost" onclick="rejoinAsHost()">Rejoin as Host</button></div>
     </div>
     <div class="divider"><span>OTHER</span></div>
@@ -842,11 +842,7 @@
 
   <!-- ERROR BOUNDARY -->
       
-    <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
-      id="errorMsg">An unexpected error occurred.</div></div>
   
-  <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
-    id="errorMsg">An unexpected error occurred.</div></div>
 <div class="toast" id="toast"></div>
 
 <!-- CONFIRM DIALOG -->
@@ -2305,7 +2301,6 @@ window.addEventListener('load',function(){ setTimeout(tryRestoreSession,600); })
   </script>
 
   
-  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div></div>
 
 
 </body>
