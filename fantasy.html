@@ -1639,13 +1639,18 @@ function distributeToAllRooms(matchId, autoMode){
         var teamPts={};
         staged.playerPts.forEach(function(entry){
           if(entry.excluded) return;
-          // Find matching player in this room's team
           rPlayers.forEach(function(rp,rpi){
             if(rp.name===entry.name||(entry.matched&&rp.name===entry.matched)){
               teamPts[rpi]=(teamPts[rpi]||0)+entry.pts;
             }
           });
         });
+        if(Object.keys(teamPts).length===0 && rPlayers.length>0){
+          logSync('Room '+code+' team '+rk+': 0 player matches ('+rPlayers.length+' players in squad, '+staged.playerPts.length+' in scorecard)','warn');
+          // Log first 3 squad names vs first 3 scorecard names for comparison
+          logSync('Squad sample: '+rPlayers.slice(0,3).map(function(p){return p.name;}).join(', '),'info');
+          logSync('Scorecard sample: '+staged.playerPts.slice(0,3).map(function(p){return p.matched||p.name;}).join(', '),'info');
+        }
         if(Object.keys(teamPts).length){
           updates['fantasy/'+code+'/matches/match'+staged.mNum+'/'+rk]=teamPts;
           count++;
@@ -1653,6 +1658,7 @@ function distributeToAllRooms(matchId, autoMode){
       });
       updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
       updates['fantasy/'+code+'/matchLabels/match'+staged.mNum]=staged.desc;
+      logSync('Room '+code+': wrote '+Object.keys(updates).length+' update entries','info');
     });
     db.ref().update(updates,function(err){
       if(err){ logSync('Distribution error: '+err,'err'); return; }
