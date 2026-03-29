@@ -841,6 +841,7 @@ function initApp(){
     document.getElementById('adminBtn').style.display='block';
     var snb=document.getElementById('syncNowBtn');if(snb)snb.style.display='flex';
     document.getElementById('tab-sy').style.display='block';
+  document.getElementById('tab-pt').style.display='block';
   }
   // Load synced IDs then auto-sync
   loadSyncedIds();
@@ -1941,6 +1942,7 @@ function loadRoomAsAdmin(code){
       document.getElementById('navSub').textContent='Room: '+code+' (Admin)';
       updateNav(); buildSquadTabs(); renderLeaderboard(); renderSquadPane(); renderHistory();
       document.getElementById('tab-sy').style.display='block';
+      document.getElementById('tab-pt').style.display='block';
       showScreen('mainScreen'); toast('Loaded room '+code);
     });
     fantasyRef.on('value',function(snap3){
