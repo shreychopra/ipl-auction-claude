@@ -1505,20 +1505,21 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
 }
 
 function stageForReview(matchId, mNum, desc, stats, autoResults, lowConf, schedMatch){
-  // Build flat player->pts list
+  // Store raw stats keyed by player name for per-room matching in distributeToAllRooms
+  // playerPts is built from raw stats (API names -> points), not team-mapped
   var playerPts = [];
-  Object.keys(autoResults).forEach(function(ti){
-    Object.keys(autoResults[ti]).forEach(function(pi){
-      var p = G.teams[ti] && G.teams[ti].players && G.teams[ti].players[pi];
-      if(!p) return;
-      playerPts.push({name:p.name,role:p.role,ti:parseInt(ti),pi:parseInt(pi),pts:autoResults[ti][pi],confidence:1.0});
-    });
+  Object.keys(stats).forEach(function(apiName){
+    var st=stats[apiName];
+    var playedXI=!!(st.bat||st.bowl);
+    var pts=calcPts(st.bat,st.bowl,st.field,false,false,playedXI);
+    if(pts>0) playerPts.push({name:apiName,pts:pts,confidence:1.0});
   });
   lowConf.forEach(function(item){
-    playerPts.push({name:item.apiName,matched:item.matched,ti:item.ti,pi:item.pi,pts:item.pts,confidence:item.score,isLowConf:true});
+    playerPts.push({name:item.apiName,matched:item.matched,pts:item.pts,confidence:item.score,isLowConf:true});
   });
-  playerPts.sort(function(a,b){if(a.ti!==b.ti)return a.ti-b.ti;return b.pts-a.pts;});
-  stagedResults[matchId]={mNum:mNum,desc:desc,playerPts:playerPts,autoResults:autoResults,schedMatch:schedMatch||null};
+  playerPts.sort(function(a,b){return b.pts-a.pts;});
+  logSync('Staged '+playerPts.length+' player entries for distribution','info');
+  stagedResults[matchId]={mNum:mNum,desc:desc,playerPts:playerPts,rawStats:stats,schedMatch:schedMatch||null};
   // AUTO-DISTRIBUTE immediately, then show corrections panel
   logSync('Auto-distributing '+desc+'...','info');
   distributeToAllRooms(matchId, true); // true = auto mode, show corrections after
@@ -1652,20 +1653,22 @@ function distributeToAllRooms(matchId, autoMode){
         var rPlayers=rTeam.players||[];
         // Match by player name across teams
         var teamPts={};
-        staged.playerPts.forEach(function(entry){
-          if(entry.excluded) return;
-          rPlayers.forEach(function(rp,rpi){
-            if(rp.name===entry.name||(entry.matched&&rp.name===entry.matched)){
-              teamPts[rpi]=(teamPts[rpi]||0)+entry.pts;
-            }
+        // Match each squad player against scorecard by fuzzy name
+        rPlayers.forEach(function(rp,rpi){
+          var bestScore=0, bestPts=0;
+          staged.playerPts.forEach(function(entry){
+            if(entry.excluded) return;
+            var s=similarity(rp.name, entry.matched||entry.name);
+            if(s>bestScore){bestScore=s;bestPts=entry.pts;}
           });
+          if(bestScore>=0.85){
+            teamPts[rpi]=(teamPts[rpi]||0)+bestPts;
+          } else if(bestScore>=0.6){
+            // Low confidence - include but log
+            teamPts[rpi]=(teamPts[rpi]||0)+bestPts;
+            logSync('Low conf match: '+rp.name+' ~ scorecard ('+Math.round(bestScore*100)+'%)','warn');
+          }
         });
-        if(Object.keys(teamPts).length===0 && rPlayers.length>0){
-          logSync('Room '+code+' team '+rk+': 0 player matches ('+rPlayers.length+' players in squad, '+staged.playerPts.length+' in scorecard)','warn');
-          // Log first 3 squad names vs first 3 scorecard names for comparison
-          logSync('Squad sample: '+rPlayers.slice(0,3).map(function(p){return p.name;}).join(', '),'info');
-          logSync('Scorecard sample: '+staged.playerPts.slice(0,3).map(function(p){return p.matched||p.name;}).join(', '),'info');
-        }
         if(Object.keys(teamPts).length){
           updates['fantasy/'+code+'/matches/match'+staged.mNum+'/'+rk]=teamPts;
           count++;
