@@ -1381,6 +1381,9 @@ function parseCard(scard, filteredInnings){
   inningsList.forEach(function(inn){
     // API v2 uses 'batsman' (singular), older used 'batCard'/'batsmen'
     var bats=inn.batsman||inn.batCard||inn.batsmen||inn.batsmanList||[];
+    if(!Array.isArray(bats)) bats=Object.values(bats);
+    var bowls=inn.bowler||inn.bowlCard||inn.bowlers||inn.bowlerList||[];
+    if(!Array.isArray(bowls)) bowls=Object.values(bowls);
     var bowls=inn.bowler||inn.bowlCard||inn.bowlers||inn.bowlerList||[];
     bats.forEach(function(b){
       // API v2 field names: name, r, fow (dismissal), 4s, 6s
