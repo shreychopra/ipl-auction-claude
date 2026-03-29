@@ -1389,7 +1389,7 @@ function parseCard(scard, filteredInnings){
       // API v2 field names: name, r, fow (dismissal), 4s, 6s
       var name=b.name||b.batName||''; if(!name) return;
       var runs=parseInt(b.r||b.runs||0);
-      var dis=(b.dismissal||b.outDesc||b.out||b.how||b.fow||'').toLowerCase();
+      var dis=(b.outdec||b.dismissal||b.outDesc||b.out||b.how||'').toLowerCase();
       var dismissed=dis&&dis!=='not out'&&dis!=='batting'&&dis!=='';
       get(name).bat={runs:runs,fours:parseInt(b['4s']||b.fours||0),sixes:parseInt(b['6s']||b.sixes||0),dismissed:dismissed};
       // fielding from dismissal
