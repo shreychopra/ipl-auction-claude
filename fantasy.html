@@ -372,7 +372,7 @@ firebase.initializeApp({
 var db = firebase.database();
 
 // ── STATE ──
-var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, auctionEndedAt:0, currentMatch:1};
+var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, auctionEndedAt:0, currentMatch:1};
 var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
@@ -1233,7 +1233,18 @@ function renderSchedule(){
       var statusMap={
         upcoming:{label:'Upcoming',color:'var(--text3)'},
         live:{label:'● Live',color:'var(--red)'},
-        done:{label:synced?'✓ Synced':'✓ Done',color:synced?'var(--green)':'var(--text3)'}
+        done:(function(){
+        var mk='match'+m.num;
+        var res=G.matchResults&&G.matchResults[mk]?G.matchResults[mk]:'';
+        // Shorten: "Royal Challengers Bengaluru won by 6 wkts" -> "RCB won by 6 wkts"
+        var short=res.replace(/Royal Challengers Bengaluru/g,'RCB')
+          .replace(/Mumbai Indians/g,'MI').replace(/Chennai Super Kings/g,'CSK')
+          .replace(/Kolkata Knight Riders/g,'KKR').replace(/Rajasthan Royals/g,'RR')
+          .replace(/Gujarat Titans/g,'GT').replace(/Punjab Kings/g,'PBKS')
+          .replace(/Lucknow Super Giants/g,'LSG').replace(/Delhi Capitals/g,'DC')
+          .replace(/Sunrisers Hyderabad/g,'SRH');
+        return {label:short||'✓ Done',color:'var(--green)'};
+      })()
       };
       var st=statusMap[status];
       statusDiv.innerHTML='<div style="font-size:12px;font-weight:600;color:'+st.color+'">'+st.label+'</div>'
@@ -1443,7 +1454,8 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
     }
     // API v2 structure: scorecard, ismatchcomplete, status
     var innings=data.scorecard||data.scoreCard||data.inningsScoreList||[];
-    var isComplete=(data.ismatchcomplete===1||data.ismatchcomplete===true||
+    var matchResult=data.status||'';
+        var isComplete=(data.ismatchcomplete===1||data.ismatchcomplete===true||
       (data.status&&data.status.toLowerCase().indexOf('won')>=0)||
       (data.status&&data.status.toLowerCase().indexOf('tied')>=0)||
       (data.status&&data.status.toLowerCase().indexOf('abandon')>=0));
@@ -1499,12 +1511,12 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
       }
     });
     // Stage all results for review before distributing to rooms
-    stageForReview(matchId, mNum, desc, stats, results, lowConf, schedMatch);
+    stageForReview(matchId, mNum, desc, stats, results, lowConf, schedMatch, matchResult);
     done();
   });
 }
 
-function stageForReview(matchId, mNum, desc, stats, autoResults, lowConf, schedMatch){
+function stageForReview(matchId, mNum, desc, stats, autoResults, lowConf, schedMatch, matchResult){
   // Store raw stats keyed by player name for per-room matching in distributeToAllRooms
   // playerPts is built from raw stats (API names -> points), not team-mapped
   var playerPts = [];
@@ -1519,7 +1531,7 @@ function stageForReview(matchId, mNum, desc, stats, autoResults, lowConf, schedM
   });
   playerPts.sort(function(a,b){return b.pts-a.pts;});
   logSync('Staged '+playerPts.length+' player entries for distribution','info');
-  stagedResults[matchId]={mNum:mNum,desc:desc,playerPts:playerPts,rawStats:stats,schedMatch:schedMatch||null};
+  stagedResults[matchId]={mNum:mNum,desc:desc,playerPts:playerPts,rawStats:stats,schedMatch:schedMatch||null,matchResult:matchResult||null};
   // AUTO-DISTRIBUTE immediately, then show corrections panel
   logSync('Auto-distributing '+desc+'...','info');
   distributeToAllRooms(matchId, true); // true = auto mode, show corrections after
@@ -1676,6 +1688,7 @@ function distributeToAllRooms(matchId, autoMode){
       });
       updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
       updates['fantasy/'+code+'/matchLabels/match'+staged.mNum]=staged.desc;
+      if(staged.matchResult) updates['fantasy/'+code+'/matchResults/match'+staged.mNum]=staged.matchResult;
       logSync('Room '+code+': wrote '+Object.keys(updates).length+' update entries','info');
     });
     db.ref().update(updates,function(err){
@@ -1883,7 +1896,7 @@ function loadRoomAsAdmin(code){
     fantasyRef=db.ref('fantasy/'+code);
     fantasyRef.once('value',function(snap2){
       var fd=snap2.val()||{};
-      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.matchResults=fd.matchResults||{}; G.currentMatch=fd.currentMatch||1;
       // Load captains and auctionEndedAt
       db.ref('rooms/'+code).once('value',function(rs){
         var rd=rs.val()||{};
@@ -1898,7 +1911,7 @@ function loadRoomAsAdmin(code){
     });
     fantasyRef.on('value',function(snap3){
       var fd=snap3.val()||{};
-      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.matchResults=fd.matchResults||{}; G.currentMatch=fd.currentMatch||1;
       renderLeaderboard(); renderHistory(); updateNav();
     });
     // Load captains and auctionEndedAt from auction room data
