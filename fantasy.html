@@ -1448,6 +1448,9 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
     var innWithBowling=innings.filter(function(inn){
       return (inn.bowlCard||inn.bowlers||[]).length>0;
     }).length;
+    // Log raw response structure for debugging
+    logSync('API keys: '+Object.keys(data).join(', '),'info');
+    if(data.matchHeader) logSync('matchHeader keys: '+Object.keys(data.matchHeader).join(', '),'info');
     logSync('State: "'+matchState+'" | innings bowled: '+innWithBowling,'info');
     if(matchState.indexOf('abandon')>=0){
       logSync(desc+' abandoned. No points awarded.','warn');
