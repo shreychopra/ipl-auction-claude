@@ -311,9 +311,7 @@
   <div class="pane" id="pane-hi">
     <div id="historyList"></div>
   </div>
-</div>
 
-  <!-- POINTS PANE (admin only) -->
   <div class="pane" id="pane-pt">
     <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
       <select id="ptRoomSel" onchange="onPtRoomChange()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);padding:8px;font-size:13px;font-family:var(--fd)">
@@ -325,6 +323,7 @@
     </div>
     <div id="pointsList" style="padding:0 16px 80px"></div>
   </div>
+</div>
 
 <!-- MATCH EDIT MODAL (admin) -->
 <div class="modal-ov" id="matchEditModal">
@@ -912,6 +911,7 @@ function loadRoom(){
       var fd=snap3.val()||{};
       G.matchData=fd.matches||{};
       G.matchLabels=fd.matchLabels||{};
+      G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
       renderLeaderboard();
       renderHistory();
