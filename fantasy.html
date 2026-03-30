@@ -874,11 +874,9 @@ function renderPointsTable(teams,matchData,matchKey,list){
         var key=p.name;
         if(!playerMap[key]){
           playerMap[key]={name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total,breakdown:matchBreakdown};
-        } else {
-          playerMap[key].pts+=total;
-          Object.keys(matchBreakdown).forEach(function(mk){
-            playerMap[key].breakdown[mk]=(playerMap[key].breakdown[mk]||0)+matchBreakdown[mk];
-          });
+        } else if(total>playerMap[key].pts){
+          // Same player in multiple rooms - keep highest to avoid cross-room inflation
+          playerMap[key]={name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total,breakdown:matchBreakdown};
         }
       }
     });
