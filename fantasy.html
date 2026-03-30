@@ -853,21 +853,6 @@ function renderPointsPane(){
   });
 }
 
-function populateMatchSelector(){
-  var sel=document.getElementById('ptMatchSel');
-  if(!sel) return;
-  while(sel.options.length>1) sel.remove(1);
-  var labels=G.matchLabels||{};
-  var keys=Object.keys(labels).sort(function(a,b){
-    return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));
-  });
-  keys.forEach(function(mk){
-    var opt=document.createElement('option');
-    opt.value=mk; opt.textContent=labels[mk];
-    sel.appendChild(opt);
-  });
-}
-
 
 function switchTab(name){
   ['lb','sq','sc','sy','hi','pt'].forEach(function(n){
