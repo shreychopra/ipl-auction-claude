@@ -1855,9 +1855,17 @@ function parseCard(scard, filteredInnings){
       var cm=disOrig.match(/^c\s+(.+?)\s+b\s/i);
       var sm=disOrig.match(/^st\s+(.+?)\s+b\s/i);
       var rm=disOrig.match(/run\s*out\s*\(?([^)]+)\)?/i);
-      if(cm){var f=cm[1].trim();if(f&&f.toLowerCase()!=='sub'&&participants[f]){get(f).field.c++;}}
-      if(sm){var f2=sm[1].trim();if(f2&&participants[f2])get(f2).field.st++;}
-      if(rm){var f3=rm[1].split(/[/,&]/)[0].trim();if(f3&&participants[f3])get(f3).field.ro++;}
+      // Use fuzzy check for participants (handles Phil Salt/Philip Salt variants)
+      function inParticipants(name){
+        if(!name) return null;
+        if(participants[name]) return name;
+        var keys=Object.keys(participants);
+        for(var ki=0;ki<keys.length;ki++){if(similarity(name,keys[ki])>=0.75)return keys[ki];}
+        return null;
+      }
+      if(cm){var f=cm[1].trim();var cf=inParticipants(f);if(cf&&cf.toLowerCase()!=='sub'){get(cf).field.c++;}}
+      if(sm){var f2=cm&&sm[1].trim()||sm[1].trim();var cf2=inParticipants(f2);if(cf2)get(cf2).field.st++;}
+      if(rm){var f3=rm[1].split(/[/,&]/)[0].trim();var cf3=inParticipants(f3);if(cf3)get(cf3).field.ro++;}
       // lbw/bowled bonus - use lowercase for matching, original for name
       if(dis.match(/^lbw\s+b\s|^b\s+[a-z]/)||dis.match(/^bowled\s/)){
         var bname=disOrig.replace(/^(lbw\s+b|b|bowled)\s+/i,'').trim().split(/\s/)[0];
@@ -2148,6 +2156,7 @@ function distributeToAllRooms(matchId, autoMode){
           return;
         }
         // Match each squad player against scorecard by fuzzy name
+        // Only include matches >= 0.85 to prevent surname-only false matches
         rPlayers.forEach(function(rp,rpi){
           var bestScore=0, bestPts=0;
           staged.playerPts.forEach(function(entry){
@@ -2157,10 +2166,6 @@ function distributeToAllRooms(matchId, autoMode){
           });
           if(bestScore>=0.85){
             teamPts[rpi]=(teamPts[rpi]||0)+bestPts;
-          } else if(bestScore>=0.6){
-            // Low confidence - include but log
-            teamPts[rpi]=(teamPts[rpi]||0)+bestPts;
-            logSync('Low conf match: '+rp.name+' ~ scorecard ('+Math.round(bestScore*100)+'%)','warn');
           }
         });
         if(Object.keys(teamPts).length){
