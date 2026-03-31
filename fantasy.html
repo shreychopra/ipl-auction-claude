@@ -257,7 +257,81 @@
       transition:opacity .3s;pointer-events:none;white-space:nowrap}
     .toast.show{opacity:1}
     .team-logo{width:22px;height:22px;object-fit:contain}
-  </style>
+  
+    /* ── RESTORED UTILITY STYLES ── */
+    .body{padding:16px;flex:1;overflow-y:auto}
+    .gap{height:10px}
+    .upper{text-transform:uppercase;letter-spacing:2px}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),#e8a800);color:#000;width:100%;font-weight:700}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2);
+      width:100%;text-align:center;display:block;padding:10px}
+    .btn-ghost:hover{border-color:var(--border2);color:var(--text)}
+    input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);
+      color:var(--text);font-size:14px;font-family:var(--fb);padding:11px 14px;outline:none;
+      transition:border-color .2s;-webkit-appearance:none}
+    input:focus{border-color:var(--blue)}
+    label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+    .card-title{font-family:var(--fd);font-size:11px;font-weight:600;letter-spacing:2.5px;
+      text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+    /* sg-card = old scoring grid card */
+    .sg-card{background:var(--surface2);border-radius:var(--rsm);padding:12px}
+    /* admin input */
+    .admin-input{width:100%;background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--rsm);color:var(--text);font-size:14px;padding:10px 14px;
+      outline:none;margin-bottom:10px}
+    /* match edit */
+    .match-edit-input{background:var(--surface2);border:1px solid var(--border);
+      border-radius:6px;color:var(--text);font-size:13px;padding:5px 8px;
+      width:60px;text-align:right;outline:none}
+    /* squad team tabs - restore original style */
+    .sp-team-tab{flex-shrink:0;padding:6px 14px;border-radius:99px;
+      border:1px solid var(--border);font-family:var(--fd);font-size:11px;
+      font-weight:700;letter-spacing:1px;color:var(--text3);
+      cursor:pointer;transition:all .15s;white-space:nowrap}
+    .sp-team-tab.on{color:#000}
+    /* lb misc */
+    .lb-pts{font-family:var(--fn);font-size:22px;color:var(--gold)}
+    /* player modal centering */
+    #playerModal{align-items:center;justify-content:center;padding:20px}
+    #playerModal .modal-box{border-radius:var(--radius);max-width:440px;width:100%}
+    /* scoringModal */
+    #scoringModal{display:none;position:fixed;inset:0;z-index:200;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+      align-items:flex-end;justify-content:center}
+    #scoringModal.show{display:flex}
+    /* squadModal */
+    #squadModal{display:none;position:fixed;inset:0;z-index:200;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+      align-items:flex-end;justify-content:center}
+    #squadModal.show{display:flex}
+    /* match edit modal */
+    #matchEditModal{display:none;position:fixed;inset:0;z-index:200;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+      align-items:flex-end;justify-content:center}
+    #matchEditModal.show{display:flex}
+    /* admin edit btn */
+    .edit-btn{background:var(--surface3);border:1px solid var(--border);border-radius:4px;
+      color:var(--text3);font-size:10px;padding:2px 6px;cursor:pointer;font-family:var(--fd)}
+    /* toast */
+    .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+      background:var(--surface3);border:1px solid var(--border2);border-radius:99px;
+      padding:10px 20px;font-size:13px;z-index:300;opacity:0;
+      transition:opacity .3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1}
+
+    /* Squad team tabs */
+    .team-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;
+      scrollbar-width:none;border-bottom:1px solid var(--border);background:var(--surface)}
+    .team-tabs::-webkit-scrollbar{display:none}
+    .ttab{flex-shrink:0;padding:6px 14px;border-radius:99px;
+      background:var(--surface2);border:1px solid var(--border);
+      font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:1px;
+      color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;
+      border-left-width:3px}
+    .ttab.on{color:var(--text);background:var(--surface3);border-color:var(--border2)}
+
+    .sp-avi img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+</style>
 </head>
 <body>
 
@@ -1254,12 +1328,14 @@ function renderPointsPane(){
           var bStr=matchKey==='all'&&bKeys.length>1?bKeys.map(function(mk){return (matchLabels[mk]||mk).replace(/M(\d+).*/,'M$1')+':'+r.breakdown[mk];}).join(' · '):'';
           var gLogo=r.team?'<img src="./images/'+r.team+'.webp" class="pts-logo" onerror="this.style.opacity=0">':'';
         var gBdAttr=JSON.stringify(r.breakdown||{}).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
-        html+='<div class="pts-row" data-pname="'+r.name.replace(/"/g,'&quot;')+'" data-prole="'+r.role+'" data-pteam="'+r.team+'" data-pbd="'+gBdAttr+'" onclick="openPlayerModalFromEl(this)">'
-          +'<div class="pts-rank">'+(i+1)+'</div>'
-          +'<div><div class="pts-name">'+r.name+'</div></div>'
-          +'<div class="pts-role">'+r.role+'</div>'
+        html+='<div style="display:grid;grid-template-columns:32px 1fr 60px 36px 44px;align-items:center;'
+          +'padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s" '
+          +'data-pname="'+r.name.replace(/"/g,'&quot;')+'" data-prole="'+r.role+'" data-pteam="'+r.team+'" data-pbd="'+gBdAttr+'" onclick="openPlayerModalFromEl(this)">'
+          +'<div style="font-size:11px;color:var(--text3)">'+(i+1)+'</div>'
+          +'<div><div style="font-size:13px;font-weight:600">'+r.name+'</div></div>'
+          +'<div style="font-size:10px;color:var(--text3);font-family:var(--fd)">'+r.role+'</div>'
           +'<div>'+gLogo+'</div>'
-          +'<div class="pts-pts">'+r.pts+'</div>'
+          +'<div style="text-align:right;font-family:var(--fn);font-size:20px;color:var(--gold)">'+r.pts+'</div>'
           +'</div>';
         });
         list.innerHTML=html+'</div>';
@@ -1359,7 +1435,7 @@ function renderPointsTable(teams,matchData,matchKey,list){
       +'<td style="padding:8px 4px;text-align:right;font-weight:700;color:var(--gold)">'+r.pts+'</td>'
       +'</tr>';
   });
-  list.innerHTML=html+'</tbody></table>';
+  list.innerHTML=html+'</div></div>';
 }
 
 
@@ -1819,84 +1895,94 @@ function renderSchedule(){
   var c=document.getElementById('scheduleList'); if(!c) return;
   c.innerHTML='';
   var now=Date.now();
-  // Group by date
-  var byDate={};
+  var TEAM_FULL={'RCB':'Royal Challengers','MI':'Mumbai Indians','CSK':'Chennai Super Kings',
+    'KKR':'Kolkata Knight Riders','DC':'Delhi Capitals','SRH':'Sunrisers Hyderabad',
+    'RR':'Rajasthan Royals','PBKS':'Punjab Kings','GT':'Gujarat Titans','LSG':'Lucknow Super Giants'};
+  var TEAM_COL={'RCB':'#d4001e','MI':'#004ba0','CSK':'#f5b800','KKR':'#5b2d8e',
+    'DC':'#0088ce','SRH':'#ff6600','RR':'#e91e8c','PBKS':'#c01c2c','GT':'#0b4973','LSG':'#a4c639'};
+
   IPL_SCHEDULE.forEach(function(m){
-    if(!byDate[m.date]) byDate[m.date]=[];
-    byDate[m.date].push(m);
-  });
-  Object.keys(byDate).sort().forEach(function(date){
-    // Date header
-    var dHdr=document.createElement('div');
-    dHdr.style.cssText='padding:8px 14px;font-family:var(--fd);font-size:10px;font-weight:700;'
-      +'letter-spacing:2px;text-transform:uppercase;color:var(--text3);'
-      +'background:var(--surface);border-bottom:1px solid var(--border);'
-      +'position:sticky;top:0;z-index:1';
-    var d=new Date(date+'T12:00:00Z');
-    dHdr.textContent=d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
-    c.appendChild(dHdr);
-    byDate[date].forEach(function(m){
-      var timeParts=m.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
-      var h=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
-      var mn=parseInt(timeParts[2]);
-      var startUTC=new Date(date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
-      var endUTC=startUTC+(4.5*60*60*1000);
-      var status=now<startUTC?'upcoming':now<endUTC?'live':'done';
-      var synced=syncedIds[m.id]||false;
-      var row=document.createElement('div');
-      row.style.cssText='padding:12px 14px;border-bottom:1px solid var(--border);'
-        +'display:flex;align-items:center;gap:12px;'
-        +(status==='live'?'background:rgba(255,69,102,.04)':'');
-      var numDiv=document.createElement('div');
-      numDiv.style.cssText='font-family:var(--fn);font-size:24px;color:var(--text3);width:32px;text-align:center';
-      numDiv.textContent=m.num;
-      var infoDiv=document.createElement('div');
-      infoDiv.className='sc-teams';
-      var teams=m.label.replace('M'+m.num+' — ','');
-      var logos=getTeamLogos(m.label);
-      var logoHtml=logos.length===2
-        ?'<span style="display:inline-flex;align-items:center;gap:4px;font-weight:600">'
-          +'<img src="./images/'+logos[0]+'.webp" class="team-logo" style="width:22px;height:22px;object-fit:contain">'
-          +'<span>'+logos[0]+'</span>'
-          +'<span style="color:var(--text3);font-size:11px;margin:0 4px">vs</span>'
-          +'<img src="./images/'+logos[1]+'.webp" class="team-logo" style="width:22px;height:22px;object-fit:contain">'
-          +'<span>'+logos[1]+'</span>'
-          +'</span>'
-        :teams;
-      infoDiv.innerHTML='<div style="font-size:14px;font-weight:600">'+logoHtml+'</div>'
-        +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+m.time+'</div>';
-      var statusDiv=document.createElement('div');
-      statusDiv.className='sc-status';
-      var statusMap={
-        upcoming:{label:'Upcoming',color:'var(--text3)'},
-        live:{label:'● Live',color:'var(--red)'},
-        done:(function(){
-        var mk='match'+m.num;
-        var res=G.matchResults&&G.matchResults[mk]?G.matchResults[mk]:'';
-        // Shorten: "Royal Challengers Bengaluru won by 6 wkts" -> "RCB won by 6 wkts"
-        var short=res.replace(/Royal Challengers Bengaluru/g,'RCB')
-          .replace(/Mumbai Indians/g,'MI').replace(/Chennai Super Kings/g,'CSK')
-          .replace(/Kolkata Knight Riders/g,'KKR').replace(/Rajasthan Royals/g,'RR')
-          .replace(/Gujarat Titans/g,'GT').replace(/Punjab Kings/g,'PBKS')
-          .replace(/Lucknow Super Giants/g,'LSG').replace(/Delhi Capitals/g,'DC')
-          .replace(/Sunrisers Hyderabad/g,'SRH');
-        var winner=short?short.split(' ')[0]:'';
-        var winColor=('var(--green)');
-        var tcMap={RCB:'#d4001e',MI:'#004ba0',CSK:'#f5b800',KKR:'#3a1f6e',DC:'#0088ce',
-          SRH:'#ff6600',RR:'#e91e8c',PBKS:'#c01c2c',GT:'#0b4973',LSG:'#a4c639'};
-        if(winner&&tcMap[winner]) winColor=tcMap[winner];
-        return {label:short||'✓ Done',color:winColor,winner:winner};
-      })()
-      };
-      var st=statusMap[status];
-      statusDiv.innerHTML='<div style="font-size:12px;font-weight:600;color:'+st.color+'">'+st.label+'</div>'
-        +(status==='upcoming'?'<div style="font-size:10px;color:var(--text3);margin-top:2px">'
-          +timeUntil(startUTC)+'</div>':'');
-      row.appendChild(numDiv); row.appendChild(infoDiv); row.appendChild(statusDiv);
-      c.appendChild(row);
-    });
+    var timeParts=m.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    var h=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+    var mn=parseInt(timeParts[2]);
+    var startUTC=new Date(m.date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
+    var endUTC=startUTC+(4.5*60*60*1000);
+    var status=now<startUTC?'upcoming':now<endUTC?'live':'done';
+    var synced=syncedIds[m.id]||false;
+    var logos=getTeamLogos(m.label);
+    var t1=logos[0]||'', t2=logos[1]||'';
+
+    // Card
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:14px;'
+      +'margin:0 12px 10px;overflow:hidden;'
+      +(status==='live'?'border-color:rgba(255,69,102,.3)':'')
+      +(status==='done'?'border-color:var(--border)':'');
+
+    // Card header row
+    var matchDate=new Date(m.date+'T12:00:00Z').toLocaleDateString('en-IN',{day:'numeric',month:'short',weekday:'short'});
+    var badgeHtml=status==='live'
+      ?'<span style="font-size:10px;font-family:var(--fd);font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:99px;background:rgba(255,69,102,.12);color:var(--red);border:1px solid rgba(255,69,102,.3)">● LIVE</span>'
+      :status==='done'
+      ?'<span style="font-size:10px;font-family:var(--fd);font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:99px;background:var(--golddim);color:var(--gold);border:1px solid var(--goldborder)">DONE</span>'
+      :'<span style="font-size:10px;font-family:var(--fd);font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:99px;background:var(--surface3);color:var(--text3);border:1px solid var(--border)">UPCOMING</span>';
+
+    var hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;'
+      +'padding:10px 14px 8px;border-bottom:1px solid var(--border)';
+    hdr.innerHTML='<div><span style="font-family:var(--fn);font-size:12px;color:var(--text3);letter-spacing:1px">MATCH '+m.num+'</span>'
+      +'<span style="font-size:11px;color:var(--text3);margin-left:8px">'+matchDate+' · '+m.time+'</span></div>'
+      +badgeHtml;
+    card.appendChild(hdr);
+
+    // Teams row
+    var teams=document.createElement('div');
+    teams.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:16px 20px';
+    var t1col=TEAM_COL[t1]||'var(--text)';
+    var t2col=TEAM_COL[t2]||'var(--text)';
+    teams.innerHTML='<div style="text-align:center;flex:1">'
+      +'<img src="./images/'+t1+'.webp" style="width:44px;height:44px;object-fit:contain;display:block;margin:0 auto 6px" onerror="this.style.opacity=0">'
+      +'<div style="font-family:var(--fn);font-size:28px;letter-spacing:2px;color:'+t1col+'">'+t1+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(TEAM_FULL[t1]||'')+'</div>'
+      +'</div>'
+      +'<div style="font-family:var(--fn);font-size:13px;color:var(--text3);letter-spacing:2px;padding:0 12px">VS</div>'
+      +'<div style="text-align:center;flex:1">'
+      +'<img src="./images/'+t2+'.webp" style="width:44px;height:44px;object-fit:contain;display:block;margin:0 auto 6px" onerror="this.style.opacity=0">'
+      +'<div style="font-family:var(--fn);font-size:28px;letter-spacing:2px;color:'+t2col+'">'+t2+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:2px">'+(TEAM_FULL[t2]||'')+'</div>'
+      +'</div>';
+    card.appendChild(teams);
+
+    // Result or countdown
+    if(status==='done'){
+      var mk='match'+m.num;
+      var res=G.matchResults&&G.matchResults[mk]?G.matchResults[mk]:'';
+      if(res){
+        var short=res.replace(/Royal Challengers Bengaluru/g,'RCB').replace(/Mumbai Indians/g,'MI')
+          .replace(/Chennai Super Kings/g,'CSK').replace(/Kolkata Knight Riders/g,'KKR')
+          .replace(/Rajasthan Royals/g,'RR').replace(/Gujarat Titans/g,'GT')
+          .replace(/Punjab Kings/g,'PBKS').replace(/Lucknow Super Giants/g,'LSG')
+          .replace(/Delhi Capitals/g,'DC').replace(/Sunrisers Hyderabad/g,'SRH');
+        var winner=short.split(' ')[0];
+        var wc=TEAM_COL[winner]||'var(--green)';
+        var result=document.createElement('div');
+        result.style.cssText='padding:8px 16px 12px;font-size:12px;font-style:italic;'
+          +'border-top:1px solid var(--border);background:var(--surface2);color:'+wc;
+        result.textContent=short;
+        card.appendChild(result);
+      }
+    } else if(status==='upcoming'){
+      var countdown=document.createElement('div');
+      countdown.style.cssText='padding:8px 16px 10px;font-size:11px;color:var(--text3);'
+        +'border-top:1px solid var(--border);text-align:center';
+      countdown.textContent=timeUntil(startUTC);
+      card.appendChild(countdown);
+    }
+
+    c.appendChild(card);
   });
 }
+
 
 function timeUntil(ts){
   var diff=ts-Date.now();
