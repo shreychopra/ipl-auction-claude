@@ -1020,11 +1020,22 @@ function onPtRoomChange(){
   if(!roomSel) return;
   var code=roomSel.value;
   if(matchSel){ while(matchSel.options.length>1) matchSel.remove(1); }
-  if(!code){
+  if(code==='__global__'){
+    db.ref('fantasy/global/matchLabels').once('value',function(s){
+      var labels=s.val()||{};
+      if(matchSel){
+        Object.keys(labels).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));}).forEach(function(mk){
+          var opt=document.createElement('option');opt.value=mk;opt.textContent=labels[mk];matchSel.appendChild(opt);
+        });
+      }
+      renderPointsPane();
+    });
+  } else if(!code){
     db.ref('fantasy').once('value',function(s){
       var fdata=s.val()||{};
       var labels={};
       Object.keys(fdata).forEach(function(rc){
+        if(rc==='global') return;
         var ml=fdata[rc].matchLabels||{};
         Object.keys(ml).forEach(function(mk){ labels[mk]=ml[mk]; });
       });
@@ -1059,6 +1070,9 @@ function renderPointsPane(){
     db.ref('rooms').once('value',function(s){
       var rooms=s.val()||{};
       while(roomSel.options.length>1) roomSel.remove(1);
+      var globalOpt=document.createElement('option');
+      globalOpt.value='__global__'; globalOpt.textContent='All Players (every match)';
+      roomSel.appendChild(globalOpt);
       var allOpt=document.createElement('option');
       allOpt.value=''; allOpt.textContent='All Rooms (aggregate)';
       roomSel.appendChild(allOpt);
@@ -1078,7 +1092,44 @@ function renderPointsPane(){
   var matchKey=(matchSel&&matchSel.value)||'all';
   list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Loading...</div>';
 
-  if(code){
+  if(code==='__global__'){
+    // Read from global store - all players who scored, keyed by name
+    db.ref('fantasy/global/matches').once('value',function(ms){
+      db.ref('fantasy/global/matchLabels').once('value',function(ls){
+        var matchData=ms.val()||{};
+        var labels=ls.val()||{};
+        var allKeys=Object.keys(matchData).filter(function(k){return k.startsWith('match');});
+        var matchKeys=matchKey==='all'?allKeys:[matchKey];
+        var rows=[];
+        // Build player rows from global data (keyed by API player name)
+        var playerTotals={};
+        matchKeys.forEach(function(mk){
+          var mdata=matchData[mk]||{};
+          Object.keys(mdata).forEach(function(pname){
+            if(!playerTotals[pname]) playerTotals[pname]={pts:0,breakdown:{}};
+            playerTotals[pname].pts+=(mdata[pname]||0);
+            playerTotals[pname].breakdown[mk]=(mdata[pname]||0);
+          });
+        });
+        Object.keys(playerTotals).forEach(function(pname){
+          var iplTeam=IPL_TEAM[pname]||'';
+          rows.push({name:pname,role:'',team:iplTeam,color:'var(--text3)',pts:playerTotals[pname].pts,breakdown:playerTotals[pname].breakdown});
+        });
+        rows.sort(function(a,b){return b.pts-a.pts;});
+        if(!rows.length){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No global points data yet. Sync a match first.</div>';return;}
+        var matchLabels=labels;
+        var html='<table style="width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed"><colgroup><col style="width:32px"><col><col style="width:72px"><col style="width:48px"><col style="width:44px"></colgroup>'
+          +'<thead><tr style="color:var(--text3);font-size:11px;font-family:var(--fd);border-bottom:1px solid var(--border)"><th style="padding:8px 4px">#</th><th style="padding:8px 4px">Player</th><th style="padding:8px 4px">Role</th><th style="padding:8px 4px">Team</th><th style="padding:8px 4px;text-align:right">Pts</th></tr></thead><tbody>';
+        rows.forEach(function(r,i){
+          var bKeys=Object.keys(r.breakdown).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));});
+          var bStr=matchKey==='all'&&bKeys.length>1?bKeys.map(function(mk){return (matchLabels[mk]||mk).replace(/M(\d+).*/,'M$1')+':'+r.breakdown[mk];}).join(' · '):'';
+          html+='<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 4px;color:var(--text3);font-size:11px">'+(i+1)+'</td><td style="padding:8px 4px"><div style="font-weight:600">'+r.name+'</div>'+(bStr?'<div style="font-size:10px;color:var(--text3)">'+bStr+'</div>':'')+'</td><td style="padding:8px 4px;color:var(--text3);font-size:11px">'+r.role+'</td><td style="padding:8px 4px;font-size:11px;font-weight:700;color:var(--gold)">'+r.team+'</td><td style="padding:8px 4px;text-align:right;font-weight:700;color:var(--gold)">'+r.pts+'</td></tr>';
+        });
+        list.innerHTML=html+'</tbody></table>';
+      });
+    });
+    return;
+  } else if(code){
     db.ref('rooms/'+code).once('value',function(rs){
       var teams=(rs.val()||{}).teams||{};
       db.ref('fantasy/'+code+'/matches').once('value',function(ms){
