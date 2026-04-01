@@ -765,7 +765,7 @@ var IPL_TEAM={
   "Abdul Samad":"LSG",
   "Abhinandan Singh":"RCB",
   "Abhishek Sharma":"SRH",
-  "Abishek Porel":"KKR",
+  "Abishek Porel":"DC",
   "Adam Milne":"RR",
   "Aiden Markram":"LSG",
   "Ajay Mandal":"DC",
@@ -1696,31 +1696,55 @@ function openPlayerModal(ti,pi){
   var matchPts=[];
   for(var i=1;i<=70;i++){
     var mk='match'+i;
-    if(G.matchData[mk]&&G.matchData[mk][ti]&&G.matchData[mk][ti][pi]!==undefined)
-      matchPts.push({m:i,pts:G.matchData[mk][ti][pi]});
+    if(G.matchData[mk]&&G.matchData[mk][ti]&&G.matchData[mk][ti][pi]!==undefined){
+      var mlbl=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'';
+      matchPts.push({m:i,mk:mk,pts:G.matchData[mk][ti][pi],label:mlbl});
+    }
   }
   var total=matchPts.reduce(function(s,x){return s+x.pts;},0);
   var avg=matchPts.length?Math.round(total/matchPts.length):0;
-  var body='<div style="display:flex;gap:0;background:var(--surface2);border-radius:var(--rsm);'
-    +'margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">'
-    +['<div style=flex:1;text-align:center;padding:12px>'
-      +'<div style="font-family:var(--fn);font-size:30px;color:var(--green)">'+total+'</div>'
-      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">TOTAL</div></div>',
-      '<div style=flex:1;text-align:center;padding:12px;border-left:1px solid var(--border)>'
-      +'<div style="font-family:var(--fn);font-size:30px;color:var(--gold)">'+matchPts.length+'</div>'
-      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">MATCHES</div></div>',
-      '<div style=flex:1;text-align:center;padding:12px;border-left:1px solid var(--border)>'
-      +'<div style="font-family:var(--fn);font-size:30px;color:var(--blue)">'+avg+'</div>'
-      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">AVG</div></div>'].join('')
+  var best=matchPts.length?matchPts.reduce(function(a,b){return b.pts>a.pts?b:a;},matchPts[0]):null;
+  var bestPts=best?best.pts:0;
+  var bestLbl=best?(best.label?best.label.replace(/M(\d+).*/,'M$1'):'M'+best.m):'—';
+  var body='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;background:var(--surface2);'
+    +'border-radius:var(--rsm);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">'
+    +'<div style="text-align:center;padding:12px 6px">'
+      +'<div style="font-family:var(--fn);font-size:28px;color:var(--green)">'+total+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">TOTAL</div></div>'
+    +'<div style="text-align:center;padding:12px 6px;border-left:1px solid var(--border)">'
+      +'<div style="font-family:var(--fn);font-size:28px;color:var(--gold)">'+matchPts.length+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">PLAYED</div></div>'
+    +'<div style="text-align:center;padding:12px 6px;border-left:1px solid var(--border)">'
+      +'<div style="font-family:var(--fn);font-size:28px;color:var(--blue)">'+avg+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">AVG</div></div>'
+    +'<div style="text-align:center;padding:12px 6px;border-left:1px solid var(--border)">'
+      +'<div style="font-family:var(--fn);font-size:28px;color:var(--gold)">'+bestPts+'</div>'
+      +'<div style="font-size:9px;color:var(--text3);letter-spacing:1px">BEST</div>'
+      +(bestLbl!=='—'?'<div style="font-size:8px;color:var(--text3);margin-top:1px">'+bestLbl+'</div>':'')
+    +'</div>'
     +'</div>';
   if(matchPts.length){
     body+='<div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;'
       +'text-transform:uppercase;margin-bottom:8px;font-family:var(--fd)">Match History</div>';
     body+=matchPts.slice().reverse().map(function(x){
       var col=x.pts>0?'var(--green)':x.pts<0?'var(--red)':'var(--text3)';
-      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">'
-        +'<span style="font-size:13px">Match '+x.m+'</span>'
-        +'<span style="font-family:var(--fn);font-size:18px;color:'+col+'">'+x.pts+'</span></div>';
+      // Full label e.g. "M6 — KKR vs SRH", fallback to "M6"
+      var dispLbl=x.label?x.label.replace(/^(M\d+)\s*[\u2014-]\s*/,'$1 — '):'M'+x.m;
+      // Extract logos from label e.g. "KKR vs SRH"
+      var logos=getTeamLogos(x.label||'');
+      var logoHtml=logos.length===2
+        ?'<img src="./images/'+logos[0]+'.webp" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px">'
+         +logos[0]+' vs '
+         +'<img src="./images/'+logos[1]+'.webp" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin:0 1px 0 3px">'
+         +logos[1]
+        :'';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">'
+        +'<div>'
+        +'<div style="font-size:10px;font-family:var(--fd);font-weight:700;color:var(--text3);letter-spacing:.5px">M'+x.m+'</div>'
+        +(logoHtml?'<div style="font-size:11px;color:var(--text2);margin-top:1px;display:flex;align-items:center">'+logoHtml+'</div>':'')
+        +'</div>'
+        +'<span style="font-family:var(--fn);font-size:22px;color:'+col+'">'+x.pts+'</span>'
+        +'</div>';
     }).join('');
   } else {
     body+='<div class="empty" style="padding:20px">No match data yet</div>';
@@ -1798,17 +1822,25 @@ function openPlayerModalFromEl(el){
   var total = bKeys.reduce(function(s,k){ return s + (pbd[k]||0); }, 0);
   var avg   = bKeys.length ? Math.round(total / bKeys.length) : 0;
 
-  var body = '<div style="display:flex;gap:0;background:var(--surface2);border-radius:var(--rsm);'
-    + 'margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">'
-    + '<div style="flex:1;text-align:center;padding:12px">'
-      + '<div style="font-family:var(--fn);font-size:30px;color:var(--green)">'+total+'</div>'
+  var bestEl=bKeys.length?bKeys.reduce(function(a,b){return (pbd[b]||0)>(pbd[a]||0)?b:a;},bKeys[0]):null;
+  var bestElPts=bestEl?pbd[bestEl]||0:0;
+  var bestElLbl=bestEl?(G.matchLabels&&G.matchLabels[bestEl]?G.matchLabels[bestEl].replace(/M(\d+).*/,'M$1'):bestEl.replace('match','M')):'—';
+  var body = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;background:var(--surface2);'
+    + 'border-radius:var(--rsm);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">'
+    + '<div style="text-align:center;padding:12px 6px">'
+      + '<div style="font-family:var(--fn);font-size:28px;color:var(--green)">'+total+'</div>'
       + '<div style="font-size:9px;color:var(--text3);letter-spacing:1px">TOTAL</div></div>'
-    + '<div style="flex:1;text-align:center;padding:12px;border-left:1px solid var(--border)">'
-      + '<div style="font-family:var(--fn);font-size:30px;color:var(--gold)">'+bKeys.length+'</div>'
-      + '<div style="font-size:9px;color:var(--text3);letter-spacing:1px">MATCHES</div></div>'
-    + '<div style="flex:1;text-align:center;padding:12px;border-left:1px solid var(--border)">'
-      + '<div style="font-family:var(--fn);font-size:30px;color:var(--blue)">'+avg+'</div>'
+    + '<div style="text-align:center;padding:12px 6px;border-left:1px solid var(--border)">'
+      + '<div style="font-family:var(--fn);font-size:28px;color:var(--gold)">'+bKeys.length+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);letter-spacing:1px">PLAYED</div></div>'
+    + '<div style="text-align:center;padding:12px 6px;border-left:1px solid var(--border)">'
+      + '<div style="font-family:var(--fn);font-size:28px;color:var(--blue)">'+avg+'</div>'
       + '<div style="font-size:9px;color:var(--text3);letter-spacing:1px">AVG</div></div>'
+    + '<div style="text-align:center;padding:12px 6px;border-left:1px solid var(--border)">'
+      + '<div style="font-family:var(--fn);font-size:28px;color:var(--gold)">'+bestElPts+'</div>'
+      + '<div style="font-size:9px;color:var(--text3);letter-spacing:1px">BEST</div>'
+      + (bestElLbl!=='—'?'<div style="font-size:8px;color:var(--text3);margin-top:1px">'+bestElLbl+'</div>':'')
+    + '</div>'
     + '</div>';
 
   if(bKeys.length){
@@ -1816,11 +1848,23 @@ function openPlayerModalFromEl(el){
       + 'text-transform:uppercase;margin-bottom:8px;font-family:var(--fd)">Match History</div>';
     body += bKeys.slice().reverse().map(function(mk){
       var pts = pbd[mk] || 0;
-      var lbl = (G.matchLabels && G.matchLabels[mk]) ? G.matchLabels[mk].replace(/M(\d+).*/,'M$1') : mk.replace('match','M');
+      var fullLbl = (G.matchLabels && G.matchLabels[mk]) ? G.matchLabels[mk] : '';
+      var mNum = mk.replace('match','M');
+      var logos = getTeamLogos(fullLbl);
+      var logoHtml = logos.length===2
+        ? '<img src="./images/'+logos[0]+'.webp" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px">'
+          +logos[0]+' vs '
+          +'<img src="./images/'+logos[1]+'.webp" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin:0 1px 0 3px">'
+          +logos[1]
+        : '';
       var col = pts > 0 ? 'var(--green)' : pts < 0 ? 'var(--red)' : 'var(--text3)';
-      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">'
-        + '<span style="font-size:13px">'+lbl+'</span>'
-        + '<span style="font-family:var(--fn);font-size:18px;color:'+col+'">'+pts+'</span></div>';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">'
+        + '<div>'
+        + '<div style="font-size:10px;font-family:var(--fd);font-weight:700;color:var(--text3);letter-spacing:.5px">'+mNum+'</div>'
+        + (logoHtml?'<div style="font-size:11px;color:var(--text2);margin-top:1px;display:flex;align-items:center">'+logoHtml+'</div>':'')
+        + '</div>'
+        + '<span style="font-family:var(--fn);font-size:22px;color:'+col+'">'+pts+'</span>'
+        + '</div>';
     }).join('');
   } else {
     body += '<div class="empty" style="padding:20px">No match data available</div>';
