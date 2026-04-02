@@ -255,10 +255,12 @@
 
   <!-- LEADERBOARD PANE -->
   <div class="pane on" id="pane-lb">
-    <div id="syncBanner" style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);
-      font-size:12px;color:var(--text3);display:flex;align-items:center;justify-content:space-between">
-      <span id="syncBannerText">Points data loading...</span>
-      <span style="font-size:10px;color:var(--text3)">Auto-updated daily</span>
+    <div id="syncBanner" style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;color:var(--text3)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span id="syncBannerText">Points data loading...</span>
+        <span id="syncBannerTime" style="font-size:10px;color:var(--text3)"></span>
+      </div>
+      <div id="syncBannerNext" style="margin-top:3px;font-size:11px;color:var(--text3)"></div>
     </div>
     <div style="display:flex;justify-content:flex-end;padding:6px 14px 0">
     <button onclick="document.getElementById('scoringModal').classList.add('show')"
@@ -745,6 +747,7 @@ var IPL_SCHEDULE = [
 ];
 
 var toastTO;
+var scheduleTimer = null; // interval for live countdown refresh
 
 // ── UTILS ──
 function toast(msg, dur){
@@ -1267,9 +1270,21 @@ function switchTab(name){
     if(t) t.classList.toggle('on', n===name);
     if(p) p.classList.toggle('on', n===name);
   });
+  // Stop any existing schedule refresh timer
+  if(scheduleTimer){ clearInterval(scheduleTimer); scheduleTimer=null; }
   if(name==='lb') renderLeaderboard();
   if(name==='sq') renderSquadPane();
-  if(name==='sc') renderSchedule();
+  if(name==='sc'){
+    renderSchedule();
+    // Refresh countdown every 60s while schedule tab is open
+    scheduleTimer=setInterval(function(){
+      if(document.getElementById('pane-sc')&&document.getElementById('pane-sc').classList.contains('on')){
+        renderSchedule();
+      } else {
+        clearInterval(scheduleTimer); scheduleTimer=null;
+      }
+    }, 60000);
+  }
   if(name==='hi') renderHistory();
   if(name==='pt'){renderPointsPane();}
 }
@@ -1464,6 +1479,8 @@ function teamMatchPts(idx,mNum){
 function renderLeaderboard(){
   // Update sync banner with last synced match
   var banner = document.getElementById('syncBannerText');
+  var bannerTime = document.getElementById('syncBannerTime');
+  var bannerNext = document.getElementById('syncBannerNext');
   if(banner){
     var synced = Object.keys(G.matchData).filter(function(k){return k.startsWith('match');})
       .map(function(k){return parseInt(k.replace('match',''));});
@@ -1471,9 +1488,40 @@ function renderLeaderboard(){
       var last = Math.max.apply(null,synced);
       var mk = 'match'+last;
       var label = (G.matchLabels&&G.matchLabels[mk]) || ('M'+last);
-      banner.textContent = 'Points synced up to: '+label;
+      // Short label: "M6 — KKR vs SRH" -> show with logos
+      var logos = getTeamLogos(label);
+      var logoTxt = logos.length===2 ? logos[0]+' vs '+logos[1] : label;
+      banner.innerHTML = '<span style="color:var(--green)">&#10003;</span> Synced through '
+        + '<strong style="color:var(--text)">'+(label.match(/^M\d+/)||[label])[0]+'</strong>'
+        + (logoTxt?' <span style="color:var(--text3)">'+logoTxt+'</span>':'');
     } else {
       banner.textContent = 'No match data yet — first sync pending';
+    }
+    // Next unsynced match countdown
+    if(bannerNext){
+      var nextUnsync = null;
+      for(var ni=0;ni<IPL_SCHEDULE.length;ni++){
+        var nm=IPL_SCHEDULE[ni];
+        if(!syncedIds[nm.id]){
+          var st=getMatchStatus(nm);
+          if(st==='upcoming'||st==='live'){nextUnsync=nm;break;}
+        }
+      }
+      if(nextUnsync){
+        var tp=nextUnsync.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        var hr=parseInt(tp[1])+(tp[3].toUpperCase()==='PM'&&tp[1]!=='12'?12:0);
+        var startUTC=new Date(nextUnsync.date+'T00:00:00Z').getTime()+(hr*60+parseInt(tp[2])-330)*60000;
+        var status=getMatchStatus(nextUnsync);
+        if(status==='live'){
+          bannerNext.innerHTML='<span style="color:var(--red)">&#9679; Live now:</span> '
+            +nextUnsync.label.replace(/^M\d+\s*[—-]\s*/,'')+' — points will sync after match ends';
+        } else {
+          bannerNext.innerHTML='Next: <strong style="color:var(--text)">'+nextUnsync.label+'</strong>'
+            +' <span style="color:var(--text3)">· '+timeUntil(startUTC)+'</span>';
+        }
+      } else if(synced.length) {
+        bannerNext.textContent = 'All played matches synced';
+      }
     }
   }
   var keys=Object.keys(G.teams).sort(function(a,b){return parseInt(a)-parseInt(b);});
@@ -2155,8 +2203,12 @@ function renderHistory(){
 function normName(n){
   return (n||'').toLowerCase().replace(/[^a-z\s]/g,'').replace(/\s+/g,' ').trim();
 }
+var NAME_EXPANSIONS={'phil':'philip','will':'william','raj':'rajat','dev':'devdutt'};
+function expandName(n){
+  return n.split(' ').map(function(w){return NAME_EXPANSIONS[w.toLowerCase()]||w;}).join(' ');
+}
 function similarity(a,b){
-  a=normName(a); b=normName(b);
+  a=normName(expandName(a)); b=normName(expandName(b));
   if(a===b) return 1;
   if(a.includes(b)||b.includes(a)) return 0.9;
   var aw=a.split(' '), bw=b.split(' ');
@@ -2200,7 +2252,13 @@ function calcPts(bat,bowl,field,isCap,isVC,playedXI){
 function parseCard(scard, filteredInnings){
   var stats={};
   function get(name){if(!stats[name])stats[name]={bat:null,bowl:null,field:{c:0,st:0,ro:0},played:true};return stats[name];}
-  var inningsList=filteredInnings||(scard.scorecard||scard.scoreCard||scard.inningsScoreList||[]);
+  var rawInnings=filteredInnings||(scard.scorecard||scard.scoreCard||scard.inningsScoreList||[]);
+  // Filter out super overs (innings 5+) to prevent contamination
+  var inningsList=rawInnings.filter(function(inn){
+    if(inn.isSuperOver||inn.superOver) return false;
+    var id=parseInt(inn.inningsId||inn.innId||inn.innings_id||0);
+    return id===0||id<=4; // 0 = field not present, safe to include
+  });
   // Build set of players who actually participated
   var participants={};
   inningsList.forEach(function(inn){
@@ -2240,7 +2298,20 @@ function parseCard(scard, filteredInnings){
       }
       if(cm){var f=cm[1].trim();var cf=inParticipants(f);if(cf&&cf.toLowerCase()!=='sub'){get(cf).field.c++;}}
       if(sm){var f2=cm&&sm[1].trim()||sm[1].trim();var cf2=inParticipants(f2);if(cf2)get(cf2).field.st++;}
-      if(rm){var f3=rm[1].split(/[/,&]/)[0].trim();var cf3=inParticipants(f3);if(cf3)get(cf3).field.ro++;}
+      if(rm){
+        var roParts=rm[1].split(/[/\\,&]/).map(function(s){return s.trim();}).filter(function(s){return s.length>0;});
+        if(roParts.length===1){
+          // Direct hit = 12pts (ro+=2, calcPts: ro*6=12)
+          var cf3=inParticipants(roParts[0]);
+          if(cf3) get(cf3).field.ro+=2;
+        } else {
+          // Indirect = 6pts each (ro+=1 each)
+          roParts.slice(0,2).forEach(function(rp){
+            var cf3=inParticipants(rp);
+            if(cf3) get(cf3).field.ro+=1;
+          });
+        }
+      }
       // lbw/bowled bonus - use lowercase for matching, original for name
       if(dis.match(/^lbw\s+b\s|^b\s+[a-z]/)||dis.match(/^bowled\s/)){
         var bname=disOrig.replace(/^(lbw\s+b|b|bowled)\s+/i,'').trim().split(/\s/)[0];
