@@ -1252,7 +1252,10 @@ function renderPointsTable(teams,matchData,matchKey,list){
         return lbl+':'+ptsVal(r.breakdown[mk]);
       }).join(' · ');
     }
-    html+='<tr style="border-bottom:1px solid var(--border)">'
+    var bdAttr=JSON.stringify(r.breakdown||{}).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+    html+='<tr style="border-bottom:1px solid var(--border);cursor:pointer" '
+      +'data-pname="'+r.name.replace(/"/g,'&quot;')+'" data-prole="'+r.role+'" data-pteam="'+iplTeam+'" '
+      +'data-pbd="'+bdAttr+'" onclick="openPlayerModalFromEl(this)">'
       +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+(i+1)+'</td>'
       +'<td style="padding:8px 4px"><div style="font-weight:600">'+r.name+'</div>'
       +(breakdownStr?'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+breakdownStr+'</div>':'')
@@ -1342,10 +1345,16 @@ function loadRoom(){
       // Show in-app alert when a new match syncs
       var newKeys=Object.keys(G.matchData).filter(function(k){return prevKeys.indexOf(k)<0;});
       if(newKeys.length){
-        newKeys.sort(function(a,b){return parseInt(b.replace('match',''))-parseInt(a.replace('match',''));});
-        var latestKey=newKeys[0];
-        showSyncAlert(G.matchLabels[latestKey]||latestKey, latestKey);
-        sendNotif('Fantasy Points Updated',(G.matchLabels[latestKey]||latestKey)+' synced!');
+        newKeys.sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));});
+        // One notification showing the range: "Synced M1–M5" or just "Synced M6"
+        var firstLbl=(G.matchLabels[newKeys[0]]||newKeys[0]).match(/^M\d+/);
+        var lastLbl=(G.matchLabels[newKeys[newKeys.length-1]]||newKeys[newKeys.length-1]).match(/^M\d+/);
+        var rangeStr=firstLbl&&lastLbl
+          ? (firstLbl[0]===lastLbl[0] ? firstLbl[0] : firstLbl[0]+' – '+lastLbl[0])
+          : newKeys.length+' matches';
+        var latestKey=newKeys[newKeys.length-1];
+        showSyncAlert(rangeStr+' synced', latestKey);
+        sendNotif('Fantasy Points Updated','Points updated through '+rangeStr);
       }
       renderLeaderboard();
       renderHistory();
@@ -1666,18 +1675,32 @@ function renderSquadView(){
       ptsDiv.innerHTML='<div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div>';
       row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
       row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
-      // Show C/VC badges if set
+      // Show C/VC badges next to name (not overlapping avatar)
       var myCaps=G.captains&&G.captains[currentSquadTeam]?G.captains[currentSquadTeam]:{};
-      if(parseInt(myCaps.c)===idx){
-        var cb=document.createElement('span');
-        cb.style.cssText='background:var(--gold);color:#0a0800;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:5px;font-family:var(--fd)';
-        cb.textContent='C';
-        row.querySelector('div').appendChild(cb);
-      } else if(parseInt(myCaps.vc)===idx){
-        var vcb=document.createElement('span');
-        vcb.style.cssText='background:var(--surface3);color:var(--gold);font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:5px;font-family:var(--fd);border:1px solid var(--gold)';
-        vcb.textContent='VC';
-        row.querySelector('div').appendChild(vcb);
+      // Also check match-keyed structure
+      var capMkSq='match'+G.currentMatch;
+      var matchCapsSq=G.captains&&G.captains[capMkSq]?G.captains[capMkSq]:{};
+      var teamCapSq=matchCapsSq[currentSquadTeam]||matchCapsSq[String(currentSquadTeam)]||myCaps||{};
+      if(parseInt(teamCapSq.c)===idx||parseInt(myCaps.c)===idx){
+        var nameEl=info.querySelector('div');
+        if(nameEl){
+          var cb=document.createElement('span');
+          cb.style.cssText='background:var(--gold);color:#0a0800;font-size:9px;font-weight:700;'
+            +'padding:2px 6px;border-radius:4px;margin-left:6px;font-family:var(--fd);'
+            +'vertical-align:middle;display:inline-block';
+          cb.textContent='C';
+          nameEl.appendChild(cb);
+        }
+      } else if(parseInt(teamCapSq.vc)===idx||parseInt(myCaps.vc)===idx){
+        var nameEl=info.querySelector('div');
+        if(nameEl){
+          var vcb=document.createElement('span');
+          vcb.style.cssText='background:var(--surface3);color:var(--gold);font-size:9px;font-weight:700;'
+            +'padding:2px 6px;border-radius:4px;margin-left:6px;font-family:var(--fd);'
+            +'border:1px solid rgba(245,184,0,.5);vertical-align:middle;display:inline-block';
+          vcb.textContent='VC';
+          nameEl.appendChild(vcb);
+        }
       }
       lst.appendChild(row);
     });
@@ -2571,24 +2594,13 @@ function distributeToAllRooms(matchId, autoMode){
     finalResults[entry.ti][entry.pi]=bd;
   });
   // Apply captain/VC multipliers (to .t only)
-  // G.captains may be flat {ti:{c,vc}} (from auction rooms data)
-  // OR match-keyed {matchKey:{ti:{c,vc}}} (from setCaptain in-session)
-  // Try match-keyed first, fall back to flat
+  // Captains are stored in Firebase at fantasy/{code}/captains/match{N}/{ti} = {c:pi, vc:pi}
+  // fantasyData is already fetched above - read from there directly
   var capMk='match'+staged.mNum;
   Object.keys(finalResults).forEach(function(ti){
-    var matchCaps=G.captains&&G.captains[capMk]?G.captains[capMk]:{};
-    // Fall back to flat structure if no match-keyed captains found
-    var cap=matchCaps[ti]||matchCaps[String(ti)]
-      ||(G.captains&&G.captains[ti]?G.captains[ti]:null)
-      ||(G.captains&&G.captains[String(ti)]?G.captains[String(ti)]:null)
-      ||{};
-    if(!cap.c&&!cap.vc) return;
-    Object.keys(finalResults[ti]).forEach(function(pi){
-      var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
-      var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
-      if(isCap) finalResults[ti][pi].t=Math.round(finalResults[ti][pi].t*2);
-      else if(isVC) finalResults[ti][pi].t=Math.round(finalResults[ti][pi].t*1.5);
-    });
+    // Read from fantasyData for each eligible room
+    // We apply caps per-room inside the room loop below, not here globally
+    // Leave finalResults as base pts; apply multiplier when writing per-room
   });
   // Now distribute to ALL rooms in Firebase that are eligible
   logSync('Distributing '+staged.desc+' to all eligible rooms...','info');
@@ -2625,8 +2637,11 @@ function distributeToAllRooms(matchId, autoMode){
           count++; // count as distributed since Worker already handled it
           return;
         }
+        // Read this room's captain/VC from Firebase fantasy captains
+        // fantasy/{code}/captains/match{N}/{ti} = {c:pi, vc:pi}
+        var roomCaps=(roomFantasy&&roomFantasy.captains&&roomFantasy.captains[capMk])
+          ? roomFantasy.captains[capMk] : {};
         // Match each squad player against scorecard by fuzzy name
-        // Only include matches >= 0.85 to prevent surname-only false matches
         rPlayers.forEach(function(rp,rpi){
           var bestScore=0, bestEntry=null;
           staged.playerPts.forEach(function(entry){
@@ -2636,6 +2651,11 @@ function distributeToAllRooms(matchId, autoMode){
           });
           if(bestScore>=0.85&&bestEntry){
             var bd=bestEntry.bd?{p:bestEntry.bd.p,b:bestEntry.bd.b,w:bestEntry.bd.w,f:bestEntry.bd.f,t:bestEntry.pts}:{p:0,b:0,w:0,f:0,t:bestEntry.pts};
+            // Apply captain/VC multiplier from this room's captains
+            var rk2=String(rk);
+            var teamCap=(roomCaps[rk2]||roomCaps[parseInt(rk2)]||{});
+            if(teamCap.c!==undefined&&parseInt(teamCap.c)===rpi) bd.t=Math.round(bd.t*2);
+            else if(teamCap.vc!==undefined&&parseInt(teamCap.vc)===rpi) bd.t=Math.round(bd.t*1.5);
             teamPts[rpi]=bd;
           }
         });
