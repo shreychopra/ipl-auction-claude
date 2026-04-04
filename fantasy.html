@@ -2635,14 +2635,13 @@ function distributeToAllRooms(matchId, autoMode){
         var rPlayers=rTeam.players||[];
         // Match by player name across teams
         var teamPts={};
-        // Skip if already synced by Worker for this room
         var roomFantasy=fantasyData&&fantasyData[code];
-        if(roomFantasy&&roomFantasy.syncedIds&&roomFantasy.syncedIds[matchId]){
+        // Skip synced rooms ONLY in auto mode (not on manual re-save)
+        if(autoMode&&roomFantasy&&roomFantasy.syncedIds&&roomFantasy.syncedIds[matchId]){
           count++; // count as distributed since Worker already handled it
           return;
         }
         // Read this room's captain/VC from Firebase fantasy captains
-        // fantasy/{code}/captains/match{N}/{ti} = {c:pi, vc:pi}
         var roomCaps=(roomFantasy&&roomFantasy.captains&&roomFantasy.captains[capMk])
           ? roomFantasy.captains[capMk] : {};
         // Match each squad player against scorecard by fuzzy name
@@ -2655,7 +2654,6 @@ function distributeToAllRooms(matchId, autoMode){
           });
           if(bestScore>=0.85&&bestEntry){
             var bd=bestEntry.bd?{p:bestEntry.bd.p,b:bestEntry.bd.b,w:bestEntry.bd.w,f:bestEntry.bd.f,t:bestEntry.pts}:{p:0,b:0,w:0,f:0,t:bestEntry.pts};
-            // Apply captain/VC multiplier from this room's captains
             var rk2=String(rk);
             var teamCap=(roomCaps[rk2]||roomCaps[parseInt(rk2)]||{});
             if(teamCap.c!==undefined&&parseInt(teamCap.c)===rpi) bd.t=Math.round(bd.t*2);
@@ -2663,10 +2661,10 @@ function distributeToAllRooms(matchId, autoMode){
             teamPts[rpi]=bd;
           }
         });
-        if(Object.keys(teamPts).length){
-          updates['fantasy/'+code+'/matches/match'+staged.mNum+'/'+rk]=teamPts;
-          count++;
-        }
+        // Always write match data for this team — null explicitly clears old wrong entries
+        updates['fantasy/'+code+'/matches/match'+staged.mNum+'/'+rk]=
+          Object.keys(teamPts).length ? teamPts : null;
+        count++;
       });
       updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
       updates['fantasy/'+code+'/matchLabels/match'+staged.mNum]=staged.desc;
