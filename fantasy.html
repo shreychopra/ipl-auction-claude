@@ -920,6 +920,7 @@ var IPL_TEAM={
   "Musheer Khan":"PBKS",
   "Naman Dhir":"MI",
   "Naman Tiwari":"LSG",
+  "Navdeep Saini":"KKR",
   "Nandre Burger":"RR",
   "Nathan Ellis":"CSK",
   "Nehal Wadhera":"PBKS",
@@ -1325,6 +1326,8 @@ function loadRoom(){
     if(!data.auctionStarted && !data.auctionEnded){toast('Auction has not started yet');return;}
     G.roomCode=code; G.myTeamName=team;
     G.teams=data.teams||{};
+    G.auctionEndedAt=data.auctionEndedAt||0;
+    G.captains=data.captains||{};
     localStorage.setItem('fl_code',code);
     localStorage.setItem('fl_team',team);
     fantasyRef=db.ref('fantasy/'+code);
@@ -1332,9 +1335,13 @@ function loadRoom(){
       var fd=snap2.val()||{};
       G.matchData=fd.matches||{};
       G.matchLabels=fd.matchLabels||{};
+      G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
+      // Also load fantasy-level captains if present
+      if(fd.captains) G.captains=fd.captains;
       initApp();
     });
+    var appInitialized=false;
     fantasyRef.on('value',function(snap3){
       var fd=snap3.val()||{};
       var prevKeys=Object.keys(G.matchData||{});
@@ -1342,20 +1349,23 @@ function loadRoom(){
       G.matchLabels=fd.matchLabels||{};
       G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
-      // Show in-app alert when a new match syncs
-      var newKeys=Object.keys(G.matchData).filter(function(k){return prevKeys.indexOf(k)<0;});
-      if(newKeys.length){
-        newKeys.sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));});
-        // One notification showing the range: "Synced M1–M5" or just "Synced M6"
-        var firstLbl=(G.matchLabels[newKeys[0]]||newKeys[0]).match(/^M\d+/);
-        var lastLbl=(G.matchLabels[newKeys[newKeys.length-1]]||newKeys[newKeys.length-1]).match(/^M\d+/);
-        var rangeStr=firstLbl&&lastLbl
-          ? (firstLbl[0]===lastLbl[0] ? firstLbl[0] : firstLbl[0]+' – '+lastLbl[0])
-          : newKeys.length+' matches';
-        var latestKey=newKeys[newKeys.length-1];
-        showSyncAlert(rangeStr+' synced', latestKey);
-        sendNotif('Fantasy Points Updated','Points updated through '+rangeStr);
+      if(fd.captains) G.captains=fd.captains;
+      // Show in-app alert ONLY after the app is initialised (skip initial load fire)
+      if(appInitialized){
+        var newKeys=Object.keys(G.matchData).filter(function(k){return prevKeys.indexOf(k)<0;});
+        if(newKeys.length){
+          newKeys.sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));});
+          var firstLbl=(G.matchLabels[newKeys[0]]||newKeys[0]).match(/^M\d+/);
+          var lastLbl=(G.matchLabels[newKeys[newKeys.length-1]]||newKeys[newKeys.length-1]).match(/^M\d+/);
+          var rangeStr=firstLbl&&lastLbl
+            ? (firstLbl[0]===lastLbl[0] ? firstLbl[0] : firstLbl[0]+' – '+lastLbl[0])
+            : newKeys.length+' matches';
+          var latestKey=newKeys[newKeys.length-1];
+          showSyncAlert(rangeStr+' synced', latestKey);
+          sendNotif('Fantasy Points Updated','Points updated through '+rangeStr);
+        }
       }
+      appInitialized=true;
       renderLeaderboard();
       renderHistory();
       updateNav();
@@ -1676,12 +1686,23 @@ function renderSquadView(){
       row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
       row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
       // Show C/VC badges next to name (not overlapping avatar)
-      var myCaps=G.captains&&G.captains[currentSquadTeam]?G.captains[currentSquadTeam]:{};
-      // Also check match-keyed structure
+      // G.captains can be flat {teamIdx:{c,vc}} (from rooms data) OR
+      // match-keyed {matchN:{teamIdx:{c,vc}}} (from fantasy captains).
+      // Check both structures.
+      var myCaps={};
       var capMkSq='match'+G.currentMatch;
-      var matchCapsSq=G.captains&&G.captains[capMkSq]?G.captains[capMkSq]:{};
-      var teamCapSq=matchCapsSq[currentSquadTeam]||matchCapsSq[String(currentSquadTeam)]||myCaps||{};
-      if(parseInt(teamCapSq.c)===idx||parseInt(myCaps.c)===idx){
+      var ti2=currentSquadTeam;
+      // Match-keyed structure (fantasy captains)
+      if(G.captains&&G.captains[capMkSq]){
+        var mc=G.captains[capMkSq];
+        myCaps=mc[ti2]||mc[String(ti2)]||mc[parseInt(ti2)]||{};
+      }
+      // If not found, fall back to flat structure (rooms captains)
+      if(!myCaps||myCaps.c===undefined){
+        var flat=G.captains&&(G.captains[ti2]||G.captains[String(ti2)]||G.captains[parseInt(ti2)]);
+        if(flat&&flat.c!==undefined) myCaps=flat;
+      }
+      if(parseInt(myCaps.c)===idx){
         var nameEl=info.querySelector('div');
         if(nameEl){
           var cb=document.createElement('span');
@@ -1691,7 +1712,7 @@ function renderSquadView(){
           cb.textContent='C';
           nameEl.appendChild(cb);
         }
-      } else if(parseInt(teamCapSq.vc)===idx||parseInt(myCaps.vc)===idx){
+      } else if(parseInt(myCaps.vc)===idx){
         var nameEl=info.querySelector('div');
         if(nameEl){
           var vcb=document.createElement('span');
@@ -1794,7 +1815,17 @@ function openPlayerModal(ti,pi){
     body+='<div class="empty" style="padding:20px">No match data yet</div>';
   }
   // Show C/VC status in modal (read-only - set during auction)
-  var myCaps2=G.captains&&G.captains[ti]?G.captains[ti]:{};
+  // Resolve captains — check match-keyed (fantasy) then flat (rooms)
+  var myCaps2={};
+  var capMk2='match'+G.currentMatch;
+  if(G.captains&&G.captains[capMk2]){
+    var mc2=G.captains[capMk2];
+    myCaps2=mc2[ti]||mc2[String(ti)]||mc2[parseInt(ti)]||{};
+  }
+  if(!myCaps2||myCaps2.c===undefined){
+    var flat2=G.captains&&(G.captains[ti]||G.captains[String(ti)]||G.captains[parseInt(ti)]);
+    if(flat2&&flat2.c!==undefined) myCaps2=flat2;
+  }
   var isCurrC=parseInt(myCaps2.c)===pi;
   var isCurrVC=parseInt(myCaps2.vc)===pi;
   if(isCurrC||isCurrVC){
@@ -2412,16 +2443,40 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
     // API v2 structure: scorecard, ismatchcomplete, status
     var innings=data.scorecard||data.scoreCard||data.inningsScoreList||[];
     var matchResult=data.status||'';
-        var isComplete=(data.ismatchcomplete===1||data.ismatchcomplete===true||
-      (data.status&&data.status.toLowerCase().indexOf('won')>=0)||
-      (data.status&&data.status.toLowerCase().indexOf('tied')>=0)||
-      (data.status&&data.status.toLowerCase().indexOf('abandon')>=0));
-    var isAbandoned=(data.status&&data.status.toLowerCase().indexOf('abandon')>=0);
+    var statusLow=(data.status||'').toLowerCase();
+    var isNoPoints=statusLow.indexOf('no result')>=0||statusLow.indexOf('abandon')>=0||
+      statusLow.indexOf('cancel')>=0||statusLow==='match drawn';
+    var isComplete=(data.ismatchcomplete===1||data.ismatchcomplete===true||
+      statusLow.indexOf('won')>=0||statusLow.indexOf('tied')>=0||isNoPoints);
     logSync('ismatchcomplete:'+data.ismatchcomplete+' | status:"'+(data.status||'')+'" | innings:'+innings.length,'info');
-    if(isAbandoned){
-      logSync(desc+' abandoned. No points awarded.','warn');
-      var upd={};upd['syncedIds/'+matchId]=true;
-      if(fantasyRef) fantasyRef.update(upd);
+    if(isNoPoints){
+      logSync(desc+' — No Result/Abandoned. No points awarded.','warn');
+      // Mark synced across all eligible rooms but write NO match data (zero points)
+      db.ref('rooms').once('value',function(rsnap){
+        var rooms=rsnap.val()||{};
+        var updates={};
+        Object.keys(rooms).forEach(function(code){
+          var room=rooms[code];
+          if(!room.auctionEnded) return;
+          var endedAt=room.auctionEndedAt||0;
+          if(schedMatch&&endedAt){
+            var tp=schedMatch.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if(tp){
+              var hh=parseInt(tp[1])+(tp[3].toUpperCase()==='PM'&&tp[1]!=='12'?12:0);
+              var matchStart=new Date(schedMatch.date+'T00:00:00Z').getTime()+(hh*60+parseInt(tp[2])-330)*60000;
+              if(endedAt>=matchStart) return;
+            }
+          }
+          updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
+          updates['fantasy/'+code+'/matchLabels/match'+mNum]=desc;
+          updates['fantasy/'+code+'/matchResults/match'+mNum]=data.status||'No Result';
+        });
+        if(Object.keys(updates).length) db.ref().update(updates,function(){
+          logSync('Marked '+desc+' as No Result across all rooms','ok');
+        });
+      });
+      db.ref('fantasy/global/matchLabels/match'+mNum).set(desc);
+      db.ref('fantasy/global/matchResults/match'+mNum).set(data.status||'No Result');
       syncedIds[matchId]=true;done();return;
     }
     if(!isComplete){
