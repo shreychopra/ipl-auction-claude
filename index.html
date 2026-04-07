@@ -727,12 +727,40 @@
   </div>
 
   <!-- STATUS -->
-  <div id="wpane-status" class="tab-pane on" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 22px;flex:1">
-    <div class="wait-pulse">⏳</div>
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--text2);margin-top:18px">Waiting for player...</h2>
-    <p style="font-size:14px;color:var(--text3);margin-top:7px">The auctioneer will bring up the next player</p>
-    <div class="wait-team" id="waitTeamName">-</div>
-    <div class="wait-info"><div class="wl">Your Budget</div><div class="wv" id="waitBudget">-</div></div>
+  <div id="wpane-status" class="tab-pane on" style="padding:24px 20px">
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:20px">
+      <div class="wait-pulse" style="font-size:40px">⏳</div>
+      <div>
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text2);margin:0">Waiting for player...</h2>
+        <p style="font-size:13px;color:var(--text3);margin:3px 0 0">The auctioneer will bring up the next player</p>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--gold);margin-bottom:4px">YOUR TEAM</div>
+      <div class="wait-team" id="waitTeamName" style="margin:0;font-size:22px">-</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center">
+        <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-family:'Bebas Neue',sans-serif">Budget</div>
+        <div style="font-family:var(--font-num);font-size:28px;color:var(--gold)" id="waitBudgetTotal">-</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center">
+        <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-family:'Bebas Neue',sans-serif">Remaining</div>
+        <div style="font-family:var(--font-num);font-size:28px;color:var(--green)" id="waitBudget">-</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center">
+        <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-family:'Bebas Neue',sans-serif">Spent</div>
+        <div style="font-family:var(--font-num);font-size:28px;color:var(--red)" id="waitBudgetSpent">-</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center">
+        <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;font-family:'Bebas Neue',sans-serif">Players</div>
+        <div style="font-family:var(--font-num);font-size:28px;color:var(--text)" id="waitBudgetCount">-</div>
+      </div>
+    </div>
+    <!-- Role tracker row: same as Squad tab -->
+    <div id="wStatusRoleTracker" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px"></div>
   </div>
 
   <!-- POOL -->
@@ -1866,6 +1894,33 @@ function updateWaitBudget(){
   var t=getTeam(G.teams,myTeamIdx); if(!t) return;
   document.getElementById('waitBudget').textContent=fmtL(t.budget-t.spent);
   document.getElementById('waitTeamName').textContent=t.name;
+  var btEl=document.getElementById('waitBudgetTotal');
+  var bsEl=document.getElementById('waitBudgetSpent');
+  var bcEl=document.getElementById('waitBudgetCount');
+  if(btEl) btEl.textContent=fmtL(t.budget);
+  if(bsEl) bsEl.textContent=fmtL(t.spent);
+  if(bcEl) bcEl.textContent=(t.players?t.players.length:0);
+  // Role tracker in status tab
+  var sqSz=G.squadSize||16;
+  var sqLim=SQUAD_LIMITS[sqSz]||SQUAD_LIMITS[16];
+  var cats={Batter:0,Bowler:0,'All-Rounder':0,WK:0};
+  (t.players||[]).forEach(function(p){ if(cats[p.role]!==undefined) cats[p.role]++; });
+  var rt=document.getElementById('wStatusRoleTracker');
+  if(rt){
+    rt.innerHTML=
+      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px;text-align:center">'
+        +'<div style="font-family:var(--fn);font-size:18px;color:'+(cats.Batter>=sqLim.Batter?'var(--red)':'var(--text)')+'">'+cats.Batter+'/'+sqLim.Batter+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">BAT</div></div>'
+      +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px;text-align:center">'
+        +'<div style="font-family:var(--fn);font-size:18px;color:'+(cats.Bowler>=sqLim.Bowler?'var(--red)':'var(--text)')+'">'+cats.Bowler+'/'+sqLim.Bowler+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">BOWL</div></div>'
+      +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px;text-align:center">'
+        +'<div style="font-family:var(--fn);font-size:18px;color:'+(cats['All-Rounder']>=sqLim['All-Rounder']?'var(--red)':'var(--text)')+'">'+cats['All-Rounder']+'/'+sqLim['All-Rounder']+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">AR</div></div>'
+      +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px;text-align:center">'
+        +'<div style="font-family:var(--fn);font-size:18px;color:'+(cats.WK>=sqLim.WK?'var(--red)':'var(--text)')+'">'+cats.WK+'/'+sqLim.WK+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">WK</div></div>';
+  }
 }
 
 function renderParticipantBid(data){
@@ -2104,14 +2159,31 @@ function renderWSquad(){
   var bs=document.getElementById('wSquadBudget');
   var sl=document.getElementById('wSquadList');
   if(!bs||!sl) return;
+  var sqSz=G.squadSize||16;
+  var sqLim=SQUAD_LIMITS[sqSz]||SQUAD_LIMITS[16];
+  var cats={Batter:0,Bowler:0,'All-Rounder':0,WK:0};
+  (t.players||[]).forEach(function(p){ if(cats[p.role]!==undefined) cats[p.role]++; });
   bs.innerHTML=
     '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
     +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
-    +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
-    +'<div class="brow"><span>Players</span><span class="bv">'+(t.players?t.players.length:0)+'</span></div>';
+    +'<div class="brow"><span>Squad</span><span class="bv" style="color:'+(t.players&&t.players.length>=(sqLim.total||16)?'var(--red)':'var(--green)')+'">'+( t.players?t.players.length:0)+'/'+sqLim.total+'</span></div>'
+    +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>';
+  // Role tracker — same line shown in pBidScreen Squad tab
+  var catTracker='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border)">'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats.Batter>=sqLim.Batter?'var(--red)':'var(--text)')+'">'+cats.Batter+'/'+sqLim.Batter+'</div><div style="color:var(--text3)">BAT</div></div>'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats.Bowler>=sqLim.Bowler?'var(--red)':'var(--text)')+'">'+cats.Bowler+'/'+sqLim.Bowler+'</div><div style="color:var(--text3)">BOWL</div></div>'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats['All-Rounder']>=sqLim['All-Rounder']?'var(--red)':'var(--text)')+'">'+cats['All-Rounder']+'/'+sqLim['All-Rounder']+'</div><div style="color:var(--text3)">AR</div></div>'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats.WK>=sqLim.WK?'var(--red)':'var(--text)')+'">'+cats.WK+'/'+sqLim.WK+'</div><div style="color:var(--text3)">WK</div></div>'
+    +'</div>';
+  var catEl=document.getElementById('wCatTracker');
+  if(!catEl){
+    catEl=document.createElement('div'); catEl.id='wCatTracker';
+    sl.parentNode.insertBefore(catEl,sl);
+  }
+  catEl.innerHTML=catTracker;
   sl.innerHTML=(t.players&&t.players.length)
     ?t.players.map(function(p){
-      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+'</div></div>'
+      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+' - '+p.nat+'</div></div>'
         +'<div class="sq-price">'+fmtL(p.soldPrice)+'</div></div>';
     }).join('')
     :'<div class="empty">No players yet</div>';
