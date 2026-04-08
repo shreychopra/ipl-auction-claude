@@ -2738,7 +2738,7 @@ function applyPauseState(paused) {
 // ══ END AUCTION ══
 function doEndAuction() {
   stopTimer();
-  pushRoom({ auctionEnded: true, paused: false, currentPlayerId: null, currentBid: 0, currentBidderIdx: "NONE" });
+  pushRoom({ auctionEnded: true, auctionEndedAt: Date.now(), paused: false, currentPlayerId: null, currentBid: 0, currentBidderIdx: "NONE" });
   showEndScreen();
 }
 
