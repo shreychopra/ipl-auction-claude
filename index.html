@@ -398,19 +398,30 @@
       60%{transform:rotate(8deg) scale(1.1)}100%{transform:rotate(0) scale(1);opacity:1}}
 
     /* ── WAIT SCREEN ── */
-    #waitScreen{align-items:center;justify-content:center;text-align:center;padding:36px 22px;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(29,61,141,.15) 0%,transparent 60%)}
-    .wait-pulse{font-size:56px;animation:wp 2.5s ease-in-out infinite}
+    #waitScreen{background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(29,61,141,.15) 0%,transparent 60%)}
+    .wait-pulse{font-size:44px;animation:wp 2.5s ease-in-out infinite}
     @keyframes wp{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
-    #waitScreen h2{font-family:var(--font-display);font-size:28px;font-weight:700;
-      letter-spacing:1px;color:var(--text2);margin-top:16px}
-    #waitScreen p{font-size:13px;color:var(--text3);margin-top:6px}
+    #waitScreen h2{font-family:var(--font-display);font-size:clamp(22px,5vw,30px);font-weight:700;
+      letter-spacing:1px;color:var(--text2);margin-top:10px}
+    #waitScreen p{font-size:13px;color:var(--text3);margin-top:4px}
     .wait-info{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);padding:16px 24px;margin-top:20px;text-align:center}
+      border-radius:var(--radius);padding:14px 20px;margin-top:14px;text-align:center;width:100%}
     .wait-info .wl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
-    .wait-info .wv{font-family:var(--font-num);font-size:34px;color:var(--team)}
-    .wait-team{font-family:var(--font-display);font-size:18px;font-weight:700;
-      color:var(--team);margin-top:12px;letter-spacing:.5px}
+    .wait-info .wv{font-family:var(--font-num);font-size:30px;color:var(--team)}
+    .wait-team{font-family:var(--font-display);font-size:17px;font-weight:700;
+      color:var(--team);margin-top:8px;letter-spacing:.5px}
+    .wstat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;width:100%}
+    .wstat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:12px 10px;text-align:center}
+    .wstat-lbl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+      text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
+    .wstat-val{font-family:var(--font-num);font-size:clamp(22px,5vw,28px)}
+    .wrole-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;width:100%}
+    .wrole-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);
+      padding:10px 4px;text-align:center}
+    .wrole-val{font-family:var(--font-num);font-size:18px}
+    .wrole-lbl{font-size:10px;color:var(--text3);margin-top:2px}
 
     /* ── END SCREEN ── */
     #endScreen{align-items:center;padding:28px 16px;text-align:center}
@@ -727,12 +738,37 @@
   </div>
 
   <!-- STATUS -->
-  <div id="wpane-status" class="tab-pane on" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 22px;flex:1">
-    <div class="wait-pulse">⏳</div>
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--text2);margin-top:18px">Waiting for player...</h2>
-    <p style="font-size:14px;color:var(--text3);margin-top:7px">The auctioneer will bring up the next player</p>
-    <div class="wait-team" id="waitTeamName">-</div>
-    <div class="wait-info"><div class="wl">Your Budget</div><div class="wv" id="waitBudget">-</div></div>
+  <div id="wpane-status" class="tab-pane on" style="padding:16px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="wait-pulse">⏳</div>
+      <div style="text-align:left">
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(20px,5vw,28px);letter-spacing:2px;color:var(--text2);margin:0">Waiting for player...</h2>
+        <p style="font-size:12px;color:var(--text3);margin:2px 0 0">The auctioneer will bring up the next player</p>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;text-align:center;margin-bottom:10px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:3px">YOUR TEAM</div>
+      <div class="wait-team" id="waitTeamName" style="margin:0;font-size:20px">-</div>
+    </div>
+    <div class="wstat-grid">
+      <div class="wstat-card">
+        <div class="wstat-lbl">Budget</div>
+        <div class="wstat-val" id="waitBudgetTotal" style="color:var(--gold)">-</div>
+      </div>
+      <div class="wstat-card">
+        <div class="wstat-lbl">Remaining</div>
+        <div class="wstat-val" id="waitBudget" style="color:var(--green)">-</div>
+      </div>
+      <div class="wstat-card">
+        <div class="wstat-lbl">Spent</div>
+        <div class="wstat-val" id="waitBudgetSpent" style="color:var(--red)">-</div>
+      </div>
+      <div class="wstat-card">
+        <div class="wstat-lbl">Players</div>
+        <div class="wstat-val" id="waitBudgetCount" style="color:var(--text)">-</div>
+      </div>
+    </div>
+    <div class="wrole-grid" id="wStatusRoleTracker"></div>
   </div>
 
   <!-- POOL -->
@@ -1864,8 +1900,40 @@ function listenParticipant(){
 function updateWaitBudget(){
   if(myTeamIdx===null||!G.teams) return;
   var t=getTeam(G.teams,myTeamIdx); if(!t) return;
-  document.getElementById('waitBudget').textContent=fmtL(t.budget-t.spent);
+  var remaining=t.budget-t.spent;
+  var playerCount=t.players?t.players.length:0;
+  // Update team name
   document.getElementById('waitTeamName').textContent=t.name;
+  // Update stat cards
+  var btEl=document.getElementById('waitBudgetTotal');
+  var brEl=document.getElementById('waitBudget');
+  var bsEl=document.getElementById('waitBudgetSpent');
+  var bcEl=document.getElementById('waitBudgetCount');
+  if(btEl) btEl.textContent=fmtL(t.budget);
+  if(brEl) brEl.textContent=fmtL(remaining);
+  if(bsEl) bsEl.textContent=fmtL(t.spent);
+  if(bcEl) bcEl.textContent=playerCount;
+  // Role tracker
+  var sqSz=G.squadSize||16;
+  var sqLim=SQUAD_LIMITS[sqSz]||SQUAD_LIMITS[16];
+  var cats={Batter:0,Bowler:0,'All-Rounder':0,WK:0};
+  (t.players||[]).forEach(function(p){ if(cats[p.role]!==undefined) cats[p.role]++; });
+  var rt=document.getElementById('wStatusRoleTracker');
+  if(rt){
+    var roles=[
+      {key:'Batter',lbl:'BAT'},
+      {key:'Bowler',lbl:'BOWL'},
+      {key:'All-Rounder',lbl:'AR'},
+      {key:'WK',lbl:'WK'}
+    ];
+    rt.innerHTML=roles.map(function(r){
+      var full=cats[r.key]>=sqLim[r.key];
+      return '<div class="wrole-card">'
+        +'<div class="wrole-val" style="color:'+(full?'var(--red)':'var(--text)')+'">'+cats[r.key]+'/'+sqLim[r.key]+'</div>'
+        +'<div class="wrole-lbl">'+r.lbl+'</div>'
+        +'</div>';
+    }).join('');
+  }
 }
 
 function renderParticipantBid(data){
@@ -2104,14 +2172,45 @@ function renderWSquad(){
   var bs=document.getElementById('wSquadBudget');
   var sl=document.getElementById('wSquadList');
   if(!bs||!sl) return;
+  var sqSz=G.squadSize||16;
+  var sqLim=SQUAD_LIMITS[sqSz]||SQUAD_LIMITS[16];
+  var cats={Batter:0,Bowler:0,'All-Rounder':0,WK:0};
+  var playerCount=t.players?t.players.length:0;
+  (t.players||[]).forEach(function(p){ if(cats[p.role]!==undefined) cats[p.role]++; });
+  var squadFull=playerCount>=(sqLim.total||16);
+  // Budget summary rows
   bs.innerHTML=
     '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
     +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
-    +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
-    +'<div class="brow"><span>Players</span><span class="bv">'+(t.players?t.players.length:0)+'</span></div>';
+    +'<div class="brow"><span>Squad</span><span class="bv" style="color:'+(squadFull?'var(--red)':'var(--green)')+'">'+playerCount+'/'+sqLim.total+'</span></div>'
+    +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>';
+  // Role tracker bar — inject/update before squad list
+  var catEl=document.getElementById('wCatTracker');
+  if(!catEl){
+    catEl=document.createElement('div');
+    catEl.id='wCatTracker';
+    sl.parentNode.insertBefore(catEl,sl);
+  }
+  var roles=[
+    {key:'Batter',lbl:'BAT',lim:sqLim.Batter},
+    {key:'Bowler',lbl:'BOWL',lim:sqLim.Bowler},
+    {key:'All-Rounder',lbl:'AR',lim:sqLim['All-Rounder']},
+    {key:'WK',lbl:'WK',lim:sqLim.WK}
+  ];
+  catEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px 10px;background:var(--surface);border-bottom:1px solid var(--border)">'
+    +roles.map(function(r){
+      var full=cats[r.key]>=r.lim;
+      return '<div style="text-align:center">'
+        +'<div style="font-family:var(--fn);font-size:14px;color:'+(full?'var(--red)':'var(--text)')+'">'+cats[r.key]+'/'+r.lim+'</div>'
+        +'<div style="font-size:10px;color:var(--text3)">'+r.lbl+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+  // Player list
   sl.innerHTML=(t.players&&t.players.length)
     ?t.players.map(function(p){
-      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+'</div></div>'
+      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div>'
+        +'<div class="sq-role">'+p.role+' · '+p.nat+'</div></div>'
         +'<div class="sq-price">'+fmtL(p.soldPrice)+'</div></div>';
     }).join('')
     :'<div class="empty">No players yet</div>';
