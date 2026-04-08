@@ -209,6 +209,10 @@
     .pill-role{background:var(--bluedim);color:var(--blue);border:1px solid rgba(79,142,247,.25)}
     .pill-nat{background:rgba(245,184,0,.08);color:var(--gold2);
       border:1px solid rgba(245,184,0,.2)}
+    .pill-team{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;
+      letter-spacing:.5px;text-transform:uppercase;display:inline-flex;align-items:center;gap:4px;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff}
+    .pill-team img{width:14px;height:14px;object-fit:contain;vertical-align:middle}
 
     /* price row */
     .price-row{display:flex;padding:14px 16px;gap:1px}
@@ -666,6 +670,12 @@
       </div>
       <div style="padding:0 12px 12px;display:flex;gap:8px">
         <button class="btn btn-gold" style="flex:1" onclick="nextRandom()">Random</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="toggleUnsoldPanel()" id="unsoldToggleBtn">Unsold (0)</button>
+      </div>
+      <!-- Unsold Players Panel -->
+      <div id="unsoldPanel" style="display:none;border-top:1px solid var(--border);padding:8px 12px 4px">
+        <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Unsold Players — click to re-auction</div>
+        <div id="unsoldList"></div>
       </div>
     </div>
 
@@ -673,7 +683,7 @@
       <div class="plyr-card">
         <div class="plyr-banner">
           <div class="plyr-avi" id="hAvi">👤</div>
-          <div><div class="plyr-name" id="hName">-</div><div class="pmeta"><span class="pill pill-role" id="hRole">-</span><span class="pill pill-nat" id="hNat">-</span></div></div>
+          <div><div class="plyr-name" id="hName">-</div><div class="pmeta"><span class="pill pill-role" id="hRole">-</span><span class="pill pill-nat" id="hNat">-</span><span class="pill pill-team" id="hTeam" style="display:none"></span></div></div>
         </div>
         <div class="price-row">
           <div class="price-box"><div class="price-lbl">Base</div><div class="price-val" id="hBase">₹0</div></div>
@@ -812,7 +822,7 @@
     <div class="live-card" id="liveCard">
       <div class="plyr-banner">
         <div class="plyr-avi" id="pAvi">👤</div>
-        <div><div class="plyr-name" id="pName">-</div><div class="pmeta"><span class="pill pill-role" id="pRole">-</span><span class="pill pill-nat" id="pNat">-</span></div></div>
+        <div><div class="plyr-name" id="pName">-</div><div class="pmeta"><span class="pill pill-role" id="pRole">-</span><span class="pill pill-nat" id="pNat">-</span><span class="pill pill-team" id="pTeamPill" style="display:none"></span></div></div>
       </div>
       <div class="price-row">
         <div class="price-box"><div class="price-lbl">Base</div><div class="price-val" id="pBase">₹0</div></div>
@@ -947,6 +957,271 @@ window.addEventListener('load', function(){
   db = firebase.database();
   console.log("Firebase ready");
 });
+
+var IPL_TEAM={
+  "AM Ghazanfar":"MI",
+  "Abdul Samad":"LSG",
+  "Abhinandan Singh":"RCB",
+  "Abhishek Sharma":"SRH",
+  "Abishek Porel":"DC",
+  "Adam Milne":"RR",
+  "Aiden Markram":"LSG",
+  "Ajay Mandal":"DC",
+  "Ajinkya Rahane":"KKR",
+  "Akash Deep":"KKR",
+  "Akash Singh":"LSG",
+  "Akeal Hosein":"CSK",
+  "Akshat Raghuwanshi":"LSG",
+  "Aman Khan":"CSK",
+  "Aman Rao":"RR",
+  "Amit Kumar":"SRH",
+  "Angkrish Raghuvanshi":"KKR",
+  "Aniket Verma":"SRH",
+  "Anrich Nortje":"LSG",
+  "Anshul Kamboj":"CSK",
+  "Anuj Rawat":"GT",
+  "Anukul Roy":"KKR",
+  "Arjun Tendulkar":"LSG",
+  "Arshad Khan":"GT",
+  "Arshdeep Singh":"PBKS",
+  "Arshin Kulkarni":"LSG",
+  "Ashok Sharma":"GT",
+  "Ashutosh Sharma":"DC",
+  "Ashwani Kumar":"MI",
+  "Atharva Ankolekar":"MI",
+  "Auqib Nabi":"DC",
+  "Avesh Khan":"LSG",
+  "Axar Patel":"DC",
+  "Ayush Badoni":"LSG",
+  "Ayush Mhatre":"CSK",
+  "Azmatullah Omarzai":"PBKS",
+  "Ben Duckett":"KKR",
+  "Ben Dwarshuis":"PBKS",
+  "Bhuvneshwar Kumar":"RCB",
+  "Blessing Muzarabani":"KKR",
+  "Brijesh Sharma":"RR",
+  "Brydon Carse":"SRH",
+  "Cameron Green":"KKR",
+  "Cooper Connolly":"PBKS",
+  "Corbin Bosch":"MI",
+  "Daksh Kamra":"KKR",
+  "Danish Malewar":"MI",
+  "David Miller":"DC",
+  "David Payne":"SRH",
+  "Deepak Chahar":"MI",
+  "Devdutt Padikkal":"RCB",
+  "Dewald Brevis":"CSK",
+  "Dhruv Jurel":"RR",
+  "Digvesh Singh Rathi":"LSG",
+  "Donovan Ferreira":"RR",
+  "Dushmantha Chameera":"DC",
+  "Eshan Malinga":"SRH",
+  "Faf du Plessis":"DC",
+  "Finn Allen":"KKR",
+  "Glenn Phillips":"GT",
+  "Gurjapneet Singh":"CSK",
+  "Gurnoor Brar":"GT",
+  "Hardik Pandya":"MI",
+  "Harnoor Singh":"PBKS",
+  "Harpreet Brar":"PBKS",
+  "Harry Brook":"DC",
+  "Harsh Dubey":"SRH",
+  "Harshal Patel":"SRH",
+  "Harshit Rana":"KKR",
+  "Heinrich Klaasen":"SRH",
+  "Himmat Singh":"LSG",
+  "Ishan Kishan":"SRH",
+  "Ishant Sharma":"GT",
+  "Jack Edwards":"SRH",
+  "Jacob Bethell":"RCB",
+  "Jacob Duffy":"RCB",
+  "Jamie Overton":"CSK",
+  "Jason Holder":"GT",
+  "Jasprit Bumrah":"MI",
+  "Jayant Yadav":"GT",
+  "Jaydev Unadkat":"SRH",
+  "Jitesh Sharma":"RCB",
+  "Jofra Archer":"RR",
+  "Jordan Cox":"RCB",
+  "Jos Buttler":"GT",
+  "Josh Hazlewood":"RCB",
+  "Josh Inglis":"LSG",
+  "KL Rahul":"DC",
+  "Kagiso Rabada":"GT",
+  "Kamindu Mendis":"SRH",
+  "Kanishk Chouhan":"RCB",
+  "Kartik Sharma":"CSK",
+  "Kartik Tyagi":"KKR",
+  "Karun Nair":"DC",
+  "Khaleel Ahmed":"CSK",
+  "Krains Fuletra":"SRH",
+  "Krunal Pandya":"RCB",
+  "Kuldeep Sen":"RR",
+  "Kuldeep Yadav":"DC",
+  "Kumar Kushagra":"GT",
+  "Kwena Maphaka":"RR",
+  "Kyle Jamieson":"DC",
+  "Lhuan-dre Pretorius":"RR",
+  "Liam Livingstone":"SRH",
+  "Lockie Ferguson":"PBKS",
+  "Luke Wood":"GT",
+  "Lungi Ngidi":"DC",
+  "M Shahrukh Khan":"GT",
+  "Shahrukh Khan":"GT",
+  "MS Dhoni":"CSK",
+  "Madhav Tiwari":"DC",
+  "Manav Suthar":"GT",
+  "Mangesh Yadav":"RCB",
+  "Manimaran Siddharth":"LSG",
+  "Manish Pandey":"KKR",
+  "Marco Jansen":"PBKS",
+  "Marcus Stoinis":"PBKS",
+  "Matheesha Pathirana":"KKR",
+  "Matt Henry":"CSK",
+  "Matthew Breetzke":"LSG",
+  "Matthew Short":"CSK",
+  "Mayank Markande":"MI",
+  "Mayank Rawat":"MI",
+  "Mayank Yadav":"LSG",
+  "Mitchell Marsh":"LSG",
+  "Mitchell Owen":"PBKS",
+  "Mitchell Santner":"MI",
+  "Mitchell Starc":"DC",
+  "Mohammed Shami":"LSG",
+  "Mohammed Siraj":"GT",
+  "Mohd Izhar":"MI",
+  "Mohsin Khan":"LSG",
+  "Mukesh Choudhary":"CSK",
+  "Mukesh Kumar":"DC",
+  "Mukul Choudhary":"LSG",
+  "Musheer Khan":"PBKS",
+  "Naman Dhir":"MI",
+  "Naman Tiwari":"LSG",
+  "Nandre Burger":"RR",
+  "Nathan Ellis":"CSK",
+  "Nehal Wadhera":"PBKS",
+  "Nicholas Pooran":"LSG",
+  "Nishant Sindhu":"GT",
+  "Nitish Kumar Reddy":"SRH",
+  "Nitish Rana":"DC",
+  "Noor Ahmad":"CSK",
+  "Nuwan Thushara":"RCB",
+  "Onkar Tarmale":"SRH",
+  "Pat Cummins":"SRH",
+  "Pathum Nissanka":"DC",
+  "Philip Salt":"RCB",
+  "Prabhsimran Singh":"PBKS",
+  "Praful Hinge":"SRH",
+  "Prashant Solanki":"KKR",
+  "Prashant Veer":"CSK",
+  "Prasidh Krishna":"GT",
+  "Pravin Dubey":"PBKS",
+  "Prince Yadav":"LSG",
+  "Prithvi Raj":"GT",
+  "Prithvi Shaw":"DC",
+  "Priyansh Arya":"PBKS",
+  "Pyla Avinash":"PBKS",
+  "Quinton de Kock":"MI",
+  "Rachin Ravindra":"KKR",
+  "Raghu Sharma":"MI",
+  "Rahul Chahar":"CSK",
+  "Rahul Tewatia":"GT",
+  "Rahul Tripathi":"KKR",
+  "Raj Bawa":"MI",
+  "Rajat Patidar":"RCB",
+  "Ramakrishna Ghosh":"CSK",
+  "Ramandeep Singh":"KKR",
+  "Rashid Khan":"GT",
+  "Rasikh Salam":"RCB",
+  "Ravi Bishnoi":"RR",
+  "Ravi Singh":"RR",
+  "Smaran Ravichandran":"SRH",
+  "Ravindra Jadeja":"RR",
+  "Rinku Singh":"KKR",
+  "Rishabh Pant":"LSG",
+  "Riyan Parag":"RR",
+  "Robin Minz":"MI",
+  "Rohit Sharma":"MI",
+  "Romario Shepherd":"RCB",
+  "Rovman Powell":"KKR",
+  "Ruturaj Gaikwad":"CSK",
+  "Ryan Rickelton":"MI",
+  "Sahil Parakh":"DC",
+  "Sai Kishore":"GT",
+  "Sai Sudharsan":"GT",
+  "Sakib Hussain":"SRH",
+  "Salil Arora":"SRH",
+  "Sam Curran":"RR",
+  "Sameer Rizvi":"DC",
+  "Sandeep Sharma":"RR",
+  "Sanju Samson":"CSK",
+  "Sarfaraz Khan":"CSK",
+  "Sarthak Ranjan":"KKR",
+  "Satvik Deswal":"RCB",
+  "Shahbaz Ahmed":"LSG",
+  "Shardul Thakur":"MI",
+  "Shashank Singh":"PBKS",
+  "Sherfane Rutherford":"MI",
+  "Shimron Hetmyer":"RR",
+  "Shivam Dube":"CSK",
+  "Shivam Mavi":"SRH",
+  "Shivang Kumar":"SRH",
+  "Shreyas Gopal":"CSK",
+  "Shreyas Iyer":"PBKS",
+  "Shubham Dubey":"RR",
+  "Shubman Gill":"GT",
+  "Sunil Narine":"KKR",
+  "Suryakumar Yadav":"MI",
+  "Suryansh Shedge":"PBKS",
+  "Sushant Mishra":"RR",
+  "Suyash Sharma":"RCB",
+  "Swapnil Singh":"RCB",
+  "T Natarajan":"DC",
+  "Tejasvi Dahiya":"KKR",
+  "Tilak Varma":"MI",
+  "Tim David":"RCB",
+  "Tim Seifert":"KKR",
+  "Tom Banton":"GT",
+  "Travis Head":"SRH",
+  "Trent Boult":"MI",
+  "Tripurana Vijay":"DC",
+  "Tristan Stubbs":"DC",
+  "Tushar Deshpande":"RR",
+  "Umran Malik":"KKR",
+  "Urvil Patel":"CSK",
+  "Vaibhav Arora":"KKR",
+  "Vaibhav Sooryavanshi":"RR",
+  "Varun Chakaravarthy":"KKR",
+  "Venkatesh Iyer":"RCB",
+  "Vicky Ostwal":"RCB",
+  "Vignesh Puthur":"RR",
+  "Vihaan Malhotra":"RCB",
+  "Vijaykumar Vyshak":"PBKS",
+  "Vipraj Nigam":"DC",
+  "Virat Kohli":"RCB",
+  "Vishal Nishad":"PBKS",
+  "Vishnu Vinod":"PBKS",
+  "Wanindu Hasaranga":"LSG",
+  "Washington Sundar":"GT",
+  "Will Jacks":"MI",
+  "Xavier Bartlett":"PBKS",
+  "Yash Dayal":"RCB",
+  "Yash Raj Punja":"RR",
+  "Yash Thakur":"PBKS",
+  "Yashasvi Jaiswal":"RR",
+  "Yudhvir Singh":"RR",
+  "Yuzvendra Chahal":"PBKS",
+  "Zak Foulkes":"CSK",
+  "Zeeshan Ansari":"SRH",
+};
+var IPL_COLORS={
+  RCB:'#D4001A', MI:'#005DA0', CSK:'#F4C400', KKR:'#3A177C',
+  DC:'#0078BC', SRH:'#F26522', RR:'#EA1A8E', PBKS:'#D71920',
+  GT:'#1C2E4A', LSG:'#A72056'
+};
+function getPlayerTeam(name){
+  return (IPL_TEAM&&IPL_TEAM[name])||null;
+}
 
 var PLAYERS = [
   {id:1,name:"Ruturaj Gaikwad",role:"Batter",nat:"India",base:200,photo:"./images/322236.1.webp"},
@@ -1540,6 +1815,7 @@ function listenAuction(){
     renderHostTeams();
     renderHostPlayers();
     updateHostCount();
+    updateUnsoldCount();
     if(data.auctionEnded) showEndScreen();
     saveSession();
   });
@@ -1650,6 +1926,24 @@ function renderActiveBid(data){
   document.getElementById('hName').textContent=p.name;
   document.getElementById('hRole').textContent=p.role;
   document.getElementById('hNat').textContent=p.nat;
+  var hTeamEl=document.getElementById('hTeam');
+  if(hTeamEl){
+    var hTeamAbbr=getPlayerTeam(p.name);
+    if(hTeamAbbr){
+      var hTeamColor=IPL_COLORS[hTeamAbbr]||'#444';
+      hTeamEl.style.display='inline-flex';
+      hTeamEl.style.background=hTeamColor+'22';
+      hTeamEl.style.borderColor=hTeamColor+'66';
+      hTeamEl.style.color=hTeamColor;
+      hTeamEl.innerHTML='';
+      var hImg=document.createElement('img');
+      hImg.src='./images/'+hTeamAbbr+'.webp';
+      hImg.style.cssText='width:14px;height:14px;object-fit:contain;vertical-align:middle';
+      hImg.onerror=function(){hImg.style.display='none';};
+      hTeamEl.appendChild(hImg);
+      hTeamEl.appendChild(document.createTextNode(' '+hTeamAbbr));
+    } else { hTeamEl.style.display='none'; }
+  }
   document.getElementById('hBase').textContent=fmtL(p.base);
   var cb=data.currentBid||0;
   document.getElementById('hCurrent').textContent=(cb===0)?'No bid yet':fmtL(cb);
@@ -1735,6 +2029,55 @@ function markUnsold(){
     pushRoom({players:players,currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE"});
   });
 }
+
+function toggleUnsoldPanel(){
+  var panel=document.getElementById('unsoldPanel');
+  if(!panel) return;
+  var visible=panel.style.display!=='none';
+  panel.style.display=visible?'none':'block';
+  if(!visible) renderUnsoldList();
+}
+
+function renderUnsoldList(){
+  var list=(G.players||[]).filter(function(p){return p.status==='unsold';});
+  var btn=document.getElementById('unsoldToggleBtn');
+  if(btn) btn.textContent='Unsold ('+list.length+')';
+  var c=document.getElementById('unsoldList');
+  if(!c) return;
+  if(!list.length){c.innerHTML='<div class="empty" style="padding:8px 0">No unsold players</div>';return;}
+  c.innerHTML=list.map(function(p){
+    return '<div class="pl-item" style="cursor:pointer;margin-bottom:4px" onclick="bringUnsoldPlayer('+p.id+')">'
+      +'<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
+      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:32px;font-size:12px">'+(EMOJI[p.role]||'?')+'</div>')
+      +'</div>'
+      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
+      +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div></div>'
+      +'<div style="font-family:var(--fn);font-size:13px;color:var(--gold)">'+fmtL(p.base)+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function bringUnsoldPlayer(id){
+  var p=(G.players||[]).find(function(x){return x.id===id;});
+  if(!p) return;
+  if(p.status!=='unsold'){toast('Player is not unsold');return;}
+  // Reset status to pending so they can be bid on again
+  var players=(G.players||[]).map(function(x){
+    if(x.id===id){var c=Object.assign({},x);c.status='pending';return c;}
+    return x;
+  });
+  pushRoom({players:players});
+  document.getElementById('unsoldPanel').style.display='none';
+  // Now bring them up for auction
+  setTimeout(function(){ bringPlayer(id); }, 300);
+}
+
+function updateUnsoldCount(){
+  var count=(G.players||[]).filter(function(p){return p.status==='unsold';}).length;
+  var btn=document.getElementById('unsoldToggleBtn');
+  if(btn) btn.textContent='Unsold ('+count+')';
+}
+
 
 function hideUnsoldOverlay(){
   document.getElementById('unsoldOverlay').classList.remove('show');
@@ -1944,6 +2287,24 @@ function renderParticipantBid(data){
   document.getElementById('pName').textContent=p.name;
   document.getElementById('pRole').textContent=p.role;
   document.getElementById('pNat').textContent=p.nat;
+  var pTeamPillEl=document.getElementById('pTeamPill');
+  if(pTeamPillEl){
+    var pTeamAbbr=getPlayerTeam(p.name);
+    if(pTeamAbbr){
+      var pTeamColor=IPL_COLORS[pTeamAbbr]||'#444';
+      pTeamPillEl.style.display='inline-flex';
+      pTeamPillEl.style.background=pTeamColor+'22';
+      pTeamPillEl.style.borderColor=pTeamColor+'66';
+      pTeamPillEl.style.color=pTeamColor;
+      pTeamPillEl.innerHTML='';
+      var pImg=document.createElement('img');
+      pImg.src='./images/'+pTeamAbbr+'.webp';
+      pImg.style.cssText='width:14px;height:14px;object-fit:contain;vertical-align:middle';
+      pImg.onerror=function(){pImg.style.display='none';};
+      pTeamPillEl.appendChild(pImg);
+      pTeamPillEl.appendChild(document.createTextNode(' '+pTeamAbbr));
+    } else { pTeamPillEl.style.display='none'; }
+  }
   document.getElementById('pBase').textContent=fmtL(p.base);
   var t=myTeamIdx!==null?getTeam(data.teams,myTeamIdx):null;
   document.getElementById('pTeamName').textContent=t?t.name:'';
