@@ -2029,9 +2029,9 @@ function teamLogoImg(code){
 
 // IPL team primary colours for schedule result display
 var IPL_COLORS={
-  RCB:'#D4001A', MI:'#005DA0', CSK:'#F4C400', KKR:'#3A177C',
+  RCB:'#D4001A', MI:'#005DA0', CSK:'#F4C400', KKR:'#3A225D',
   DC:'#0078BC', SRH:'#F26522', RR:'#EA1A8E', PBKS:'#D71920',
-  GT:'#1C2E4A', LSG:'#A72056'
+  GT:'#DBBE6E', LSG:'#A72056'
 };
 
 function renderSchedule(){
@@ -2135,8 +2135,13 @@ function renderSchedule(){
         logo.style.cssText='width:44px;height:44px;object-fit:contain';
         logo.onerror=function(){this.style.display='none';};
         var label=document.createElement('div');
+        // Winner gets their color; non-winner in done match is dimmed (handled by opacity on wrap)
+        // Upcoming/live: show each team's own color
+        var teamColor=IPL_COLORS[code]||'var(--text)';
         label.style.cssText='font-family:var(--fd);font-size:14px;font-weight:700;'
-          +(isWinner&&status==='done'?'color:'+winColor:'color:var(--text)');
+          +(status==='done'
+            ?(isWinner?'color:'+winColor:'color:var(--text)')
+            :'color:'+teamColor);
         label.textContent=code;
         wrap.appendChild(logo); wrap.appendChild(label);
         return wrap;
