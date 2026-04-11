@@ -435,7 +435,16 @@ function ptsVal(v){
   }
   return typeof v==='number'?v:0;
 }
-function ptsBd(v){ return (v!==null&&v!==undefined&&typeof v==='object') ? v : null; }
+function ptsBd(v){
+  if(v===null||v===undefined||typeof v!=='object') return null;
+  // Normalize each field to a number (guards against Worker writing nested objects)
+  var p=typeof v.p==='number'?v.p:0;
+  var b=typeof v.b==='number'?v.b:0;
+  var w=typeof v.w==='number'?v.w:0;
+  var f=typeof v.f==='number'?v.f:0;
+  if(!p&&!b&&!w&&!f) return null;
+  return {p:p,b:b,w:w,f:f,t:ptsVal(v)};
+}
 var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
@@ -1176,21 +1185,21 @@ function renderPointsPane(){
         rows.sort(function(a,b){return b.pts-a.pts;});
         if(!rows.length){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No global data yet. Run a sync first.</div>';return;}
         var html='<div style="background:var(--surface2);border-bottom:1px solid var(--border)">'
-          +'<div style="display:grid;grid-template-columns:32px 1fr 60px 36px 44px;padding:8px 12px;'
+          +'<div style="display:grid;grid-template-columns:32px 1fr 80px;padding:8px 12px;'
           +'font-size:9px;font-family:var(--fd);letter-spacing:2px;text-transform:uppercase;color:var(--text3)">'
-          +'<div>#</div><div>Player</div><div>Role</div><div>Team</div><div style="text-align:right">Pts</div>'
+          +'<div>#</div><div>Player</div><div style="text-align:right">Pts</div>'
           +'</div></div><div>';
         rows.forEach(function(r,i){
-          var logoImg=r.team?'<img src="./images/'+r.team+'.webp" style="width:28px;height:28px;object-fit:contain" onerror="this.style.opacity=0">':'';
           var bdAttr=JSON.stringify(r.breakdown||{}).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
-          html+='<div style="display:grid;grid-template-columns:32px 1fr 60px 36px 44px;align-items:center;'
+          html+='<div style="display:grid;grid-template-columns:32px 1fr 80px;align-items:center;'
             +'padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s" '
             +'data-pname="'+r.name.replace(/"/g,'&quot;')+'" data-prole="" data-pteam="'+r.team+'" data-pbd="'+bdAttr+'" onclick="openPlayerModalFromEl(this)">'
             +'<div style="font-size:11px;color:var(--text3)">'+(i+1)+'</div>'
             +'<div><div style="font-size:13px;font-weight:600">'+r.name+'</div></div>'
-            +'<div style="font-size:10px;color:var(--text3);font-family:var(--fd)">'+r.role+'</div>'
-            +'<div>'+logoImg+'</div>'
-            +'<div style="text-align:right;font-family:var(--fn);font-size:20px;color:var(--gold)">'+r.pts+'</div>'
+            +'<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">'
+              +(r.team?'<img src="./images/'+r.team+'.webp" style="width:24px;height:24px;object-fit:contain" onerror="this.style.opacity=0">':'')
+              +'<span style="font-family:var(--fn);font-size:20px;color:var(--gold)">'+r.pts+'</span>'
+            +'</div>'
             +'</div>';
         });
         list.innerHTML=html+'</div></div>';
@@ -1282,12 +1291,10 @@ function renderPointsTable(teams,matchData,matchKey,list){
   }
   var matchLabels=G.matchLabels||{};
   var html='<table style="width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed">'
-    +'<colgroup><col style="width:32px"><col><col style="width:72px"><col style="width:48px"><col style="width:44px"></colgroup>'
+    +'<colgroup><col style="width:32px"><col><col style="width:80px"></colgroup>'
     +'<thead><tr style="color:var(--text3);font-size:11px;font-family:var(--fd);border-bottom:1px solid var(--border)">'
     +'<th style="padding:8px 4px">#</th>'
     +'<th style="padding:8px 4px">Player</th>'
-    +'<th style="padding:8px 4px">Role</th>'
-    +'<th style="padding:8px 4px">Team</th>'
     +'<th style="padding:8px 4px;text-align:right">Pts</th>'
     +'</tr></thead><tbody>';
   rows.forEach(function(r,i){
@@ -1308,9 +1315,12 @@ function renderPointsTable(teams,matchData,matchKey,list){
       +'<td style="padding:8px 4px"><div style="font-weight:600">'+r.name+'</div>'
       +(breakdownStr?'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+breakdownStr+'</div>':'')
       +'</td>'
-      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+r.role+'</td>'
-      +'<td style="padding:8px 4px;font-size:11px;font-weight:700;color:var(--gold)">'+iplTeam+'</td>'
-      +'<td style="padding:8px 4px;text-align:right;font-weight:700;color:var(--gold)">'+r.pts+'</td>'
+      +'<td style="padding:8px 4px;text-align:right">'
+        +'<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">'
+          +(iplTeam?'<img src="./images/'+iplTeam+'.webp" style="width:20px;height:20px;object-fit:contain" onerror="this.style.opacity=0">':'')
+          +'<span style="font-weight:700;color:var(--gold)">'+r.pts+'</span>'
+        +'</div>'
+      +'</td>'
       +'</tr>';
   });
   list.innerHTML=html+'</tbody></table>';
