@@ -442,7 +442,8 @@ function ptsBd(v){
   var b=typeof v.b==='number'?v.b:0;
   var w=typeof v.w==='number'?v.w:0;
   var f=typeof v.f==='number'?v.f:0;
-  if(!p&&!b&&!w&&!f) return null;
+  // Only skip if there's genuinely no data at all (no total either)
+  if(!p&&!b&&!w&&!f&&!ptsVal(v)) return null;
   return {p:p,b:b,w:w,f:f,t:ptsVal(v)};
 }
 var fantasyRef = null;
@@ -2845,8 +2846,14 @@ function distributeToAllRooms(matchId, autoMode){
           return;
         }
         // Read this room's captain/VC from Firebase fantasy captains
-        var roomCaps=(roomFantasy&&roomFantasy.captains&&roomFantasy.captains[capMk])
-          ? roomFantasy.captains[capMk] : {};
+        // Look up captains for this specific match; fall back to any saved key
+        // (C/VC is tournament-wide so users may only have saved under match1)
+        var roomCaps=(function(){
+          if(!roomFantasy||!roomFantasy.captains) return {};
+          if(roomFantasy.captains[capMk]) return roomFantasy.captains[capMk];
+          var keys=Object.keys(roomFantasy.captains);
+          return keys.length ? roomFantasy.captains[keys[0]] : {};
+        })();
         // Match each squad player against scorecard by fuzzy name
         rPlayers.forEach(function(rp,rpi){
           var bestScore=0, bestEntry=null;
