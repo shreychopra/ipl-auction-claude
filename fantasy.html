@@ -2807,6 +2807,44 @@ function distributeToAllRooms(matchId, autoMode){
   logSync('Distributing '+staged.desc+' to all eligible rooms...','info');
   db.ref('fantasy').once('value',function(fsnap){
     var fantasyData=fsnap.val()||{};
+    // Pre-build a flat captain map: {roomCode: {teamKeyStr: {c,vc}}}
+    // Handles both storage formats in one pass, before any room loops.
+    //   match-keyed (new): fantasy/CODE/captains/match1/TI = {c:pi, vc:pi}
+    //   flat (old):        fantasy/CODE/captains/TI        = {c:pi, vc:pi}
+    var captainMap={};
+    Object.keys(fantasyData).forEach(function(code){
+      var caps=fantasyData[code]&&fantasyData[code].captains;
+      captainMap[code]={};
+      if(!caps||typeof caps!=='object') return;
+      Object.keys(caps).forEach(function(key){
+        var val=caps[key];
+        if(!val||typeof val!=='object') return;
+        if(key.indexOf('match')===0){
+          // match-keyed: caps['match1'] = {0:{c,vc}, 1:{c,vc}, ...}
+          Object.keys(val).forEach(function(ti){
+            var cv=val[ti];
+            if(cv&&typeof cv==='object'&&(cv.c!==undefined||cv.vc!==undefined)){
+              if(captainMap[code][ti]===undefined) captainMap[code][ti]=cv;
+            }
+          });
+        } else {
+          // flat: caps['0'] = {c,vc}
+          var cv=val;
+          if(cv.c!==undefined||cv.vc!==undefined){
+            if(captainMap[code][key]===undefined) captainMap[code][key]=cv;
+          }
+        }
+      });
+      var capKeys=Object.keys(captainMap[code]);
+      if(capKeys.length){
+        logSync('Room '+code+' caps: '+capKeys.map(function(k){
+          var cv=captainMap[code][k];
+          return 'T'+k+'→C:'+cv.c+'/VC:'+cv.vc;
+        }).join(' | '),'info');
+      } else {
+        logSync('Room '+code+': no captain data found in fantasy/'+code+'/captains','warn');
+      }
+    });
   db.ref('rooms').once('value',function(rsnap){
     var rooms=rsnap.val()||{};
     var roomCodes=Object.keys(rooms);
@@ -2834,44 +2872,18 @@ function distributeToAllRooms(matchId, autoMode){
       }
       // Write points for each team in this room that has matching players
       var roomTeams=room.teams||{};
+      var roomFantasy=fantasyData&&fantasyData[code];
+      var roomAlreadySynced=autoMode&&roomFantasy&&roomFantasy.syncedIds&&roomFantasy.syncedIds[matchId];
+      var capMap=captainMap[code]||{};
       Object.keys(roomTeams).forEach(function(rk){
+        // Skip already-synced rooms in auto mode (manual re-save always overwrites)
+        if(roomAlreadySynced){ count++; return; }
         var rTeam=roomTeams[rk];
         var rPlayers=rTeam.players||[];
-        // Match by player name across teams
         var teamPts={};
-        var roomFantasy=fantasyData&&fantasyData[code];
-        // Skip synced rooms ONLY in auto mode (not on manual re-save)
-        if(autoMode&&roomFantasy&&roomFantasy.syncedIds&&roomFantasy.syncedIds[matchId]){
-          count++; // count as distributed since Worker already handled it
-          return;
-        }
-        // Resolve captain/VC for this specific team from Firebase.
-        // Captains may be stored in two formats depending on when they were saved:
-        //   match-keyed: captains/match1/0 = {c:3,vc:5}  (new format)
-        //   flat:        captains/0 = {c:3,vc:5}          (old format)
-        // We resolve per-team so mixed-format rooms are handled correctly.
-        var caps=roomFantasy&&roomFantasy.captains;
-        function resolveTeamCap(rkStr){
-          if(!caps) return {};
-          var rki=parseInt(rkStr);
-          // 1. Match-specific key (most precise)
-          if(caps[capMk]){
-            var c=caps[capMk][rkStr]||caps[capMk][rki];
-            if(c) return c;
-          }
-          // 2. Any other match-keyed entry for this team
-          var mkeys=Object.keys(caps).filter(function(k){return k.indexOf('match')===0;});
-          for(var ki=0;ki<mkeys.length;ki++){
-            var mc=caps[mkeys[ki]];
-            var c2=mc[rkStr]||mc[rki];
-            if(c2) return c2;
-          }
-          // 3. Flat format: caps[ti] = {c,vc}
-          var flat=caps[rkStr]||caps[rki];
-          if(flat&&(flat.c!==undefined||flat.vc!==undefined)) return flat;
-          return {};
-        }
-        var teamCap=resolveTeamCap(String(rk));
+        // Look up captain/VC for this team key (string lookup, integer keys stored as strings in Firebase)
+        var teamCap=capMap[String(rk)]||capMap[parseInt(rk)]||{};
+        var capApplied=[];
         // Match each squad player against scorecard by fuzzy name
         rPlayers.forEach(function(rp,rpi){
           var bestScore=0, bestEntry=null;
@@ -2882,18 +2894,24 @@ function distributeToAllRooms(matchId, autoMode){
           });
           if(bestScore>=0.85&&bestEntry){
             var bd=bestEntry.bd?{p:bestEntry.bd.p,b:bestEntry.bd.b,w:bestEntry.bd.w,f:bestEntry.bd.f,t:bestEntry.pts}:{p:0,b:0,w:0,f:0,t:bestEntry.pts};
-            if(teamCap.c!==undefined&&parseInt(teamCap.c)===rpi) bd.t=Math.round(bd.t*2);
-            else if(teamCap.vc!==undefined&&parseInt(teamCap.vc)===rpi) bd.t=Math.round(bd.t*1.5);
+            if(teamCap.c!==undefined&&parseInt(teamCap.c)===rpi){
+              bd.t=Math.round(bd.t*2);
+              capApplied.push('2×C='+rp.name+'(pi'+rpi+')');
+            } else if(teamCap.vc!==undefined&&parseInt(teamCap.vc)===rpi){
+              bd.t=Math.round(bd.t*1.5);
+              capApplied.push('1.5×VC='+rp.name+'(pi'+rpi+')');
+            }
             teamPts[rpi]=bd;
           }
         });
+        if(capApplied.length) logSync('Room '+code+' T'+rk+': '+capApplied.join(', '),'info');
+        else if(teamCap.c!==undefined||teamCap.vc!==undefined) logSync('Room '+code+' T'+rk+': cap C:'+teamCap.c+'/VC:'+teamCap.vc+' — no matching player found in scorecard','warn');
         // Always write match data for this team — null explicitly clears old wrong entries
         updates['fantasy/'+code+'/matches/match'+staged.mNum+'/'+rk]=
           Object.keys(teamPts).length ? teamPts : null;
         count++;
       });
       updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
-      logSync('Room '+code+': wrote '+Object.keys(updates).length+' update entries','info');
     });
     logSync('Applying '+Object.keys(updates).length+' Firebase updates for '+count+' room(s)...','info');
     if(Object.keys(updates).length===0){
@@ -2951,16 +2969,16 @@ function saveResults(results,mNum,matchId,desc){
     });
   });
   var upd={};
-  Object.keys(results).forEach(function(ti){upd['matches/'+mk+'/'+ti]=results[ti];});
+  Object.keys(results).forEach(function(ti){upd['matches/'+saveMk+'/'+ti]=results[ti];});
   upd['syncedIds/'+matchId]=true;
-  upd['matchLabels/'+mk]=desc; // store match label (e.g. 'M1 — RCB vs SRH')
+  upd['matchLabels/'+saveMk]=desc;
   if(!G.matchLabels) G.matchLabels={};
-  G.matchLabels[mk]=desc;
+  G.matchLabels[saveMk]=desc;
   if(fantasyRef){
     fantasyRef.update(upd,function(err){
       if(err){logSync('Save error: '+err,'err');return;}
       syncedIds[matchId]=true;
-      G.matchData[mk]=results;
+      G.matchData[saveMk]=results;
       logSync('Saved Match '+mNum+' ('+desc+')','ok');
       // notification handled by fantasyRef.on listener (batched)
       renderLeaderboard();
