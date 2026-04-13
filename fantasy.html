@@ -2466,7 +2466,7 @@ function calcPts(bat,bowl,field,isCap,isVC,playedXI){
   if(field){f+=(field.c||0)*8+(field.st||0)*12+(field.ro||0)*6;}
   var bd={p:p,b:b,w:bw,f:f,t:p+b+bw+f};
   if(_isCap) bd.t=Math.round(bd.t*2);
-  else if(_isVC) bd.t=Math.round(bd.t*1.5);
+  else if(_isVC) bd.t=bd.t*1.5;
   return bd;
 }
 function parseCard(scard, filteredInnings){
@@ -2940,7 +2940,7 @@ function distributeToAllRooms(matchId, autoMode){
               bd.t=Math.round(bd.t*2);
               capApplied.push('2×C='+rp.name+'(pi'+rpi+')');
             } else if(teamCap.vc!==undefined&&parseInt(teamCap.vc)===rpi){
-              bd.t=Math.round(bd.t*1.5);
+              bd.t=bd.t*1.5;
               capApplied.push('1.5×VC='+rp.name+'(pi'+rpi+')');
             }
             teamPts[rpi]=bd;
@@ -3007,7 +3007,7 @@ function saveResults(results,mNum,matchId,desc){
       var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
       var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
       if(isCap && results[ti][pi] && typeof results[ti][pi]==='object') results[ti][pi].t=Math.round(results[ti][pi].t*2);
-      else if(isVC && results[ti][pi] && typeof results[ti][pi]==='object') results[ti][pi].t=Math.round(results[ti][pi].t*1.5);
+      else if(isVC && results[ti][pi] && typeof results[ti][pi]==='object') results[ti][pi].t=results[ti][pi].t*1.5;
     });
   });
   var upd={};
