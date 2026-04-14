@@ -2439,7 +2439,7 @@ function renderHistory(){
 function normName(n){
   return (n||'').toLowerCase().replace(/[^a-z\s]/g,'').replace(/\s+/g,' ').trim();
 }
-var NAME_EXPANSIONS={'phil':'philip','will':'william','raj':'rajat','dev':'devdutt'};
+var NAME_EXPANSIONS={'phil':'philip','will':'william','raj':'rajat','dev':'devdutt','chakravarthy':'chakaravarthy'};
 function expandName(n){
   return n.split(' ').map(function(w){return NAME_EXPANSIONS[w.toLowerCase()]||w;}).join(' ');
 }
