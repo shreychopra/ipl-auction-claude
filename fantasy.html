@@ -3301,42 +3301,43 @@ function clearNoResultMatch(){
 function findIPLIds(){
   var pw=window.prompt('Enter admin password:');
   if(!pw) return;
+  // Allow trying different endpoints — default is upcoming
+  var ep=window.prompt('Endpoint to try (press OK for default):','/matches/v1/upcoming');
+  if(ep===null) return;
+  if(!ep) ep='/matches/v1/upcoming';
   var btn=document.getElementById('findIdsBtn');
   if(btn){btn.textContent='Fetching...';btn.disabled=true;}
-  logSync('Fetching IPL 2026 match IDs from Cricbuzz series endpoint...','info');
-  
+  logSync('Calling '+ep+' (1 request)...','info');
+
   fetch(WORKER_URL+'/find-ipl-ids',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({password:pw})
+    body:JSON.stringify({password:pw, endpoint:ep})
   })
   .then(function(r){return r.json();})
   .then(function(data){
     if(btn){btn.textContent='Find IPL IDs';btn.disabled=false;}
-    
+    if(data.error){
+      logSync('Error from API: '+data.error,'err');
+      logSync('Raw: '+data.rawSnippet,'info');
+      return;
+    }
+    logSync('Endpoint: '+data.endpoint+' | Total matches in response: '+data.totalMatches,'info');
+    logSync('Raw snippet: '+data.rawSnippet,'info');
     if(data.iplMatches && data.iplMatches.length){
-      logSync('Found '+data.iplMatches.length+' IPL matches:','ok');
-      // Sort by startDate then matchId
-      data.iplMatches.sort(function(a,b){
-        if(a.startDate!==b.startDate) return a.startDate.localeCompare(b.startDate);
-        return parseInt(a.matchId)-parseInt(b.matchId);
-      });
+      logSync('IPL matches found: '+data.iplMatches.length,'ok');
       data.iplMatches.forEach(function(m){
-        logSync('ID '+m.matchId+' | '+m.startDate+' | '+m.teams+' | '+m.matchDesc,'info');
+        logSync('ID '+m.matchId+' | '+m.startDate+' | '+m.teams,'info');
       });
-      logSync('Copy the IDs above and share them to update the SCHEDULE array.','ok');
+      logSync('Done — share IDs above to update SCHEDULE.','ok');
     } else {
-      logSync('No IPL matches found. Total matches from all series IDs tried: '+data.totalFound,'warn');
-      logSync('Raw API snippets:','warn');
-      Object.keys(data.rawSnippets||{}).forEach(function(sid){
-        logSync('Series '+sid+': '+data.rawSnippets[sid],'info');
-      });
-      logSync('The series ID may be wrong. Try passing different series IDs to the endpoint.','warn');
+      logSync('No IPL matches found in response.','warn');
+      logSync('Try a different endpoint — e.g. /matches/v1/recent or /schedule/v1/domestic','warn');
     }
   })
   .catch(function(e){
     if(btn){btn.textContent='Find IPL IDs';btn.disabled=false;}
-    logSync('Error: '+e.message,'err');
+    logSync('Fetch error: '+e.message,'err');
   });
 }
 
