@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="IPL Auction">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IPL 2026 Fantasy League</title>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.min.js"></script>
@@ -65,6 +65,7 @@
       letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
       text-decoration:none}
     .btn:active{transform:scale(.98)}
+    .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
     .btn-gold{background:linear-gradient(135deg,#f5b800,#e09800);color:#0a0800;
       box-shadow:0 4px 20px rgba(245,184,0,.25)}
     .btn-blue{background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff}
@@ -81,7 +82,7 @@
     .pane.on{display:block}
     /* leaderboard */
     .lb-hdr{padding:10px 16px;display:grid;grid-template-columns:28px 1fr 68px 80px 80px;gap:8px;
-      font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
+      font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
       border-bottom:1px solid var(--border);font-family:var(--fd)}
     .lb-row{padding:12px 16px;display:grid;grid-template-columns:28px 1fr 68px 80px 80px;gap:8px;
       align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
@@ -146,7 +147,7 @@
       cursor:pointer;display:flex;align-items:center;justify-content:space-between}
     .room-body{padding:12px;display:none;border-top:1px solid var(--border)}
     /* toast */
-    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(80px);
       background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rsm);
       padding:10px 20px;font-size:13px;z-index:300;opacity:0;transition:all .25s;
       white-space:nowrap;max-width:92vw;text-align:center}
@@ -157,7 +158,7 @@
 <body>
 
 <nav class="nav" id="mainNav" style="display:none">
-  <a href="./fantasy.html" class="nav-back">⌂ Home</a>
+  <a href="./fantasy.html" class="nav-back"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Home</a>
   <div style="flex:1">
     <div class="nav-title">Fantasy League</div>
     <div class="nav-sub" id="navSub">IPL 2026</div>
@@ -267,7 +268,7 @@
     <div style="display:flex;justify-content:flex-end;padding:6px 14px 0">
     <button onclick="document.getElementById('scoringModal').classList.add('show')"
       style="background:var(--surface2);border:1px solid var(--border);border-radius:50%;
-      width:24px;height:24px;color:var(--text3);font-size:13px;cursor:pointer;
+      width:44px;height:44px;color:var(--text3);font-size:14px;cursor:pointer;
       display:flex;align-items:center;justify-content:center;font-weight:700">?</button>
   </div>
   <div class="lb-hdr" style="grid-template-columns:28px 1fr 68px 80px 80px"><div>#</div><div>Team</div><div style="text-align:center">Trend</div><div style="text-align:right">Match</div><div style="text-align:right">Total</div></div>
@@ -313,12 +314,11 @@
           <div style="font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Match ID Verifier</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">Ping Cricbuzz to confirm upcoming match IDs</div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="runMatchVerifier()" class="btn btn-ghost btn-sm" id="verifyBtn">Verify All Upcoming</button>
         <button onclick="forceResyncAllPlayed()" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync All Played</button>
         <button onclick="clearNoResultMatch()" class="btn btn-ghost btn-sm" id="clearNRBtn" style="border-color:var(--gold);color:var(--gold)">Clear No-Result Match</button>
         <button onclick="migrateBreakdownData()" class="btn btn-ghost btn-sm" id="migrateBtn" style="border-color:var(--blue);color:var(--blue)">Migrate Old Points</button>
-        <button onclick="findIPLIds()" class="btn btn-ghost btn-sm" id="findIdsBtn" style="border-color:#a855f7;color:#a855f7">Find IPL IDs</button>
       </div>
       </div>
       <div id="verifyResults" style="padding:8px 10px;max-height:260px;overflow-y:auto"></div>
@@ -368,7 +368,7 @@
     <div style="display:flex;align-items:center;margin-bottom:16px">
       <div style="flex:1;font-family:var(--fd);font-size:18px;font-weight:700" id="matchEditTitle">Edit Points</div>
       <button onclick="document.getElementById('matchEditModal').classList.remove('show')"
-        style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
+        style="background:none;border:none;color:var(--text3);cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Edit individual player points for this match. Changes save to Firebase immediately.</div>
     <div id="matchEditList"></div>
@@ -385,7 +385,7 @@
         <div style="font-family:var(--fd);font-size:18px;font-weight:700" id="modalName"></div>
         <div style="font-size:12px;color:var(--text3)" id="modalSub"></div>
       </div>
-      <button onclick="closeModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--text3);cursor:pointer;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div id="modalBody"></div>
   </div>
@@ -395,7 +395,7 @@
 <div class="admin-ov" id="adminPanel">
   <div class="admin-nav">
     <button onclick="closeAdmin()" class="nav-back" id="adminBackBtn">← Back</button>
-    <a href="./fantasy.html" class="nav-back">⌂ Home</a>
+    <a href="./fantasy.html" class="nav-back"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Home</a>
     <div style="font-family:var(--fd);font-size:18px;font-weight:700;flex:1">Admin — All Rooms</div>
     <button class="btn btn-blue btn-sm" id="syncNowAdminBtn" onclick="runSync(true)">Sync Now</button>
     <button onclick="loadAllRooms()" class="nav-back" style="color:var(--gold)">Refresh</button>
@@ -741,56 +741,56 @@ var IPL_SCHEDULE = [
   {num:18, id:"149790", label:"M18 — CSK vs DC",   date:"2026-04-11", time:"7:30 PM IST"},
   {num:19, id:"149801", label:"M19 — LSG vs GT",   date:"2026-04-12", time:"3:30 PM IST"},
   {num:20, id:"149812", label:"M20 — MI vs RCB",   date:"2026-04-12", time:"7:30 PM IST"},
-  {num:21, id:"151752", label:"M21 — SRH vs RR", date:"2026-04-13", time:"7:30 PM IST"},
-  {num:22, id:"151763", label:"M22 — CSK vs KKR", date:"2026-04-14", time:"7:30 PM IST"},
-  {num:23, id:"151774", label:"M23 — RCB vs LSG", date:"2026-04-15", time:"7:30 PM IST"},
-  {num:24, id:"151785", label:"M24 — MI vs PBKS", date:"2026-04-16", time:"7:30 PM IST"},
-  {num:25, id:"151796", label:"M25 — GT vs KKR", date:"2026-04-17", time:"7:30 PM IST"},
-  {num:26, id:"151807", label:"M26 — RCB vs DC", date:"2026-04-18", time:"3:30 PM IST"},
-  {num:27, id:"151818", label:"M27 — SRH vs CSK", date:"2026-04-18", time:"7:30 PM IST"},
-  {num:28, id:"151829", label:"M28 — KKR vs RR", date:"2026-04-19", time:"3:30 PM IST"},
-  {num:29, id:"151840", label:"M29 — PBKS vs LSG", date:"2026-04-19", time:"7:30 PM IST"},
-  {num:30, id:"151845", label:"M30 — GT vs MI", date:"2026-04-20", time:"7:30 PM IST"},
-  {num:31, id:"151856", label:"M31 — SRH vs DC", date:"2026-04-21", time:"7:30 PM IST"},
-  {num:32, id:"151867", label:"M32 — LSG vs RR", date:"2026-04-22", time:"7:30 PM IST"},
-  {num:33, id:"151878", label:"M33 — MI vs CSK", date:"2026-04-23", time:"7:30 PM IST"},
-  {num:34, id:"151889", label:"M34 — RCB vs GT", date:"2026-04-24", time:"7:30 PM IST"},
-  {num:35, id:"151891", label:"M35 — DC vs PBKS", date:"2026-04-25", time:"3:30 PM IST"},
-  {num:36, id:"151902", label:"M36 — RR vs SRH", date:"2026-04-25", time:"7:30 PM IST"},
-  {num:37, id:"151913", label:"M37 — CSK vs GT", date:"2026-04-26", time:"3:30 PM IST"},
-  {num:38, id:"151924", label:"M38 — LSG vs KKR", date:"2026-04-26", time:"7:30 PM IST"},
-  {num:39, id:"151935", label:"M39 — DC vs RCB", date:"2026-04-27", time:"7:30 PM IST"},
-  {num:40, id:"151943", label:"M40 — PBKS vs RR", date:"2026-04-28", time:"7:30 PM IST"},
-  {num:41, id:"151972", label:"M41 — MI vs SRH", date:"2026-04-29", time:"7:30 PM IST"},
-  {num:42, id:"151983", label:"M42 — GT vs RCB", date:"2026-04-30", time:"7:30 PM IST"},
-  {num:43, id:"151994", label:"M43 — RR vs DC", date:"2026-05-01", time:"7:30 PM IST"},
-  {num:44, id:"152005", label:"M44 — CSK vs MI", date:"2026-05-02", time:"7:30 PM IST"},
-  {num:45, id:"152016", label:"M45 — SRH vs KKR", date:"2026-05-03", time:"3:30 PM IST"},
-  {num:46, id:"152027", label:"M46 — GT vs PBKS", date:"2026-05-03", time:"7:30 PM IST"},
-  {num:47, id:"152038", label:"M47 — MI vs LSG", date:"2026-05-04", time:"7:30 PM IST"},
-  {num:48, id:"152049", label:"M48 — DC vs CSK", date:"2026-05-05", time:"7:30 PM IST"},
-  {num:49, id:"152060", label:"M49 — SRH vs PBKS", date:"2026-05-06", time:"7:30 PM IST"},
-  {num:50, id:"152071", label:"M50 — LSG vs RCB", date:"2026-05-07", time:"7:30 PM IST"},
-  {num:51, id:"152082", label:"M51 — DC vs KKR", date:"2026-05-08", time:"7:30 PM IST"},
-  {num:52, id:"152093", label:"M52 — RR vs GT", date:"2026-05-09", time:"7:30 PM IST"},
-  {num:53, id:"152104", label:"M53 — CSK vs LSG", date:"2026-05-10", time:"3:30 PM IST"},
-  {num:54, id:"152115", label:"M54 — RCB vs MI", date:"2026-05-10", time:"7:30 PM IST"},
-  {num:55, id:"152126", label:"M55 — PBKS vs DC", date:"2026-05-11", time:"7:30 PM IST"},
-  {num:56, id:"152137", label:"M56 — GT vs SRH", date:"2026-05-12", time:"7:30 PM IST"},
-  {num:57, id:"152148", label:"M57 — RCB vs KKR", date:"2026-05-13", time:"7:30 PM IST"},
-  {num:58, id:"152159", label:"M58 — PBKS vs MI", date:"2026-05-14", time:"7:30 PM IST"},
-  {num:59, id:"152170", label:"M59 — LSG vs CSK", date:"2026-05-15", time:"7:30 PM IST"},
-  {num:60, id:"152181", label:"M60 — KKR vs GT", date:"2026-05-16", time:"7:30 PM IST"},
-  {num:61, id:"152192", label:"M61 — PBKS vs RCB", date:"2026-05-17", time:"3:30 PM IST"},
-  {num:62, id:"152203", label:"M62 — DC vs RR", date:"2026-05-17", time:"7:30 PM IST"},
-  {num:63, id:"152214", label:"M63 — CSK vs SRH", date:"2026-05-18", time:"7:30 PM IST"},
-  {num:64, id:"152225", label:"M64 — RR vs LSG", date:"2026-05-19", time:"7:30 PM IST"},
-  {num:65, id:"152236", label:"M65 — KKR vs MI", date:"2026-05-20", time:"7:30 PM IST"},
-  {num:66, id:"152247", label:"M66 — GT vs CSK", date:"2026-05-21", time:"7:30 PM IST"},
-  {num:67, id:"152258", label:"M67 — SRH vs RCB", date:"2026-05-22", time:"7:30 PM IST"},
-  {num:68, id:"152269", label:"M68 — LSG vs PBKS", date:"2026-05-23", time:"7:30 PM IST"},
-  {num:69, id:"152280", label:"M69 — MI vs RR", date:"2026-05-24", time:"3:30 PM IST"},
-  {num:70, id:"152291", label:"M70 — KKR vs DC", date:"2026-05-24", time:"7:30 PM IST"},
+  {num:21, id:"149823", label:"M21 — SRH vs RR", date:"2026-04-13", time:"7:30 PM IST"},
+  {num:22, id:"149834", label:"M22 — CSK vs KKR", date:"2026-04-14", time:"7:30 PM IST"},
+  {num:23, id:"149845", label:"M23 — RCB vs LSG", date:"2026-04-15", time:"7:30 PM IST"},
+  {num:24, id:"149856", label:"M24 — MI vs PBKS", date:"2026-04-16", time:"7:30 PM IST"},
+  {num:25, id:"149867", label:"M25 — GT vs KKR", date:"2026-04-17", time:"7:30 PM IST"},
+  {num:26, id:"149878", label:"M26 — RCB vs DC", date:"2026-04-18", time:"3:30 PM IST"},
+  {num:27, id:"149882", label:"M27 — SRH vs CSK", date:"2026-04-18", time:"7:30 PM IST"},
+  {num:28, id:"149893", label:"M28 — KKR vs RR", date:"2026-04-19", time:"3:30 PM IST"},
+  {num:29, id:"149897", label:"M29 — PBKS vs LSG", date:"2026-04-19", time:"7:30 PM IST"},
+  {num:30, id:"149908", label:"M30 — GT vs MI", date:"2026-04-20", time:"7:30 PM IST"},
+  {num:31, id:"149919", label:"M31 — SRH vs DC", date:"2026-04-21", time:"7:30 PM IST"},
+  {num:32, id:"149930", label:"M32 — LSG vs RR", date:"2026-04-22", time:"7:30 PM IST"},
+  {num:33, id:"149941", label:"M33 — MI vs CSK", date:"2026-04-23", time:"7:30 PM IST"},
+  {num:34, id:"149952", label:"M34 — RCB vs GT", date:"2026-04-24", time:"7:30 PM IST"},
+  {num:35, id:"149963", label:"M35 — DC vs PBKS", date:"2026-04-25", time:"3:30 PM IST"},
+  {num:36, id:"149967", label:"M36 — RR vs SRH", date:"2026-04-25", time:"7:30 PM IST"},
+  {num:37, id:"149978", label:"M37 — GT vs CSK", date:"2026-04-26", time:"3:30 PM IST"},
+  {num:38, id:"149982", label:"M38 — LSG vs KKR", date:"2026-04-26", time:"7:30 PM IST"},
+  {num:39, id:"149993", label:"M39 — DC vs RCB", date:"2026-04-27", time:"7:30 PM IST"},
+  {num:40, id:"150004", label:"M40 — PBKS vs RR", date:"2026-04-28", time:"7:30 PM IST"},
+  {num:41, id:"150015", label:"M41 — MI vs SRH", date:"2026-04-29", time:"7:30 PM IST"},
+  {num:42, id:"150026", label:"M42 — GT vs RCB", date:"2026-04-30", time:"7:30 PM IST"},
+  {num:43, id:"150037", label:"M43 — RR vs DC", date:"2026-05-01", time:"7:30 PM IST"},
+  {num:44, id:"150048", label:"M44 — CSK vs MI", date:"2026-05-02", time:"7:30 PM IST"},
+  {num:45, id:"150059", label:"M45 — SRH vs KKR", date:"2026-05-03", time:"3:30 PM IST"},
+  {num:46, id:"150063", label:"M46 — GT vs PBKS", date:"2026-05-03", time:"7:30 PM IST"},
+  {num:47, id:"150074", label:"M47 — MI vs LSG", date:"2026-05-04", time:"7:30 PM IST"},
+  {num:48, id:"150085", label:"M48 — DC vs CSK", date:"2026-05-05", time:"7:30 PM IST"},
+  {num:49, id:"150096", label:"M49 — SRH vs PBKS", date:"2026-05-06", time:"7:30 PM IST"},
+  {num:50, id:"150107", label:"M50 — LSG vs RCB", date:"2026-05-07", time:"7:30 PM IST"},
+  {num:51, id:"150118", label:"M51 — DC vs KKR", date:"2026-05-08", time:"7:30 PM IST"},
+  {num:52, id:"150129", label:"M52 — RR vs GT", date:"2026-05-09", time:"7:30 PM IST"},
+  {num:53, id:"150140", label:"M53 — CSK vs LSG", date:"2026-05-10", time:"3:30 PM IST"},
+  {num:54, id:"150144", label:"M54 — RCB vs MI", date:"2026-05-10", time:"7:30 PM IST"},
+  {num:55, id:"150155", label:"M55 — PBKS vs DC", date:"2026-05-11", time:"7:30 PM IST"},
+  {num:56, id:"150166", label:"M56 — GT vs SRH", date:"2026-05-12", time:"7:30 PM IST"},
+  {num:57, id:"150177", label:"M57 — RCB vs KKR", date:"2026-05-13", time:"7:30 PM IST"},
+  {num:58, id:"150188", label:"M58 — PBKS vs MI", date:"2026-05-14", time:"7:30 PM IST"},
+  {num:59, id:"150199", label:"M59 — LSG vs CSK", date:"2026-05-15", time:"7:30 PM IST"},
+  {num:60, id:"150210", label:"M60 — KKR vs GT", date:"2026-05-16", time:"7:30 PM IST"},
+  {num:61, id:"150221", label:"M61 — PBKS vs RCB", date:"2026-05-17", time:"3:30 PM IST"},
+  {num:62, id:"150225", label:"M62 — DC vs RR", date:"2026-05-17", time:"7:30 PM IST"},
+  {num:63, id:"150236", label:"M63 — CSK vs SRH", date:"2026-05-18", time:"7:30 PM IST"},
+  {num:64, id:"150247", label:"M64 — RR vs LSG", date:"2026-05-19", time:"7:30 PM IST"},
+  {num:65, id:"150258", label:"M65 — KKR vs MI", date:"2026-05-20", time:"7:30 PM IST"},
+  {num:66, id:"150269", label:"M66 — CSK vs GT", date:"2026-05-21", time:"7:30 PM IST"},
+  {num:67, id:"150280", label:"M67 — SRH vs RCB", date:"2026-05-22", time:"7:30 PM IST"},
+  {num:68, id:"150291", label:"M68 — LSG vs PBKS", date:"2026-05-23", time:"7:30 PM IST"},
+  {num:69, id:"150302", label:"M69 — MI vs RR", date:"2026-05-24", time:"3:30 PM IST"},
+  {num:70, id:"150306", label:"M70 — KKR vs DC", date:"2026-05-24", time:"7:30 PM IST"},
 ];
 
 var toastTO;
@@ -3294,43 +3294,6 @@ function clearNoResultMatch(){
       renderLeaderboard(); renderHistory();
       toast('M'+mNum+' cleared — No Result');
     });
-  });
-}
-
-
-function findIPLIds(){
-  var pw=window.prompt('Enter admin password:');
-  if(!pw) return;
-  var btn=document.getElementById('findIdsBtn');
-  if(btn){btn.textContent='Fetching...';btn.disabled=true;}
-  logSync('Scraping Cricbuzz schedule page for IPL 2026 match IDs...','info');
-
-  fetch(WORKER_URL+'/find-ipl-ids',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({password:pw})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(btn){btn.textContent='Find IPL IDs';btn.disabled=false;}
-    if(data.error){
-      logSync('Error: '+data.error,'err');
-      if(data.rawSnippet) logSync('Page snippet: '+data.rawSnippet.slice(0,300),'info');
-      return;
-    }
-    if(data.matches && data.matches.length){
-      logSync('Found '+data.total+' IPL matches on Cricbuzz:','ok');
-      data.matches.forEach(function(m){
-        logSync('M'+m.matchNum+' → ID: '+m.matchId+' ('+m.slug+')','info');
-      });
-      logSync('Share the M→ID list above to update the SCHEDULE array.','ok');
-    } else {
-      logSync('No matches found. Data: '+JSON.stringify(data).slice(0,300),'warn');
-    }
-  })
-  .catch(function(e){
-    if(btn){btn.textContent='Find IPL IDs';btn.disabled=false;}
-    logSync('Fetch error: '+e.message,'err');
   });
 }
 

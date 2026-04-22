@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="IPL Auction">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IPL 2026 Mock Auction</title>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.min.js"></script>
@@ -114,6 +114,7 @@
     .squad-sz-btn.on{background:var(--ipl-mid);border-color:var(--gold);color:#fff}
     .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
     .btn:disabled{opacity:.3;pointer-events:none;box-shadow:none}
+    .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
     /* ── TOGGLE ── */
     .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
@@ -217,7 +218,7 @@
     /* price row */
     .price-row{display:flex;padding:14px 16px;gap:1px}
     .price-box{flex:1;text-align:center;padding:4px 0}
-    .price-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    .price-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
       color:var(--text3);margin-bottom:3px;font-family:var(--font-display)}
     .price-val{font-family:var(--font-num);font-size:30px;color:var(--gold);line-height:1}
     .price-val.big{font-size:40px;color:var(--green)}
@@ -231,7 +232,7 @@
       font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
     .tnum{font-family:var(--font-num);font-size:24px;color:var(--text)}
     .tnum.urgent{color:var(--red);animation:pulse .5s infinite alternate}
-    @keyframes pulse{from{opacity:1}to{opacity:.3}}
+    @keyframes pulse{from{opacity:1}to{opacity:.6}}
     .ttrack{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden}
     .tbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));
       border-radius:99px;transition:width 1.05s linear}
@@ -239,7 +240,7 @@
 
     /* bid feed */
     .bfeed-wrap{padding:0 10px 10px}
-    .bfeed-lbl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .bfeed-lbl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:6px;font-family:var(--font-display)}
     .bfeed{display:flex;flex-direction:column;gap:5px}
     .bfeed-item{display:flex;align-items:center;padding:8px 12px;
@@ -261,7 +262,7 @@
 
     /* player list */
     .next-wrap{padding:10px}
-    .next-title{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .next-title{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:7px;font-family:var(--font-display)}
     .search-inp{background:var(--surface2);border:1px solid var(--border);
       border-radius:var(--rsm);color:var(--text);font-size:14px;padding:10px 14px;
@@ -308,7 +309,7 @@
     .ts{flex:1;background:var(--surface2);border-radius:var(--rsm);padding:8px;
       text-align:center;border:1px solid var(--border)}
     .ts .v{font-family:var(--font-num);font-size:18px;display:block}
-    .ts .l{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:1.5px;
+    .ts .l{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:1.5px;
       text-transform:uppercase;display:block;margin-top:2px}
     .acq-row{display:flex;justify-content:space-between;align-items:center;
       padding:7px 10px;background:var(--surface2);border-radius:var(--rsm);
@@ -410,7 +411,7 @@
     #waitScreen p{font-size:13px;color:var(--text3);margin-top:4px}
     .wait-info{background:var(--surface);border:1px solid var(--border);
       border-radius:var(--radius);padding:14px 20px;margin-top:14px;text-align:center;width:100%}
-    .wait-info .wl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .wait-info .wl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
     .wait-info .wv{font-family:var(--font-num);font-size:30px;color:var(--team)}
     .wait-team{font-family:var(--font-display);font-size:17px;font-weight:700;
@@ -418,14 +419,14 @@
     .wstat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;width:100%}
     .wstat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
       padding:12px 10px;text-align:center}
-    .wstat-lbl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .wstat-lbl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
     .wstat-val{font-family:var(--font-num);font-size:clamp(22px,5vw,28px)}
     .wrole-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;width:100%}
     .wrole-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);
       padding:10px 4px;text-align:center}
     .wrole-val{font-family:var(--font-num);font-size:18px}
-    .wrole-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+    .wrole-lbl{font-size:11px;color:var(--text3);margin-top:2px}
 
     /* ── END SCREEN ── */
     #endScreen{align-items:center;padding:28px 16px;text-align:center}
@@ -445,7 +446,7 @@
     .fp-price{color:var(--green);font-weight:600;font-family:var(--font-num);font-size:14px}
 
     /* ── TOAST ── */
-    .toast{position:fixed;bottom:24px;left:50%;
+    .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;
       transform:translateX(-50%) translateY(80px);
       background:var(--surface2);border:1px solid var(--border2);
       border-radius:var(--rsm);padding:10px 20px;font-size:13px;font-weight:500;
@@ -487,7 +488,7 @@
 <!-- ════ LANDING ════ -->
 <div id="landingScreen" class="screen active">
   <div class="page-hero" style="position:relative">
-    <button onclick="document.getElementById('howItWorksModal').classList.add('show')" style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:5px 10px;color:var(--text3);font-family:var(--fd);font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px">HOW IT WORKS</button>
+    <button onclick="document.getElementById('howItWorksModal').classList.add('show')" style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 14px;min-height:44px;color:var(--text3);font-family:var(--font-display);font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px;display:flex;align-items:center">HOW IT WORKS</button>
     
     
     <span class="icon">🏏</span>
@@ -1138,6 +1139,7 @@ var IPL_TEAM={
   "Ramandeep Singh":"KKR",
   "Rashid Khan":"GT",
   "Rasikh Salam":"RCB",
+  "Rasikh Salam Dar":"RCB",
   "Ravi Bishnoi":"RR",
   "Ravi Singh":"RR",
   "Smaran Ravichandran":"SRH",
@@ -1255,10 +1257,10 @@ var PLAYERS = [
   {id:24,name:"Mukesh Choudhary",role:"Bowler",nat:"India",base:30,photo:"./images/398614.5.webp"},
   {id:25,name:"Noor Ahmad",role:"Bowler",nat:"Afghanistan",base:150,photo:"./images/383239.1.webp"},
   {id:26,name:"Abishek Porel",role:"WK",nat:"India",base:100,photo:"./images/393462.2.webp"},
-  {id:27,name:"Ben Duckett",role:"Batter",nat:"India",base:200,photo:"./images/383154.1.webp"},
-  {id:28,name:"David Miller",role:"Batter",nat:"India",base:200,photo:"./images/316655.1.webp"},
+  {id:27,name:"Ben Duckett",role:"Batter",nat:"England",base:200,photo:"./images/383154.1.webp"},
+  {id:28,name:"David Miller",role:"Batter",nat:"South Africa",base:200,photo:"./images/316655.1.webp"},
   {id:29,name:"Karun Nair",role:"Batter",nat:"India",base:30,photo:"./images/399231.5.webp"},
-  {id:30,name:"Pathum Nissanka",role:"Batter",nat:"India",base:75,photo:"./images/323070.1.webp"},
+  {id:30,name:"Pathum Nissanka",role:"Batter",nat:"Sri Lanka",base:75,photo:"./images/323070.1.webp"},
   {id:31,name:"Sahil Parakh",role:"Batter",nat:"India",base:30,photo:"./images/1451028.1.webp"},
   {id:32,name:"KL Rahul",role:"WK",nat:"India",base:200,photo:"./images/319942.3.webp"},
   {id:33,name:"Nitish Rana",role:"Batter",nat:"India",base:100,photo:"./images/323054.1.webp"},
@@ -1270,12 +1272,12 @@ var PLAYERS = [
   {id:39,name:"Ashutosh Sharma",role:"All-Rounder",nat:"India",base:75,photo:"./images/380694.1.webp"},
   {id:40,name:"Madhav Tiwari",role:"All-Rounder",nat:"India",base:30,photo:"./images/397423.7.webp"},
   {id:41,name:"Auqib Nabi",role:"Bowler",nat:"India",base:30,photo:"./images/413761.2.webp"},
-  {id:42,name:"Dushmantha Chameera",role:"Bowler",nat:"India",base:50,photo:"./images/319862.2.webp"},
-  {id:43,name:"Kyle Jamieson",role:"Bowler",nat:"India",base:200,photo:"./images/321236.1.webp"},
+  {id:42,name:"Dushmantha Chameera",role:"Bowler",nat:"Sri Lanka",base:50,photo:"./images/319862.2.webp"},
+  {id:43,name:"Kyle Jamieson",role:"Bowler",nat:"New Zealand",base:200,photo:"./images/321236.1.webp"},
   {id:44,name:"Kuldeep Yadav",role:"Bowler",nat:"India",base:200,photo:"./images/319943.2.webp"},
   {id:45,name:"Mukesh Kumar",role:"Bowler",nat:"India",base:150,photo:"./images/373907.1.webp"},
   {id:46,name:"T Natarajan",role:"Bowler",nat:"India",base:150,photo:"./images/322699.1.webp"},
-  {id:47,name:"Lungi Ngidi",role:"Bowler",nat:"India",base:200,photo:"./images/322069.1.webp"},
+  {id:47,name:"Lungi Ngidi",role:"Bowler",nat:"South Africa",base:200,photo:"./images/322069.1.webp"},
   {id:48,name:"Vipraj Nigam",role:"Bowler",nat:"India",base:30,photo:"./images/397429.4.webp"},
   {id:49,name:"Mitchell Starc",role:"Bowler",nat:"Australia",base:200,photo:"./images/390978.5.webp"},
   {id:50,name:"Tripurana Vijay",role:"Bowler",nat:"India",base:30,photo:"./images/397428.4.webp"},
@@ -1312,7 +1314,7 @@ var PLAYERS = [
   {id:81,name:"Angkrish Raghuvanshi",role:"Batter",nat:"India",base:75,photo:"./images/345093.1.webp"},
   {id:82,name:"Ramandeep Singh",role:"Batter",nat:"India",base:100,photo:"./images/380670.5.webp"},
   {id:83,name:"Sarthak Ranjan",role:"Batter",nat:"India",base:30,photo:"./images/414334.2.webp"},
-  {id:84,name:"Tim Seifert",role:"WK",nat:"India",base:150,photo:"./images/321313.1.webp"},
+  {id:84,name:"Tim Seifert",role:"WK",nat:"New Zealand",base:150,photo:"./images/321313.1.webp"},
   {id:85,name:"Rinku Singh",role:"Batter",nat:"India",base:200,photo:"./images/341043.1.webp"},
   {id:86,name:"Rahul Tripathi",role:"Batter",nat:"India",base:75,photo:"./images/356821.5.webp"},
   {id:87,name:"Daksh Kamra",role:"All-Rounder",nat:"India",base:30,photo:"./images/414335.2.webp"},
@@ -1375,7 +1377,7 @@ var PLAYERS = [
   {id:144,name:"Trent Boult",role:"Bowler",nat:"New Zealand",base:200,photo:"./images/383185.1.webp"},
   {id:145,name:"Jasprit Bumrah",role:"Bowler",nat:"India",base:200,photo:"./images/319940.2.webp"},
   {id:146,name:"Deepak Chahar",role:"Bowler",nat:"India",base:150,photo:"./images/322704.1.webp"},
-  {id:147,name:"AM Ghazanfar",role:"Bowler",nat:"India",base:100,photo:"./images/390546.2.webp"},
+  {id:147,name:"AM Ghazanfar",role:"Bowler",nat:"Afghanistan",base:100,photo:"./images/390546.2.webp"},
   {id:148,name:"Mayank Markande",role:"Bowler",nat:"India",base:30,photo:"./images/355403.1.webp"},
   {id:149,name:"Mohd Izhar",role:"Bowler",nat:"India",base:30,photo:"./images/1512648.1.webp"},
   {id:150,name:"Raghu Sharma",role:"Bowler",nat:"India",base:30,photo:"./images/400220.2.webp"},
@@ -1390,7 +1392,7 @@ var PLAYERS = [
   {id:159,name:"Cooper Connolly",role:"All-Rounder",nat:"Australia",base:200,photo:"./images/347820.1.webp"},
   {id:160,name:"Marco Jansen",role:"All-Rounder",nat:"South Africa",base:150,photo:"./images/337189.1.webp"},
   {id:161,name:"Musheer Khan",role:"All-Rounder",nat:"India",base:30,photo:"./images/392178.2.webp"},
-  {id:162,name:"Mitchell Owen",role:"All-Rounder",nat:"India",base:75,photo:"./images/393175.2.webp"},
+  {id:162,name:"Mitchell Owen",role:"All-Rounder",nat:"Australia",base:75,photo:"./images/393175.2.webp"},
   {id:163,name:"Shashank Singh",role:"All-Rounder",nat:"India",base:100,photo:"./images/380696.1.webp"},
   {id:164,name:"Marcus Stoinis",role:"All-Rounder",nat:"India",base:150,photo:"./images/321596.2.webp"},
   {id:165,name:"Suryansh Shedge",role:"All-Rounder",nat:"India",base:30,photo:"./images/393181.2.webp"},
@@ -1424,7 +1426,7 @@ var PLAYERS = [
   {id:193,name:"Josh Hazlewood",role:"Bowler",nat:"Australia",base:200,photo:"./images/390976.5.webp"},
   {id:194,name:"Bhuvneshwar Kumar",role:"Bowler",nat:"India",base:150,photo:"./images/392400.2.webp"},
   {id:195,name:"Vicky Ostwal",role:"Bowler",nat:"India",base:30,photo:"./images/408829.webp"},
-  {id:196,name:"Rasikh Salam",role:"Bowler",nat:"India",base:150,photo:"./images/341040.1.webp"},
+  {id:196,name:"Rasikh Salam Dar",role:"Bowler",nat:"India",base:150,photo:"./images/341040.1.webp"},
   {id:197,name:"Suyash Sharma",role:"Bowler",nat:"India",base:75,photo:"./images/358041.1.webp"},
   {id:198,name:"Swapnil Singh",role:"Bowler",nat:"India",base:30,photo:"./images/384254.1.webp"},
   {id:199,name:"Nuwan Thushara",role:"Bowler",nat:"Sri Lanka",base:75,photo:"./images/381395.7.webp"},
