@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="IPL Auction">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IPL 2026 Mock Auction</title>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.min.js"></script>
@@ -114,6 +114,7 @@
     .squad-sz-btn.on{background:var(--ipl-mid);border-color:var(--gold);color:#fff}
     .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
     .btn:disabled{opacity:.3;pointer-events:none;box-shadow:none}
+    .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
     /* ── TOGGLE ── */
     .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:2px 0}
@@ -217,7 +218,7 @@
     /* price row */
     .price-row{display:flex;padding:14px 16px;gap:1px}
     .price-box{flex:1;text-align:center;padding:4px 0}
-    .price-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    .price-lbl{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
       color:var(--text3);margin-bottom:3px;font-family:var(--font-display)}
     .price-val{font-family:var(--font-num);font-size:30px;color:var(--gold);line-height:1}
     .price-val.big{font-size:40px;color:var(--green)}
@@ -231,7 +232,7 @@
       font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
     .tnum{font-family:var(--font-num);font-size:24px;color:var(--text)}
     .tnum.urgent{color:var(--red);animation:pulse .5s infinite alternate}
-    @keyframes pulse{from{opacity:1}to{opacity:.3}}
+    @keyframes pulse{from{opacity:1}to{opacity:.6}}
     .ttrack{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden}
     .tbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));
       border-radius:99px;transition:width 1.05s linear}
@@ -239,7 +240,7 @@
 
     /* bid feed */
     .bfeed-wrap{padding:0 10px 10px}
-    .bfeed-lbl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .bfeed-lbl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:6px;font-family:var(--font-display)}
     .bfeed{display:flex;flex-direction:column;gap:5px}
     .bfeed-item{display:flex;align-items:center;padding:8px 12px;
@@ -261,7 +262,7 @@
 
     /* player list */
     .next-wrap{padding:10px}
-    .next-title{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .next-title{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:7px;font-family:var(--font-display)}
     .search-inp{background:var(--surface2);border:1px solid var(--border);
       border-radius:var(--rsm);color:var(--text);font-size:14px;padding:10px 14px;
@@ -308,7 +309,7 @@
     .ts{flex:1;background:var(--surface2);border-radius:var(--rsm);padding:8px;
       text-align:center;border:1px solid var(--border)}
     .ts .v{font-family:var(--font-num);font-size:18px;display:block}
-    .ts .l{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:1.5px;
+    .ts .l{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:1.5px;
       text-transform:uppercase;display:block;margin-top:2px}
     .acq-row{display:flex;justify-content:space-between;align-items:center;
       padding:7px 10px;background:var(--surface2);border-radius:var(--rsm);
@@ -410,7 +411,7 @@
     #waitScreen p{font-size:13px;color:var(--text3);margin-top:4px}
     .wait-info{background:var(--surface);border:1px solid var(--border);
       border-radius:var(--radius);padding:14px 20px;margin-top:14px;text-align:center;width:100%}
-    .wait-info .wl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .wait-info .wl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
     .wait-info .wv{font-family:var(--font-num);font-size:30px;color:var(--team)}
     .wait-team{font-family:var(--font-display);font-size:17px;font-weight:700;
@@ -418,14 +419,14 @@
     .wstat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;width:100%}
     .wstat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
       padding:12px 10px;text-align:center}
-    .wstat-lbl{font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;
+    .wstat-lbl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
     .wstat-val{font-family:var(--font-num);font-size:clamp(22px,5vw,28px)}
     .wrole-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;width:100%}
     .wrole-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);
       padding:10px 4px;text-align:center}
     .wrole-val{font-family:var(--font-num);font-size:18px}
-    .wrole-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+    .wrole-lbl{font-size:11px;color:var(--text3);margin-top:2px}
 
     /* ── END SCREEN ── */
     #endScreen{align-items:center;padding:28px 16px;text-align:center}
@@ -445,7 +446,7 @@
     .fp-price{color:var(--green);font-weight:600;font-family:var(--font-num);font-size:14px}
 
     /* ── TOAST ── */
-    .toast{position:fixed;bottom:24px;left:50%;
+    .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;
       transform:translateX(-50%) translateY(80px);
       background:var(--surface2);border:1px solid var(--border2);
       border-radius:var(--rsm);padding:10px 20px;font-size:13px;font-weight:500;
@@ -487,7 +488,7 @@
 <!-- ════ LANDING ════ -->
 <div id="landingScreen" class="screen active">
   <div class="page-hero" style="position:relative">
-    <button onclick="document.getElementById('howItWorksModal').classList.add('show')" style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:5px 10px;color:var(--text3);font-family:var(--fd);font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px">HOW IT WORKS</button>
+    <button onclick="document.getElementById('howItWorksModal').classList.add('show')" style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 14px;min-height:44px;color:var(--text3);font-family:var(--font-display);font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px;display:flex;align-items:center">HOW IT WORKS</button>
     
     
     <span class="icon">🏏</span>
