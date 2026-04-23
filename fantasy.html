@@ -175,6 +175,8 @@
       opacity:0;transition:all .25s;white-space:nowrap;max-width:92vw;text-align:center}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+    select{background:#0d1120;color:var(--text)}
+    select option{background:#0d1120;color:var(--text)}
   </style>
 </head>
 <body>
@@ -366,17 +368,17 @@
 
   <div class="pane" id="pane-pt">
     <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
-      <select id="ptRoomSel" onchange="onPtRoomChange()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px;font-size:13px;font-family:var(--fd)">
+      <select id="ptRoomSel" onchange="onPtRoomChange()" style="width:100%;background:#0d1120;border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px;font-size:13px;font-family:var(--fd)">
         <option value="">— Select a room —</option>
       </select>
-      <select id="ptMatchSel" onchange="renderPointsPane()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px;font-size:13px;font-family:var(--fd)">
+      <select id="ptMatchSel" onchange="renderPointsPane()" style="width:100%;background:#0d1120;border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px;font-size:13px;font-family:var(--fd)">
         <option value="all">All Matches (Season Total)</option>
       </select>
       <div style="display:flex;gap:8px">
         <input id="ptSearch" type="text" placeholder="Search player…" oninput="filterPointsList()"
-          style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px 10px;font-size:13px;font-family:var(--fd);outline:none"/>
+          style="flex:1;background:#0d1120;border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px 10px;font-size:13px;font-family:var(--fd);outline:none"/>
         <select id="ptTeamFilter" onchange="filterPointsList()"
-          style="width:96px;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px 6px;font-size:12px;font-family:var(--fd)">
+          style="width:96px;background:#0d1120;border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);padding:8px 6px;font-size:12px;font-family:var(--fd)">
           <option value="">All teams</option>
           <option value="RCB">RCB</option><option value="MI">MI</option>
           <option value="CSK">CSK</option><option value="KKR">KKR</option>
