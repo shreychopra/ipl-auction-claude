@@ -16,17 +16,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#070a12;--surface:#0d1120;--surface2:#121928;--surface3:#182030;
-      --border:#252d3d;--border2:#2e3a52;
-      --gold:#f5b800;--gold2:#ffd84d;--golddim:rgba(245,184,0,.12);
+      --bg:#060810;--surface:#0c0f1d;--surface2:#101525;--surface3:#151c2e;
+      --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.11);
+      --gold:#f5b800;--gold2:#ffd84d;--golddim:rgba(245,184,0,.12);--goldglow:rgba(245,184,0,.2);
       --blue:#5091CD;--bluedim:rgba(80,145,205,.14);--ipl-dark:#1D3D8D;--ipl-mid:#5091CD;
       --green:#00d68f;--greendim:rgba(0,214,143,.1);
       --red:#ff4566;--reddim:rgba(255,69,102,.12);
-      --text:#eef0f8;--text2:#7c8ba1;--text3:#404d63;
-      --team:#f5b800;--radius:12px;--rsm:8px;
+      --text:#eef0f8;--text2:#7c8ba1;--text3:#3d4d65;
+      --team:#f5b800;--radius:14px;--rsm:9px;
       --font-display:'Rajdhani',sans-serif;
       --font-body:'Space Grotesk',sans-serif;
       --font-num:'Bebas Neue',sans-serif;
+      --glass:rgba(255,255,255,.03);--glass-border:rgba(255,255,255,.07);
+      --glass-hi:rgba(255,255,255,.06);--glass-shadow:0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06);
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden}
@@ -37,46 +39,53 @@
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
     /* ── HERO ── */
-    .page-hero{padding:44px 24px 28px;text-align:center;position:relative;overflow:hidden;flex-shrink:0;
-      background:linear-gradient(180deg,#0e1a3a 0%,#0a0f1e 60%,var(--bg) 100%)}
+    .page-hero{padding:52px 24px 32px;text-align:center;position:relative;overflow:hidden;flex-shrink:0;
+      background:linear-gradient(180deg,#0b1535 0%,#080d1c 55%,var(--bg) 100%)}
     .page-hero::before{content:'';position:absolute;inset:0;
-      background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(29,61,141,.35) 0%,rgba(80,145,205,.1) 50%,transparent 70%)}
+      background:radial-gradient(ellipse 90% 70% at 50% -10%,rgba(29,61,141,.4) 0%,rgba(80,145,205,.12) 50%,transparent 70%)}
     .page-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-      background:linear-gradient(90deg,transparent,var(--border2),transparent)}
-    .page-hero .icon{font-size:44px;display:block;margin-bottom:10px;position:relative;
-      filter:drop-shadow(0 0 24px rgba(245,184,0,.55))}
-    .page-hero h1{font-family:var(--font-display);font-size:clamp(38px,10vw,56px);font-weight:700;
-      letter-spacing:2px;color:var(--gold);line-height:1;position:relative}
-    .page-hero p{color:var(--text3);font-size:11px;margin-top:6px;letter-spacing:2px;
-      text-transform:uppercase;position:relative}
+      background:linear-gradient(90deg,transparent,rgba(245,184,0,.25),transparent)}
+    .hero-blob{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;animation:blobDrift 8s ease-in-out infinite alternate}
+    .hero-blob-gold{width:220px;height:220px;background:rgba(245,184,0,.08);top:-60px;left:-40px;animation-delay:0s}
+    .hero-blob-blue{width:180px;height:180px;background:rgba(80,145,205,.1);top:-40px;right:-30px;animation-delay:-4s}
+    @keyframes blobDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(16px,12px) scale(1.08)}}
+    .page-hero .icon{display:block;margin:0 auto 14px;position:relative;
+      filter:drop-shadow(0 0 28px rgba(245,184,0,.6))}
+    .page-hero h1{font-family:var(--font-display);font-size:clamp(42px,11vw,60px);font-weight:700;
+      letter-spacing:3px;color:var(--gold);line-height:1;position:relative;
+      text-shadow:0 0 40px rgba(245,184,0,.3)}
+    .page-hero p{color:var(--text2);font-size:12px;margin-top:8px;letter-spacing:3px;
+      text-transform:uppercase;position:relative;opacity:.8}
     .role-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;
-      padding:4px 12px;border-radius:99px;letter-spacing:1.5px;margin-top:10px;
+      padding:5px 14px;border-radius:99px;letter-spacing:1.5px;margin-top:12px;
       text-transform:uppercase;position:relative}
     .badge-host{background:var(--reddim);border:1px solid rgba(255,69,102,.35);color:var(--red)}
     .badge-part{background:var(--bluedim);border:1px solid rgba(79,142,247,.35);color:var(--blue)}
 
     /* ── LAYOUT ── */
-    .body{padding:16px 16px 32px;flex:1;overflow-y:auto}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-      padding:18px;margin-bottom:12px}
-    .card-title{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:2.5px;
-      text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+    .body{padding:18px 16px 36px;flex:1;overflow-y:auto}
+    .card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);
+      padding:20px;margin-bottom:14px;box-shadow:var(--glass-shadow)}
+    .card-title{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:2.5px;
+      text-transform:uppercase;color:var(--text3);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .card-title::before{content:'';width:3px;height:14px;border-radius:2px;
+      background:linear-gradient(180deg,var(--gold),rgba(245,184,0,.3));flex-shrink:0}
     .card-title svg{opacity:.6}
-    label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500;letter-spacing:.3px}
+    label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500;letter-spacing:.3px}
     input[type=text],input[type=number],select{
-      width:100%;background:var(--surface2);border:1px solid var(--border);
+      width:100%;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);
       border-radius:var(--rsm);color:var(--text);font-size:14px;
-      font-family:var(--font-body);padding:11px 14px;outline:none;
+      font-family:var(--font-body);padding:12px 14px;outline:none;min-height:44px;
       transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
-    input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--golddim)}
+    input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--golddim),0 0 16px rgba(245,184,0,.08)}
     input.upper{text-transform:uppercase;letter-spacing:6px;font-weight:700;font-size:20px;
       text-align:center;font-family:var(--font-num)}
     select option{background:var(--surface2)}
-    .gap{height:12px}
-    .divider{height:1px;background:var(--border);margin:18px 0;position:relative}
-    .divider span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-      background:var(--bg);padding:0 12px;font-size:11px;color:var(--text3);
-      font-weight:600;letter-spacing:2px;text-transform:uppercase}
+    .gap{height:14px}
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--glass-border)}
+    .divider span{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
+      text-transform:uppercase;white-space:nowrap}
 
     /* ── BUTTONS ── */
     .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
@@ -87,17 +96,18 @@
     .btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .15s}
     .btn:active::after{background:rgba(255,255,255,.08)}
     .btn:active{transform:scale(.98)}
-    .btn-gold{background:linear-gradient(135deg,#f5b800,#e09800);color:#0a0800;
-      box-shadow:0 4px 20px rgba(245,184,0,.25)}
-    .btn-gold:hover{box-shadow:0 4px 28px rgba(245,184,0,.4)}
-    .btn-blue{background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;
-      box-shadow:0 4px 20px rgba(29,61,141,.4)}
-    .btn-green{background:linear-gradient(135deg,#00d68f,#00b87a);color:#040f0a;
-      box-shadow:0 4px 20px rgba(0,214,143,.2)}
+    .btn-gold{background:linear-gradient(135deg,#f5b800,#d98a00);color:#0a0800;
+      box-shadow:0 4px 24px rgba(245,184,0,.35),0 0 0 1px rgba(245,184,0,.2)}
+    .btn-gold:hover{box-shadow:0 4px 32px rgba(245,184,0,.5),0 0 0 1px rgba(245,184,0,.3)}
+    .btn-blue{background:linear-gradient(135deg,#4d8ec7,#1a3880);color:#fff;
+      box-shadow:0 4px 24px rgba(29,61,141,.45),0 0 0 1px rgba(80,145,205,.2)}
+    .btn-blue:hover{box-shadow:0 4px 32px rgba(29,61,141,.6),0 0 0 1px rgba(80,145,205,.35)}
+    .btn-green{background:linear-gradient(135deg,#00d68f,#00a86e);color:#040f0a;
+      box-shadow:0 4px 24px rgba(0,214,143,.3)}
     .btn-red{background:var(--reddim);color:var(--red);border:1px solid rgba(255,69,102,.3)}
     .btn-red:hover{background:rgba(255,69,102,.2)}
-    .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
-    .btn-ghost:hover{border-color:var(--border2);background:var(--surface3)}
+    .btn-ghost{background:var(--glass);color:var(--text);border:1px solid var(--glass-border)}
+    .btn-ghost:hover{border-color:var(--border2);background:var(--glass-hi)}
     .btn-sm{padding:8px 14px;font-size:12px;border-radius:var(--rsm);width:auto}
     .color-opt{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
     .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
@@ -137,16 +147,19 @@
     .tpbtn.on,.tpbtn:active{background:var(--gold);color:#0a0800;border-color:var(--gold)}
 
     /* ── ROOM CODE ── */
-    .rc-card{background:linear-gradient(145deg,#152454,#0d1a3a);
-      border:1px solid var(--border2);border-radius:var(--radius);
-      padding:28px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden}
-    .rc-card::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);
-      width:200px;height:200px;background:radial-gradient(circle,rgba(245,184,0,.08),transparent 70%)}
-    .rc-lbl{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
-      color:var(--text3);margin-bottom:10px}
-    .rc-code{font-family:var(--font-num);font-size:64px;letter-spacing:12px;color:#fff;
-      line-height:1;filter:drop-shadow(0 0 24px rgba(245,184,0,.7));position:relative;font-weight:400}
-    .rc-sub{font-size:12px;color:var(--text3);margin-top:10px}
+    .rc-card{background:linear-gradient(145deg,rgba(21,36,84,.7),rgba(13,26,58,.7));
+      border:1px solid rgba(80,145,205,.2);border-radius:var(--radius);
+      padding:32px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden;
+      box-shadow:0 0 60px rgba(29,61,141,.15),inset 0 1px 0 rgba(255,255,255,.06)}
+    .rc-card::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+      width:280px;height:280px;background:radial-gradient(circle,rgba(245,184,0,.1),transparent 65%)}
+    .rc-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(245,184,0,.3),transparent)}
+    .rc-lbl{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+      color:var(--text3);margin-bottom:12px;font-family:var(--font-display)}
+    .rc-code{font-family:var(--font-num);font-size:68px;letter-spacing:14px;color:#fff;
+      line-height:1;filter:drop-shadow(0 0 32px rgba(245,184,0,.8));position:relative;font-weight:400}
+    .rc-sub{font-size:12px;color:var(--text2);margin-top:12px;line-height:1.6}
 
     /* ── PARTICIPANTS LIST ── */
     .plist{margin-top:12px;display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto}
@@ -342,30 +355,32 @@
       text-align:right;white-space:nowrap}
 
     /* ── PARTICIPANT BID SCREEN ── */
-    .bid-hdr{padding:10px 14px;background:linear-gradient(135deg,#0e1e4a,#0d1120);
+    .bid-hdr{padding:12px 16px;background:rgba(14,30,74,.6);backdrop-filter:blur(8px);
       border-bottom:1px solid rgba(80,145,205,.2);display:flex;align-items:center;
       justify-content:space-between;flex-shrink:0}
-    .bid-hdr-team{font-family:var(--font-display);font-size:17px;font-weight:700;
-      color:var(--team);letter-spacing:.5px}
-    .bpill{font-family:var(--font-num);font-size:15px;background:var(--surface2);
-      border:1px solid var(--border);padding:4px 12px;border-radius:99px;
-      color:var(--text)}
-    .live-card{margin:10px;background:var(--surface);border:2px solid var(--border);
-      border-radius:var(--radius);overflow:hidden;transition:border-color .3s}
-    .live-card.leading{border-color:var(--team);
-      box-shadow:0 0 20px rgba(245,184,0,.1)}
-    .p-leader{text-align:center;padding:4px 16px 12px;font-size:13px;color:var(--text2)}
+    .bid-hdr-team{font-family:var(--font-display);font-size:18px;font-weight:700;
+      color:var(--team);letter-spacing:.5px;text-shadow:0 0 20px rgba(245,184,0,.3)}
+    .bpill{font-family:var(--font-num);font-size:16px;background:var(--glass);
+      border:1px solid var(--glass-border);padding:5px 14px;border-radius:99px;color:var(--text);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+    .live-card{margin:10px;background:var(--glass);border:1px solid var(--glass-border);
+      border-radius:var(--radius);overflow:hidden;transition:border-color .3s,box-shadow .3s;
+      box-shadow:var(--glass-shadow)}
+    .live-card.leading{border-color:rgba(245,184,0,.4);
+      box-shadow:0 0 32px rgba(245,184,0,.15),var(--glass-shadow)}
+    .p-leader{text-align:center;padding:4px 16px 14px;font-size:13px;color:var(--text2)}
     .p-leader.me strong{color:var(--green)}
-    .bid-controls{padding:10px}
-    .big-bid-btn{width:100%;padding:18px;border:none;border-radius:var(--radius);
-      background:linear-gradient(135deg,var(--team),color-mix(in srgb,var(--team) 75%,black));
-      color:#0a0800;font-family:var(--font-display);font-size:24px;font-weight:700;
-      letter-spacing:2px;cursor:pointer;transition:all .15s;
-      box-shadow:0 4px 24px rgba(245,184,0,.3)}
-    .big-bid-btn:active{transform:scale(.97)}
-    .big-bid-btn:disabled{opacity:.25;pointer-events:none;box-shadow:none}
-    .bid-hint{text-align:center;margin-top:8px;font-size:11px;color:var(--text3);
-      letter-spacing:.5px}
+    .bid-controls{padding:12px}
+    .big-bid-btn{width:100%;padding:22px;border:none;border-radius:var(--radius);
+      background:linear-gradient(135deg,var(--team),#c97a00);
+      color:#0a0800;font-family:var(--font-display);font-size:28px;font-weight:700;
+      letter-spacing:3px;cursor:pointer;transition:all .2s;
+      box-shadow:0 6px 32px rgba(245,184,0,.45),0 0 0 1px rgba(245,184,0,.25),inset 0 1px 0 rgba(255,255,255,.2)}
+    .big-bid-btn:hover{box-shadow:0 8px 40px rgba(245,184,0,.6),0 0 0 1px rgba(245,184,0,.4),inset 0 1px 0 rgba(255,255,255,.2)}
+    .big-bid-btn:active{transform:scale(.96);box-shadow:0 2px 16px rgba(245,184,0,.3)}
+    .big-bid-btn:disabled{opacity:.2;pointer-events:none;box-shadow:none}
+    .bid-hint{text-align:center;margin-top:10px;font-size:11px;color:var(--text3);
+      letter-spacing:1px;text-transform:uppercase;font-family:var(--font-display)}
 
     /* squad */
     .squad-budget{margin:10px;background:var(--surface);border:1px solid var(--border);
@@ -385,62 +400,69 @@
     /* ── OVERLAYS ── */
     .overlay{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;
       align-items:center;justify-content:center;text-align:center;padding:32px;
-      opacity:0;pointer-events:none;transition:opacity .3s}
+      opacity:0;pointer-events:none;transition:opacity .35s}
     .overlay.show{opacity:1;pointer-events:all}
-    .ov-sold{background:rgba(8,9,13,.97);backdrop-filter:blur(8px)}
-    .ov-unsold{background:rgba(8,9,13,.94);backdrop-filter:blur(8px)}
-    .overlay h2{font-family:var(--font-display);font-size:58px;letter-spacing:4px;
+    .ov-sold{background:rgba(6,8,16,.97);backdrop-filter:blur(12px)}
+    .ov-sold::before{content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 70% 50% at 50% 30%,rgba(0,214,143,.06),transparent 70%)}
+    .ov-unsold{background:rgba(6,8,16,.95);backdrop-filter:blur(12px)}
+    .overlay h2{font-family:var(--font-display);font-size:62px;letter-spacing:5px;
       line-height:1;font-weight:700}
-    .ov-player{font-family:var(--font-display);font-size:26px;font-weight:700;
-      margin-top:8px;letter-spacing:.5px}
-    .ov-to{font-size:13px;color:var(--text2);margin-top:5px}
-    .ov-price{font-family:var(--font-num);font-size:72px;color:var(--green);
-      line-height:1;margin:10px 0;filter:drop-shadow(0 0 20px rgba(0,214,143,.4))}
-    .ov-unit{font-size:14px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
-    .hammer{font-size:64px;margin-bottom:10px;animation:hamDrop .5s ease;
-      filter:drop-shadow(0 0 16px rgba(245,184,0,.5))}
-    @keyframes hamDrop{0%{transform:rotate(-40deg) scale(.4);opacity:0}
-      60%{transform:rotate(8deg) scale(1.1)}100%{transform:rotate(0) scale(1);opacity:1}}
+    .ov-player{font-family:var(--font-display);font-size:28px;font-weight:700;
+      margin-top:10px;letter-spacing:.5px}
+    .ov-to{font-size:14px;color:var(--text2);margin-top:6px}
+    .ov-price{font-family:var(--font-num);font-size:80px;color:var(--green);
+      line-height:1;margin:12px 0;filter:drop-shadow(0 0 28px rgba(0,214,143,.5))}
+    .ov-unit{font-size:13px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;
+      font-family:var(--font-display);font-weight:700}
+    .hammer{width:64px;height:64px;margin-bottom:12px;animation:hamDrop .5s cubic-bezier(.34,1.56,.64,1);
+      filter:drop-shadow(0 0 20px rgba(245,184,0,.6))}
+    @keyframes hamDrop{0%{transform:rotate(-45deg) scale(.3);opacity:0}
+      70%{transform:rotate(10deg) scale(1.1)}100%{transform:rotate(0) scale(1);opacity:1}}
 
     /* ── WAIT SCREEN ── */
-    #waitScreen{background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(29,61,141,.15) 0%,transparent 60%)}
-    .wait-pulse{font-size:44px;animation:wp 2.5s ease-in-out infinite}
-    @keyframes wp{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
-    #waitScreen h2{font-family:var(--font-display);font-size:clamp(22px,5vw,30px);font-weight:700;
-      letter-spacing:1px;color:var(--text2);margin-top:10px}
+    #waitScreen{background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(29,61,141,.2) 0%,transparent 60%)}
+    .wait-spinner{width:48px;height:48px;border:3px solid rgba(245,184,0,.15);
+      border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #waitScreen h2{font-family:var(--font-display);font-size:clamp(20px,5vw,28px);font-weight:700;
+      letter-spacing:1px;color:var(--text2);margin-top:0}
     #waitScreen p{font-size:13px;color:var(--text3);margin-top:4px}
-    .wait-info{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);padding:14px 20px;margin-top:14px;text-align:center;width:100%}
+    .wait-info{background:var(--glass);border:1px solid var(--glass-border);
+      border-radius:var(--radius);padding:16px 20px;margin-top:14px;text-align:center;width:100%;
+      box-shadow:var(--glass-shadow)}
     .wait-info .wl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
       text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
-    .wait-info .wv{font-family:var(--font-num);font-size:30px;color:var(--team)}
+    .wait-info .wv{font-family:var(--font-num);font-size:32px;color:var(--team);
+      text-shadow:0 0 20px rgba(245,184,0,.3)}
     .wait-team{font-family:var(--font-display);font-size:17px;font-weight:700;
       color:var(--team);margin-top:8px;letter-spacing:.5px}
     .wstat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;width:100%}
-    .wstat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-      padding:12px 10px;text-align:center}
+    .wstat-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);
+      padding:14px 10px;text-align:center;box-shadow:var(--glass-shadow)}
     .wstat-lbl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:2px;
-      text-transform:uppercase;margin-bottom:5px;font-family:var(--font-display)}
+      text-transform:uppercase;margin-bottom:6px;font-family:var(--font-display)}
     .wstat-val{font-family:var(--font-num);font-size:clamp(22px,5vw,28px)}
     .wrole-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;width:100%}
-    .wrole-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);
-      padding:10px 4px;text-align:center}
+    .wrole-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--rsm);
+      padding:12px 4px;text-align:center;box-shadow:var(--glass-shadow)}
     .wrole-val{font-family:var(--font-num);font-size:18px}
     .wrole-lbl{font-size:11px;color:var(--text3);margin-top:2px}
 
     /* ── END SCREEN ── */
-    #endScreen{align-items:center;padding:28px 16px;text-align:center}
-    #endScreen h1{font-family:var(--font-display);font-size:42px;font-weight:700;
-      letter-spacing:2px;color:var(--gold);margin-top:12px}
+    #endScreen{align-items:center;padding:32px 16px;text-align:center}
+    #endScreen h1{font-family:var(--font-display);font-size:44px;font-weight:700;
+      letter-spacing:3px;color:var(--gold);margin-top:14px;
+      text-shadow:0 0 40px rgba(245,184,0,.35)}
     .final-list{width:100%;margin-top:16px;display:flex;flex-direction:column;
-      gap:8px;text-align:left}
-    .ft{background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);padding:12px}
-    .ft-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+      gap:10px;text-align:left}
+    .ft{background:var(--glass);border:1px solid var(--glass-border);
+      border-radius:var(--radius);padding:14px;box-shadow:var(--glass-shadow)}
+    .ft-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
     .ft-name{font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:.3px}
-    .ft-spent{font-family:var(--font-num);font-size:19px;color:var(--gold)}
-    .fp{font-size:12px;color:var(--text2);padding:5px 0;
-      border-bottom:1px solid var(--border);display:flex;justify-content:space-between;
+    .ft-spent{font-family:var(--font-num);font-size:20px;color:var(--gold)}
+    .fp{font-size:12px;color:var(--text2);padding:6px 0;
+      border-bottom:1px solid var(--glass-border);display:flex;justify-content:space-between;
       align-items:center}
     .fp:last-child{border:none}
     .fp-price{color:var(--green);font-weight:600;font-family:var(--font-num);font-size:14px}
@@ -455,16 +477,16 @@
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
     /* ── CONFIRM ── */
-    .confirm-overlay{position:fixed;inset:0;background:rgba(8,9,13,.92);z-index:300;
+    .confirm-overlay{position:fixed;inset:0;background:rgba(6,8,16,.88);z-index:300;
       display:flex;align-items:center;justify-content:center;padding:24px;
-      opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px)}
+      opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(8px)}
     .confirm-overlay.show{opacity:1;pointer-events:all}
-    .confirm-box{background:var(--surface);border:1px solid var(--border2);
+    .confirm-box{background:rgba(13,17,32,.95);border:1px solid var(--glass-border);
       border-radius:var(--radius);padding:28px 24px;max-width:300px;width:100%;
-      text-align:center}
-    .confirm-box h3{font-family:var(--font-display);font-size:20px;font-weight:700;
-      margin-bottom:8px;letter-spacing:.3px}
-    .confirm-box p{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+      text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08)}
+    .confirm-box h3{font-family:var(--font-display);font-size:22px;font-weight:700;
+      margin-bottom:8px;letter-spacing:.5px}
+    .confirm-box p{font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.65}
     .confirm-btns{display:flex;gap:8px}
 
     /* ── PAUSE ── */
@@ -487,17 +509,22 @@
 
 <!-- ════ LANDING ════ -->
 <div id="landingScreen" class="screen active">
-  <div class="page-hero" style="position:relative">
-    <button onclick="document.getElementById('howItWorksModal').classList.add('show')" style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 14px;min-height:44px;color:var(--text3);font-family:var(--font-display);font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px;display:flex;align-items:center">HOW IT WORKS</button>
-    
-    
-    <span class="icon">🏏</span>
+  <div class="page-hero">
+    <div class="hero-blob hero-blob-gold"></div>
+    <div class="hero-blob hero-blob-blue"></div>
+    <button onclick="document.getElementById('howItWorksModal').classList.add('show')" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);border-radius:var(--rsm);padding:10px 14px;min-height:44px;color:var(--text2);font-family:var(--font-display);font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1.5px;display:flex;align-items:center;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">HOW IT WORKS</button>
+    <svg class="icon" width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="26" cy="26" r="25" stroke="rgba(245,184,0,.25)" stroke-width="1.5"/>
+      <path d="M14 38L24 20l4 4-10 18H14z" fill="#f5b800" opacity=".9"/>
+      <path d="M24 20l14-8-4 14-10-6z" fill="#ffd84d" opacity=".85"/>
+      <circle cx="36" cy="16" r="4" fill="#f5b800" opacity=".7"/>
+    </svg>
     <h1>IPL 2026</h1>
     <p>Mock Auction</p>
   </div>
   <div class="body">
     <div class="card">
-      <div class="card-title">HOST — CREATE ROOM</div>
+      <div class="card-title">Host — Create Room</div>
       <label>Your Name</label>
       <input type="text" id="hostName" placeholder="e.g. Rahul" maxlength="20"/>
       <div class="gap"></div>
@@ -508,14 +535,12 @@
       <input type="number" id="teamBudget" value="10000" min="100" max="99999"/>
       <div class="gap"></div>
       <label>Max Squad Size</label>
-      <div style="display:flex;gap:8px;margin-bottom:4px">
+      <div style="display:flex;gap:8px;margin-bottom:6px">
         <button type="button" class="squad-sz-btn on" data-sz="16" onclick="pickSquadSize(this)">16</button>
         <button type="button" class="squad-sz-btn" data-sz="18" onclick="pickSquadSize(this)">18</button>
         <button type="button" class="squad-sz-btn" data-sz="20" onclick="pickSquadSize(this)">20</button>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px" id="squadSizeHint">
-        Max: 6 Bat / 6 Bowl / 4 AR / 2 WK
-      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px" id="squadSizeHint">Max: 6 Bat / 6 Bowl / 4 AR / 2 WK</div>
       <div class="gap"></div>
       <div class="toggle-row">
         <div><div class="toggle-lbl">Countdown Timer</div><div class="toggle-sub">Auto-close bids on timeout</div></div>
@@ -532,44 +557,56 @@
         </div>
         <div style="margin-top:9px"><label>Custom seconds</label><input type="number" id="customTimer" value="45" min="5" max="300"/></div>
       </div>
-      <div style="margin-top:16px"><button class="btn btn-gold" onclick="createRoom()">Create Room</button></div>
+      <div style="margin-top:18px"><button class="btn btn-gold" onclick="createRoom()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Create Room
+      </button></div>
     </div>
     <div class="divider"><span>OR</span></div>
     <div class="card">
-      <div class="card-title">JOIN A ROOM</div>
+      <div class="card-title">Join a Room</div>
       <label>Your Name</label>
       <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
       <input type="text" id="roomCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
-      <div style="margin-top:16px"><button class="btn btn-blue" onclick="joinRoom()">Find Room</button></div>
+      <div style="margin-top:18px"><button class="btn btn-blue" onclick="joinRoom()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h6v6M10 14L21 3M9 21H3V3h6"/></svg>
+        Find Room
+      </button></div>
     </div>
     <div class="divider"><span>OR</span></div>
     <div class="card">
-      <div class="card-title">HOST — REJOIN ROOM</div>
+      <div class="card-title">Rejoin as Host</div>
       <label>Your Name</label>
       <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
       <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
-      <div style="margin-top:16px"><button class="btn btn-ghost" onclick="rejoinAsHost()">Rejoin as Host</button></div>
+      <div style="margin-top:18px"><button class="btn btn-ghost" onclick="rejoinAsHost()">Rejoin as Host</button></div>
     </div>
-    <div class="divider"><span>OTHER</span></div>
+    <div class="divider"><span>ALSO</span></div>
     <a href="./fantasy.html" style="display:block;text-decoration:none">
-      <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
+      <button class="btn btn-blue" style="width:100%">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Fantasy League Tracker
+      </button>
     </a>
-  <div style="width:100%;max-width:420px;margin-top:12px">
-    
-  </div>
   </div>
 </div>
 
 <!-- ════ LOBBY ════ -->
 <div id="lobbyScreen" class="screen">
   <div class="page-hero">
-    
-    
-    <span class="icon">🏆</span>
+    <div class="hero-blob hero-blob-gold"></div>
+    <div class="hero-blob hero-blob-blue"></div>
+    <svg class="icon" width="52" height="52" viewBox="0 0 52 52" fill="none">
+      <path d="M16 8h20l-3 18H19L16 8z" fill="rgba(245,184,0,.2)" stroke="#f5b800" stroke-width="1.5"/>
+      <path d="M19 26c0 0-3 4-3 8h20c0-4-3-8-3-8" fill="rgba(245,184,0,.15)" stroke="#f5b800" stroke-width="1.5"/>
+      <rect x="18" y="34" width="16" height="3" rx="1.5" fill="#f5b800" opacity=".8"/>
+      <path d="M16 14H10c0 6 4 9 9 10" stroke="#ffd84d" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M36 14h6c0 6-4 9-9 10" stroke="#ffd84d" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    </svg>
     <h1 id="lobbyRoomName">Room</h1>
     <p id="lobbySubtitle">Share this code with everyone</p>
     <span class="role-badge badge-host">HOST</span>
@@ -586,19 +623,27 @@
         <div style="color:var(--text3);font-size:13px;padding:4px 0">Waiting<span class="wdots"></span></div>
       </div>
     </div>
-    <button class="btn btn-gold" onclick="startAuction()">Start Auction</button>
-    <div style="margin-top:9px"><button class="btn btn-ghost" onclick="showScreen('landingScreen')">← Back</button></div>
+    <button class="btn btn-gold" onclick="startAuction()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start Auction
+    </button>
+    <div style="margin-top:10px"><button class="btn btn-ghost" onclick="showScreen('landingScreen')">← Back</button></div>
   </div>
 </div>
 
 <!-- ════ TEAM SELECT (participant) ════ -->
 <div id="teamSelectScreen" class="screen">
   <div class="page-hero">
-    
-    
-    <span class="icon">🏏</span>
+    <div class="hero-blob hero-blob-gold"></div>
+    <div class="hero-blob hero-blob-blue"></div>
+    <svg class="icon" width="52" height="52" viewBox="0 0 52 52" fill="none">
+      <circle cx="26" cy="26" r="25" stroke="rgba(245,184,0,.25)" stroke-width="1.5"/>
+      <path d="M14 38L24 20l4 4-10 18H14z" fill="#f5b800" opacity=".9"/>
+      <path d="M24 20l14-8-4 14-10-6z" fill="#ffd84d" opacity=".85"/>
+      <circle cx="36" cy="16" r="4" fill="#f5b800" opacity=".7"/>
+    </svg>
     <h1 id="tsRoomName">Room</h1>
-    <p id="tsRoomCode" style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;color:var(--gold)">CODE</p>
+    <p id="tsRoomCode" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--gold);margin-top:6px;text-shadow:0 0 20px rgba(245,184,0,.4)">CODE</p>
     <span class="role-badge badge-part">PARTICIPANT</span>
   </div>
   <div class="body">
@@ -607,7 +652,7 @@
       <input type="text" id="myTeamName" placeholder="e.g. Mumbai Mavericks" maxlength="25"/>
       <div class="gap"></div>
       <div class="card-title">Team Colour</div>
-      <div id="colorPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+      <div id="colorPicker" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
         <button class="color-opt on" data-color="#e74c3c" style="background:#e74c3c" onclick="pickColor(this)"></button>
         <button class="color-opt" data-color="#e67e22" style="background:#e67e22" onclick="pickColor(this)"></button>
         <button class="color-opt" data-color="#f1c40f" style="background:#f1c40f" onclick="pickColor(this)"></button>
@@ -621,9 +666,12 @@
         <button class="color-opt" data-color="#f5b800" style="background:#f5b800" onclick="pickColor(this)"></button>
         <button class="color-opt" data-color="#00d68f" style="background:#00d68f" onclick="pickColor(this)"></button>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--text3)">Up to 12 teams can join. Each participant creates their own team.</div>
+      <div style="margin-top:14px;font-size:12px;color:var(--text3);line-height:1.6">Up to 12 teams can join. Each participant creates their own team.</div>
     </div>
-    <button class="btn btn-blue" id="joinTeamBtn" onclick="joinTeam()">Join Auction</button>
+    <button class="btn btn-blue" id="joinTeamBtn" onclick="joinTeam()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Join Auction
+    </button>
   </div>
 </div>
 
@@ -632,7 +680,7 @@
   <div class="conn-bar cb-connecting" id="hostConnBar">⟳ Connecting...</div>
   <div class="a-bar">
     <div style="flex:1;min-width:0">
-      <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">🎙 Auctioneer</div>
+      <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Auctioneer</div>
       <h2 id="hostTitle">Ready</h2>
     </div>
     <span class="pbadge pb-gold" id="hostCount">0/225</span>
@@ -700,7 +748,7 @@
         </div>
       </div>
       <div class="bfeed-wrap">
-        <div class="bfeed-lbl">📡 Live Bids</div>
+        <div class="bfeed-lbl" style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse .8s ease-in-out infinite alternate"></span> Live Bids</div>
         <div class="bfeed" id="hBidFeed"><div style="color:var(--text3);font-size:13px">Waiting for bids...</div></div>
       </div>
       <div style="padding:4px 10px 6px;font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:'Rajdhani',sans-serif">OPENING BID</div>
@@ -750,15 +798,15 @@
 
   <!-- STATUS -->
   <div id="wpane-status" class="tab-pane on" style="padding:16px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div class="wait-pulse">⏳</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div class="wait-spinner"></div>
       <div style="text-align:left">
-        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(20px,5vw,28px);letter-spacing:2px;color:var(--text2);margin:0">Waiting for player...</h2>
-        <p style="font-size:12px;color:var(--text3);margin:2px 0 0">The auctioneer will bring up the next player</p>
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:clamp(20px,5vw,26px);letter-spacing:2px;color:var(--text2);margin:0">Waiting for player...</h2>
+        <p style="font-size:12px;color:var(--text3);margin:3px 0 0">The auctioneer will bring up the next player</p>
       </div>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;text-align:center;margin-bottom:10px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:3px">YOUR TEAM</div>
+    <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:14px 16px;text-align:center;margin-bottom:10px;box-shadow:var(--glass-shadow)">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--text3);margin-bottom:4px">YOUR TEAM</div>
       <div class="wait-team" id="waitTeamName" style="margin:0;font-size:20px">-</div>
     </div>
     <div class="wstat-grid">
@@ -867,63 +915,88 @@
 
 <!-- ════ END SCREEN ════ -->
 <div id="endScreen" class="screen">
-  <div style="font-size:68px;filter:drop-shadow(0 0 28px rgba(240,180,41,.6))">🏆</div>
+  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style="filter:drop-shadow(0 0 32px rgba(245,184,0,.55));margin-top:8px">
+    <path d="M22 12h28l-4 26H26L22 12z" fill="rgba(245,184,0,.2)" stroke="#f5b800" stroke-width="2"/>
+    <path d="M26 38c0 0-4 6-4 12h28c0-6-4-12-4-12" fill="rgba(245,184,0,.15)" stroke="#f5b800" stroke-width="2"/>
+    <rect x="24" y="50" width="24" height="4" rx="2" fill="#f5b800" opacity=".85"/>
+    <path d="M22 20H12c0 10 6 15 14 16" stroke="#ffd84d" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M50 20h10c0 10-6 15-14 16" stroke="#ffd84d" stroke-width="2" stroke-linecap="round" fill="none"/>
+  </svg>
   <h1>Auction Complete!</h1>
-  <div style="color:var(--text2);font-size:14px;margin-top:7px" id="endSummary"></div>
+  <div style="color:var(--text2);font-size:14px;margin-top:8px;line-height:1.5" id="endSummary"></div>
   <div class="final-list" id="finalList"></div>
   <div id="exportBtnWrap" style="display:none;margin-top:16px">
-    <button class="btn btn-gold" style="max-width:300px" onclick="exportCSV()">Export CSV</button>
+    <button class="btn btn-ghost" style="max-width:300px" onclick="exportCSV()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </button>
   </div>
   <div id="cvcSection" style="width:100%;max-width:400px;margin-top:16px;display:none">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:left">
-      <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Pick Your Captain & Vice-Captain</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">One-time choice for the whole tournament. Captain scores 2x points, Vice-Captain 1.5x.</div>
-      <label style="font-size:12px;color:var(--text2);margin-bottom:5px;display:block">Captain</label>
-      <select id="capSelect" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--font-body);padding:10px 12px;outline:none;margin-bottom:10px">
+    <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:20px;text-align:left;box-shadow:var(--glass-shadow)">
+      <div style="font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:8px"><span style="display:block;width:3px;height:13px;background:linear-gradient(180deg,var(--gold),rgba(245,184,0,.3));border-radius:2px"></span>Pick Your Captain & Vice-Captain</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">One-time choice for the whole tournament. Captain scores 2× points, Vice-Captain 1.5×.</div>
+      <label style="font-size:12px;color:var(--text2);margin-bottom:6px;display:block">Captain</label>
+      <select id="capSelect" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--font-body);padding:12px;outline:none;margin-bottom:12px;min-height:44px">
         <option value="">-- Select Captain --</option>
       </select>
-      <label style="font-size:12px;color:var(--text2);margin-bottom:5px;display:block">Vice-Captain</label>
-      <select id="vcSelect" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--font-body);padding:10px 12px;outline:none;margin-bottom:12px">
+      <label style="font-size:12px;color:var(--text2);margin-bottom:6px;display:block">Vice-Captain</label>
+      <select id="vcSelect" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:var(--rsm);color:var(--text);font-size:14px;font-family:var(--font-body);padding:12px;outline:none;margin-bottom:14px;min-height:44px">
         <option value="">-- Select Vice-Captain --</option>
       </select>
       <button class="btn btn-gold" onclick="saveCaptains()" style="width:100%">Confirm Selection</button>
-      <div id="cvcStatus" style="font-size:12px;color:var(--green);margin-top:8px;text-align:center;display:none">✓ Saved!</div>
+      <div id="cvcStatus" style="font-size:12px;color:var(--green);margin-top:10px;text-align:center;display:none;font-weight:600">✓ Saved!</div>
     </div>
   </div>
-  <div id="endRoomCode" style="width:100%;max-width:300px;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;text-align:center;display:none">
-    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;font-family:var(--font-display)">Your Room Code — share with your team for Fantasy</div>
-    <div id="endRoomCodeVal" style="font-family:var(--font-num);font-size:32px;color:var(--gold);letter-spacing:6px;cursor:pointer" onclick="copyRoomCode()" title="Click to copy">------</div>
-    <div style="font-size:10px;color:var(--text3);margin-top:4px">Tap to copy · Use this to enter the Fantasy Tracker</div>
+  <div id="endRoomCode" style="width:100%;max-width:300px;margin-top:16px;background:var(--glass);border:1px solid rgba(245,184,0,.2);border-radius:var(--radius);padding:16px;text-align:center;display:none;box-shadow:0 0 40px rgba(245,184,0,.08)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-family:var(--font-display)">Room Code — for Fantasy Tracker</div>
+    <div id="endRoomCodeVal" style="font-family:var(--font-num);font-size:36px;color:var(--gold);letter-spacing:8px;cursor:pointer;text-shadow:0 0 28px rgba(245,184,0,.5)" onclick="copyRoomCode()" title="Tap to copy">------</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">Tap to copy</div>
   </div>
-  <a id="fantasyLink" href="./fantasy.html" style="display:block;max-width:300px;margin-top:12px;text-decoration:none">
-    <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
+  <a id="fantasyLink" href="./fantasy.html" style="display:block;max-width:300px;margin-top:14px;text-decoration:none;width:100%">
+    <button class="btn btn-blue" style="width:100%">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Fantasy League Tracker
+    </button>
   </a>
-  <button class="btn btn-ghost" style="margin-top:8px;max-width:300px" onclick="showScreen('landingScreen')">New Auction</button>
+  <button class="btn btn-ghost" style="margin-top:8px;max-width:300px;width:100%" onclick="showScreen('landingScreen')">New Auction</button>
 </div>
 
 <!-- SOLD OVERLAY (host) -->
 <div class="overlay ov-sold" id="soldOverlay">
-  <div class="hammer">🔨</div>
-  <h2 style="color:var(--gold)">SOLD!</h2>
+  <svg class="hammer" width="64" height="64" viewBox="0 0 64 64" fill="none">
+    <rect x="8" y="36" width="32" height="12" rx="4" fill="#f5b800" transform="rotate(-45 8 36)"/>
+    <rect x="30" y="8" width="22" height="14" rx="4" fill="#ffd84d" transform="rotate(-45 30 8)"/>
+  </svg>
+  <h2 style="color:var(--gold);text-shadow:0 0 40px rgba(245,184,0,.5)">SOLD!</h2>
   <div class="ov-player" id="ovPlayer">-</div>
   <div class="ov-to">sold to <strong id="ovTeam" style="color:var(--gold)">-</strong></div>
   <div class="ov-price" id="ovPrice">0</div>
   <div class="ov-unit">LAKHS</div>
-  <button class="btn btn-gold" style="margin-top:20px;max-width:260px" onclick="hideSoldOverlay()">Next Player</button>
+  <button class="btn btn-gold" style="margin-top:24px;max-width:260px" onclick="hideSoldOverlay()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    Next Player
+  </button>
 </div>
 
 <!-- UNSOLD OVERLAY (host) -->
 <div class="overlay ov-unsold" id="unsoldOverlay">
-  <div style="font-size:60px">😔</div>
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style="margin-bottom:4px">
+    <circle cx="32" cy="32" r="28" stroke="rgba(255,69,102,.3)" stroke-width="2"/>
+    <line x1="20" y1="20" x2="44" y2="44" stroke="#ff4566" stroke-width="3" stroke-linecap="round"/>
+    <line x1="44" y1="20" x2="20" y2="44" stroke="#ff4566" stroke-width="3" stroke-linecap="round"/>
+  </svg>
   <h2 style="color:var(--red)">UNSOLD</h2>
   <div class="ov-player" id="ovUnsoldPlayer" style="margin-top:8px">-</div>
-  <button class="btn btn-ghost" style="margin-top:20px;max-width:260px" onclick="hideUnsoldOverlay()">Continue</button>
+  <button class="btn btn-ghost" style="margin-top:24px;max-width:260px" onclick="hideUnsoldOverlay()">Continue</button>
 </div>
 
 <!-- SOLD FLASH (participants) -->
 <div class="overlay ov-sold" id="soldFlash" style="pointer-events:none">
-  <div class="hammer">🔨</div>
-  <h2 style="color:var(--gold)">SOLD!</h2>
+  <svg class="hammer" width="64" height="64" viewBox="0 0 64 64" fill="none">
+    <rect x="8" y="36" width="32" height="12" rx="4" fill="#f5b800" transform="rotate(-45 8 36)"/>
+    <rect x="30" y="8" width="22" height="14" rx="4" fill="#ffd84d" transform="rotate(-45 30 8)"/>
+  </svg>
+  <h2 style="color:var(--gold);text-shadow:0 0 40px rgba(245,184,0,.5)">SOLD!</h2>
   <div class="ov-player" id="fPlayer">-</div>
   <div class="ov-to">to <strong id="fTeam" style="color:var(--gold)">-</strong></div>
   <div class="ov-price" id="fPrice">0</div>
