@@ -461,7 +461,7 @@ firebase.initializeApp({
 var db = firebase.database();
 
 // ── STATE ──
-var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, globalMatchResults:{}, globalMatchLabels:{}, auctionEndedAt:0, currentMatch:1};
+var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, globalMatchResults:{}, globalMatchLabels:{}, globalMatchData:{}, auctionEndedAt:0, currentMatch:1};
 // Safely extract total pts from a value that may be a number (old data) or {p,b,w,f,t} object (new)
 // Always returns a number. Handles the case where t is itself a nested breakdown object
 // (Cloudflare Worker bug: wrote t:bd instead of t:bd.t — this unwraps it correctly).
@@ -1473,7 +1473,11 @@ function loadRoom(){
         fantasyRef.update(migrateUpd);
         // G.captains already has the right data, no need to change it
       }
-      initApp();
+      // Load global match data (base points, no C/VC) for Best XI
+      db.ref('fantasy/global/matches').once('value',function(gs){
+        G.globalMatchData=gs.val()||{};
+        initApp();
+      });
     });
     var appInitialized=false;
     fantasyRef.on('value',function(snap3){
@@ -1775,33 +1779,41 @@ function renderBestXI(){
   var card=document.getElementById('bestXICard');
   var list=document.getElementById('bestXIList');
   if(!card||!list) return;
-  var matchKeys=Object.keys(G.matchData||{});
+  var globalData=G.globalMatchData||{};
+  var matchKeys=Object.keys(globalData).filter(function(k){return k.startsWith('match');});
   if(!matchKeys.length){card.style.display='none';return;}
-  var allPlayers=[];
+  // De-duplicate players across teams (same player may appear in multiple rooms — take highest pts)
+  var seen={};
   Object.keys(G.teams).forEach(function(ti){
     var team=G.teams[ti];
     if(!team||!team.players) return;
-    (team.players).forEach(function(player,pi){
+    team.players.forEach(function(player){
+      if(!player||!player.name) return;
       var totalPts=0;
       matchKeys.forEach(function(mk){
-        var mt=G.matchData[mk]&&G.matchData[mk][ti];
-        if(mt&&mt[pi]!=null) totalPts+=ptsVal(mt[pi]);
+        var gm=globalData[mk];
+        if(gm&&gm[player.name]!=null) totalPts+=ptsVal(gm[player.name]);
       });
-      if(totalPts>0) allPlayers.push({
-        name:player.name,role:player.role,
-        teamName:team.name,color:team.color||'#5091CD',
-        pts:totalPts,photo:player.photo||''
-      });
+      if(totalPts<=0) return;
+      if(!seen[player.name]||seen[player.name].pts<totalPts){
+        seen[player.name]={
+          name:player.name, role:player.role,
+          teamName:team.name, color:team.color||'#5091CD',
+          pts:totalPts,
+          photo:PHOTO_MAP[player.id]||''
+        };
+      }
     });
   });
+  var allPlayers=Object.keys(seen).map(function(n){return seen[n];});
   if(!allPlayers.length){card.style.display='none';return;}
   allPlayers.sort(function(a,b){return b.pts-a.pts;});
   var xi=allPlayers.slice(0,11);
   card.style.display='block';
   list.innerHTML=xi.map(function(p,i){
     var photoHtml=p.photo
-      ? '<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
-      : '';
+      ?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
+      :'';
     return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;'
       +'background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--rsm);'
       +'margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,.2)">'
