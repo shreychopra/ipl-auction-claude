@@ -391,7 +391,25 @@
         <button onclick="forceResyncAllPlayed()" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync All Played</button>
         <button onclick="clearNoResultMatch()" class="btn btn-ghost btn-sm" id="clearNRBtn" style="border-color:var(--gold);color:var(--gold)">Clear No-Result Match</button>
         <button onclick="migrateBreakdownData()" class="btn btn-ghost btn-sm" id="migrateBtn" style="border-color:var(--blue);color:var(--blue)">Migrate Old Points</button>
+        <button onclick="openFixResult()" class="btn btn-ghost btn-sm" id="fixResultBtn" style="border-color:#f59e0b;color:#f59e0b">Fix Match Result</button>
       </div>
+      </div>
+      <div id="fixResultForm" style="display:none;padding:12px 14px;border-top:1px solid var(--border);background:rgba(245,158,11,.04)">
+        <div style="font-size:11px;color:#f59e0b;font-family:var(--fd);letter-spacing:1px;margin-bottom:8px">MANUAL RESULT OVERRIDE — writes to global + all rooms</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;color:var(--text3);font-family:var(--fd)">MATCH #</label>
+            <input id="fixResultMatchNum" type="number" min="1" max="70" placeholder="38"
+              style="width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:6px 8px;font-size:13px;font-family:var(--fd);outline:none"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px">
+            <label style="font-size:10px;color:var(--text3);font-family:var(--fd)">RESULT STRING (e.g. "KKR won by 1 run (Super Over)")</label>
+            <input id="fixResultText" type="text" placeholder="KKR won by 1 run (Super Over)"
+              style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:6px 8px;font-size:13px;font-family:var(--fd);outline:none;box-sizing:border-box"/>
+          </div>
+          <button onclick="saveFixedResult()" class="btn btn-sm" style="background:#f59e0b;color:#000;font-weight:700;border:none;flex-shrink:0" id="fixResultSaveBtn">Save</button>
+          <button onclick="document.getElementById('fixResultForm').style.display='none'" class="btn btn-ghost btn-sm" style="flex-shrink:0">Cancel</button>
+        </div>
       </div>
       <div id="verifyResults" style="padding:8px 10px;max-height:260px;overflow-y:auto"></div>
     </div>
@@ -2391,6 +2409,8 @@ function renderSchedule(){
       var winner=winnerTeam(shortRes);
       var winColor=winner&&IPL_COLORS[winner]?IPL_COLORS[winner]:'var(--green)';
       var isNR=rawRes&&(/no result|abandon|cancel/i.test(rawRes));
+      // Stale in-progress string (synced mid-over): has result text but no winner + not NR
+      var isStale=rawRes&&!isNR&&!winner&&(/needs?\s+\d|require|to win|to tie/i.test(rawRes));
 
       // Card wrapper
       var card=document.createElement('div');
@@ -2398,7 +2418,7 @@ function renderSchedule(){
         +'background:'+(isNR?'rgba(255,255,255,.02)':'var(--surface)')+';border:1px solid '+(isNR?'rgba(255,255,255,.06)':'var(--border)')+';'
         +(isNR?'opacity:0.6':'')
         +(status==='live'?'border-color:rgba(255,69,102,.5);box-shadow:0 0 0 1px rgba(255,69,102,.2)':'')
-        +(status==='done'&&winner?'border-top:2px solid '+winColor:'');
+        +(status==='done'&&winner&&!isStale?'border-top:2px solid '+winColor:'');
 
       // Top bar: match number + status badge + time
       var topBar=document.createElement('div');
@@ -2424,6 +2444,11 @@ function renderSchedule(){
             +'color:var(--text3);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);'
             +'padding:2px 8px;border-radius:99px';
           badge.textContent='NO RESULT';
+        } else if(isStale){
+          badge.style.cssText='font-size:10px;font-weight:700;font-family:var(--fd);letter-spacing:1px;'
+            +'color:#f59e0b;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);'
+            +'padding:2px 8px;border-radius:99px';
+          badge.textContent='RESULT PENDING';
         } else {
           badge.style.cssText='font-size:10px;font-weight:700;font-family:var(--fd);letter-spacing:1px;'
             +'color:var(--green);background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);'
@@ -2443,7 +2468,7 @@ function renderSchedule(){
       function teamBlock(code, isWinner){
         var wrap=document.createElement('div');
         wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;'
-          +(isWinner?'opacity:1':'opacity:'+(status==='done'?'0.45':'1'));
+          +(isWinner?'opacity:1':'opacity:'+(status==='done'&&!isStale?'0.45':'1'));
         var logo=document.createElement('img');
         logo.src='./images/'+code+'.webp';
         logo.className='team-logo';
@@ -2479,6 +2504,11 @@ function renderSchedule(){
             +'background:rgba(255,255,255,.04);border-radius:6px;padding:5px 10px;'
             +'border:1px solid rgba(255,255,255,.1);display:inline-block">'
             +shortRes+'</div>';
+        } else if(isStale){
+          resultRow.innerHTML='<div style="font-size:11px;color:#f59e0b;'
+            +'background:rgba(245,158,11,.06);border-radius:6px;padding:5px 10px;'
+            +'border:1px solid rgba(245,158,11,.2);display:inline-block">'
+            +'Re-sync match to get final result</div>';
         } else {
           resultRow.innerHTML='<div style="font-size:12px;font-weight:700;color:'+winColor+';'
             +'background:rgba('+hexToRgb(winColor)+',0.08);border-radius:6px;padding:5px 10px;'
@@ -3448,6 +3478,45 @@ function clearNoResultMatch(){
       logSync('M'+mNum+' cleared — No Result across '+Object.keys(fantasyData).length+' rooms','ok');
       renderLeaderboard(); renderHistory();
       toast('M'+mNum+' cleared — No Result');
+    });
+  });
+}
+
+function openFixResult(){
+  var f=document.getElementById('fixResultForm');
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+function saveFixedResult(){
+  var mNum=parseInt(document.getElementById('fixResultMatchNum').value||'0');
+  var result=(document.getElementById('fixResultText').value||'').trim();
+  if(!mNum||mNum<1||mNum>70){toast('Enter a valid match number (1–70)');return;}
+  if(!result){toast('Enter a result string');return;}
+  var btn=document.getElementById('fixResultSaveBtn');
+  btn.disabled=true; btn.textContent='Saving…';
+  var mKey='match'+mNum;
+  db.ref('fantasy/global/matchResults/'+mKey).set(result,function(err){
+    if(err){toast('Error: '+err);btn.disabled=false;btn.textContent='Save';return;}
+    db.ref('rooms').once('value',function(rsnap){
+      var rooms=rsnap.val()||{};
+      var updates={};
+      Object.keys(rooms).forEach(function(code){
+        if(rooms[code].auctionEnded) updates['fantasy/'+code+'/matchResults/'+mKey]=result;
+      });
+      function finish(){
+        G.globalMatchResults[mKey]=result;
+        if(G.matchResults) G.matchResults[mKey]=result;
+        if(document.getElementById('pane-sc')&&document.getElementById('pane-sc').classList.contains('on')) renderSchedule();
+        btn.disabled=false; btn.textContent='Save';
+        document.getElementById('fixResultForm').style.display='none';
+        toast('✓ Result updated for M'+mNum);
+        logSync('Match '+mNum+' result fixed: "'+result+'"','ok');
+      }
+      if(Object.keys(updates).length){
+        db.ref().update(updates,function(err2){
+          if(err2) logSync('Partial error writing to rooms: '+err2,'warn');
+          finish();
+        });
+      } else { finish(); }
     });
   });
 }
